@@ -75,8 +75,6 @@ Il sistema gestisce diverse macro-categorie di "Micro-Task Solidali":
 - **Francesco Polperio**
 - **Andrei Mickel Victorino**
 
-[cite_start][cite: 3]
-
 ---
 
 _Progetto sviluppato per finalità accademiche e dimostrative (PoC)._
