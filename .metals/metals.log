@@ -1,0 +1,15 @@
+2026.02.18 21:02:51 INFO  Started: Metals version 1.6.5 in folders '/Users/fabiopsh/Documents/Progetti Università Magistrale/Solidarities Link - SOLI/solidarities-link' for client Antigravity 1.107.0.
+2026.02.18 21:02:51 INFO  Memory monitor started
+2026.02.18 21:02:51 WARN  Using H2 2.4.240 which is newer than the version Flyway has been verified with. The latest verified version of H2 is 2.3.232.
+2026.02.18 21:05:18 INFO  no build target found for /Users/fabiopsh/Documents/Progetti Università Magistrale/Solidarities Link - SOLI/solidarities-link/soli-backend/src/main/java/it/soli/entity/UserRole.java. Using fallback presentation compiler.
+2026.02.18 21:05:28 INFO  no build target found for /Users/fabiopsh/Documents/Progetti Università Magistrale/Solidarities Link - SOLI/solidarities-link/soli-backend/src/main/java/it/soli/entity/User.java. Using fallback presentation compiler.
+2026.02.18 21:05:30 INFO  no build target found for /Users/fabiopsh/Documents/Progetti Università Magistrale/Solidarities Link - SOLI/solidarities-link/soli-backend/src/main/java/it/soli/resource/UserResource.java. Using fallback presentation compiler.
+feb 18, 2026 9:09:20 PM org.eclipse.lsp4j.jsonrpc.services.GenericEndpoint notify
+INFO: Unsupported notification method: $/setTrace
+feb 18, 2026 9:09:21 PM org.eclipse.lsp4j.jsonrpc.services.GenericEndpoint notify
+INFO: Unsupported notification method: $/setTrace
+2026.02.18 21:14:48 INFO  no build target found for /Users/fabiopsh/Documents/Progetti Università Magistrale/Solidarities Link - SOLI/solidarities-link/soli-backend/src/main/java/it/soli/entity/UserRole.java. Using fallback presentation compiler.
+2026.02.18 21:14:48 INFO  no build target found for /Users/fabiopsh/Documents/Progetti Università Magistrale/Solidarities Link - SOLI/solidarities-link/soli-backend/src/main/java/it/soli/resource/UserResource.java. Using fallback presentation compiler.
+2026.02.18 21:14:48 INFO  no build target found for /Users/fabiopsh/Documents/Progetti Università Magistrale/Solidarities Link - SOLI/solidarities-link/soli-backend/src/main/java/it/soli/entity/User.java. Using fallback presentation compiler.
+feb 18, 2026 9:25:03 PM org.eclipse.lsp4j.jsonrpc.services.GenericEndpoint notify
+INFO: Unsupported notification method: $/setTrace

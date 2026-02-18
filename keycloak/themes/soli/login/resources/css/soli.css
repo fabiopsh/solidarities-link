@@ -1,0 +1,319 @@
+/* ============================================
+   SOLI - Keycloak Custom Login Theme
+   Parent: keycloak (v1 FreeMarker)
+   ============================================ */
+
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
+
+/* --- Global --- */
+* {
+	font-family: "Inter", "Roboto", "Helvetica", "Arial", sans-serif !important;
+}
+
+/* --- Background: teal gradient --- */
+body {
+	background: linear-gradient(135deg, #004d40 0%, #00796b 40%, #48a999 100%) !important;
+	min-height: 100vh !important;
+}
+
+/* --- Login container --- */
+.login-pf {
+	background: transparent !important;
+}
+
+.login-pf body,
+.login-pf {
+	background: linear-gradient(135deg, #004d40 0%, #00796b 40%, #48a999 100%) !important;
+}
+
+/* --- Center the card --- */
+#kc-container-wrapper {
+	display: flex !important;
+	flex-direction: column !important;
+	align-items: center !important;
+	justify-content: center !important;
+	min-height: 100vh !important;
+}
+
+/* --- Header --- */
+#kc-header {
+	background: none !important;
+	border: none !important;
+	padding: 0 !important;
+	margin: 0 !important;
+	position: static !important;
+}
+
+#kc-header-wrapper {
+	text-align: center !important;
+	padding: 0 0 20px 0 !important;
+	color: transparent !important;
+	font-size: 0 !important;
+	overflow: visible !important;
+}
+
+#kc-header-wrapper::before {
+	content: "🤝" !important;
+	display: block !important;
+	font-size: 56px !important;
+	margin-bottom: 8px !important;
+	line-height: 1.2 !important;
+}
+
+#kc-header-wrapper::after {
+	content: "SoLi" !important;
+	display: block !important;
+	font-size: 2.2rem !important;
+	font-weight: 700 !important;
+	background: linear-gradient(135deg, #ffffff 0%, #b2dfdb 100%) !important;
+	-webkit-background-clip: text !important;
+	-webkit-text-fill-color: transparent !important;
+	background-clip: text !important;
+}
+
+/* --- Card / Form container --- */
+#kc-content {
+	max-width: 440px !important;
+	width: 100% !important;
+	margin: 0 auto !important;
+}
+
+#kc-content-wrapper {
+	background: #ffffff !important;
+	border-radius: 24px !important;
+	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18) !important;
+	padding: 40px 36px !important;
+	border: none !important;
+}
+
+.login-pf .container {
+	max-width: 440px !important;
+	padding: 0 16px !important;
+}
+
+/* card-pf overrides */
+.card-pf {
+	background: #ffffff !important;
+	border-radius: 24px !important;
+	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18) !important;
+	border: none !important;
+	margin: 0 !important;
+	padding: 32px !important;
+}
+
+/* --- Page title --- */
+#kc-page-title,
+.login-pf .card-pf h1 {
+	font-size: 1.4rem !important;
+	font-weight: 600 !important;
+	color: #212121 !important;
+	text-align: center !important;
+	margin-bottom: 24px !important;
+}
+
+/* --- Form labels --- */
+label,
+.control-label {
+	font-weight: 500 !important;
+	color: #424242 !important;
+	font-size: 0.875rem !important;
+	margin-bottom: 6px !important;
+}
+
+/* --- Input fields --- */
+input[type="text"],
+input[type="password"],
+input[type="email"],
+.form-control,
+input.form-control {
+	border-radius: 12px !important;
+	border: 1.5px solid #e0e0e0 !important;
+	padding: 12px 16px !important;
+	font-size: 1rem !important;
+	transition:
+		border-color 0.2s ease,
+		box-shadow 0.2s ease !important;
+	background: #fafafa !important;
+	outline: none !important;
+	height: auto !important;
+	box-shadow: none !important;
+}
+
+input[type="text"]:focus,
+input[type="password"]:focus,
+input[type="email"]:focus,
+.form-control:focus {
+	border-color: #00796b !important;
+	box-shadow: 0 0 0 3px rgba(0, 121, 107, 0.12) !important;
+	background: #ffffff !important;
+}
+
+/* --- Form groups spacing --- */
+.form-group {
+	margin-bottom: 18px !important;
+}
+
+/* --- Primary button (Login/Register) --- */
+input[type="submit"],
+button[type="submit"],
+.btn-primary,
+#kc-login {
+	background: linear-gradient(135deg, #00796b 0%, #48a999 100%) !important;
+	border: none !important;
+	border-radius: 12px !important;
+	padding: 12px 24px !important;
+	font-size: 1rem !important;
+	font-weight: 600 !important;
+	color: #ffffff !important;
+	cursor: pointer !important;
+	text-transform: none !important;
+	transition: all 0.2s ease !important;
+	width: 100% !important;
+	letter-spacing: 0.01em !important;
+	text-shadow: none !important;
+	box-shadow: none !important;
+	height: auto !important;
+	line-height: 1.5 !important;
+}
+
+input[type="submit"]:hover,
+button[type="submit"]:hover,
+.btn-primary:hover,
+#kc-login:hover {
+	background: linear-gradient(135deg, #004d40 0%, #00796b 100%) !important;
+	box-shadow: 0 4px 12px rgba(0, 77, 64, 0.3) !important;
+}
+
+input[type="submit"]:focus,
+button[type="submit"]:focus,
+.btn-primary:focus {
+	outline: none !important;
+	box-shadow: 0 0 0 3px rgba(0, 121, 107, 0.25) !important;
+}
+
+/* --- Secondary / link buttons --- */
+.btn-default,
+a.btn {
+	border-radius: 12px !important;
+	padding: 10px 24px !important;
+	font-weight: 500 !important;
+	border: 1.5px solid #e0e0e0 !important;
+	background: #ffffff !important;
+	color: #00796b !important;
+}
+
+.btn-default:hover,
+a.btn:hover {
+	background: #f5f5f5 !important;
+	border-color: #00796b !important;
+}
+
+/* --- Links --- */
+a,
+.login-pf a {
+	color: #00796b !important;
+}
+
+a:hover {
+	color: #004d40 !important;
+	text-decoration: underline !important;
+}
+
+/* --- Registration link --- */
+#kc-registration,
+#kc-registration span {
+	text-align: center !important;
+	margin-top: 16px !important;
+}
+
+#kc-registration a {
+	color: #00796b !important;
+	font-weight: 600 !important;
+}
+
+/* --- "Remember me" checkbox + forgot password row --- */
+.login-pf-settings {
+	margin-top: 8px !important;
+	margin-bottom: 16px !important;
+}
+
+/* --- Checkbox --- */
+input[type="checkbox"]:checked {
+	accent-color: #00796b !important;
+}
+
+/* --- Alert/error messages --- */
+.alert {
+	border-radius: 12px !important;
+	border: none !important;
+	padding: 12px 16px !important;
+}
+
+.alert-error,
+.alert-danger {
+	background: #ffebee !important;
+	color: #c62828 !important;
+}
+
+.alert-success {
+	background: #e8f5e9 !important;
+	color: #2e7d32 !important;
+}
+
+.alert-warning {
+	background: #fff8e1 !important;
+	color: #f57f17 !important;
+}
+
+/* --- Info section at bottom --- */
+#kc-info,
+#kc-info-wrapper {
+	text-align: center !important;
+	color: rgba(255, 255, 255, 0.8) !important;
+	font-size: 0.85rem !important;
+	margin-top: 16px !important;
+}
+
+#kc-info a {
+	color: #ffffff !important;
+	text-decoration: underline !important;
+}
+
+/* --- Social providers --- */
+#kc-social-providers .btn {
+	border-radius: 12px !important;
+	font-weight: 500 !important;
+	border: 1.5px solid #e0e0e0 !important;
+	padding: 10px 24px !important;
+}
+
+/* --- Remove default Keycloak branding --- */
+div.kc-logo-text {
+	display: none !important;
+}
+
+.login-pf .container-fluid {
+	padding: 0 !important;
+}
+
+/* --- Scrollbar --- */
+::-webkit-scrollbar {
+	width: 6px;
+}
+::-webkit-scrollbar-thumb {
+	background: rgba(255, 255, 255, 0.3);
+	border-radius: 3px;
+}
+
+/* --- Responsive --- */
+@media (max-width: 480px) {
+	.card-pf {
+		padding: 24px 20px !important;
+		border-radius: 20px !important;
+	}
+
+	#kc-content-wrapper {
+		padding: 28px 20px !important;
+		border-radius: 20px !important;
+	}
+}
