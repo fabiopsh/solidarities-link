@@ -11188,3 +11188,5 @@ INFO: Unsupported notification method: $/setTrace
 2026.02.19 12:18:21 INFO  time: compiled soli-backend in 1.1s
 feb 19, 2026 12:21:42 PM org.eclipse.lsp4j.jsonrpc.services.GenericEndpoint notify
 INFO: Unsupported notification method: $/setTrace
+feb 19, 2026 12:25:22 PM org.eclipse.lsp4j.jsonrpc.services.GenericEndpoint notify
+INFO: Unsupported notification method: $/setTrace
