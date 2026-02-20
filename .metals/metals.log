@@ -28,3 +28,20 @@ INFORMAZIONI: Unsupported notification method: $/setTrace
 2026.02.19 15:19:31 INFO  no build target found for /Users/fabiopsh/Documents/Progetti Università Magistrale/Solidarities Link - SOLI/solidarities-link/soli-backend/src/main/java/it/soli/entity/User.java. Using fallback presentation compiler.
 feb 19, 2026 3:19:53 PM org.eclipse.lsp4j.jsonrpc.services.GenericEndpoint notify
 INFORMAZIONI: Unsupported notification method: $/setTrace
+2026.02.19 15:20:11 WARN  no build target for: /Users/fabiopsh/Documents/Progetti Università Magistrale/Solidarities Link - SOLI/solidarities-link/soli-backend/src/main/java/it/soli/entity/UserRole.java
+2026.02.19 15:20:11 INFO  no build target found for /Users/fabiopsh/Documents/Progetti Università Magistrale/Solidarities Link - SOLI/solidarities-link/soli-backend/src/main/java/it/soli/entity/UserRole.java. Using fallback presentation compiler.
+2026.02.19 15:20:11 WARN  Running javac-semanticdb failed for file:///Users/fabiopsh/Documents/Progetti%20Universita%CC%80%20Magistrale/Solidarities%20Link%20-%20SOLI/solidarities-link/soli-backend/src/main/java/it/soli/entity/UserRole.java. Output:
+
+2026.02.19 15:20:11 INFO  no build target found for /Users/fabiopsh/Documents/Progetti Università Magistrale/Solidarities Link - SOLI/solidarities-link/soli-backend/src/main/java/it/soli/entity/UserRole.java. Using fallback presentation compiler.
+2026.02.19 15:20:12 WARN  no build target for: /Users/fabiopsh/Documents/Progetti Università Magistrale/Solidarities Link - SOLI/solidarities-link/soli-backend/src/main/java/it/soli/entity/User.java
+2026.02.19 15:20:11 INFO  no build target found for /Users/fabiopsh/Documents/Progetti Università Magistrale/Solidarities Link - SOLI/solidarities-link/soli-backend/src/main/java/it/soli/entity/User.java. Using fallback presentation compiler.
+2026.02.19 15:20:12 WARN  Running javac-semanticdb failed for file:///Users/fabiopsh/Documents/Progetti%20Universita%CC%80%20Magistrale/Solidarities%20Link%20-%20SOLI/solidarities-link/soli-backend/src/main/java/it/soli/entity/User.java. Output:
+
+2026.02.19 15:20:12 INFO  no build target found for /Users/fabiopsh/Documents/Progetti Università Magistrale/Solidarities Link - SOLI/solidarities-link/soli-backend/src/main/java/it/soli/entity/User.java. Using fallback presentation compiler.
+2026.02.19 15:20:12 INFO  no build target found for /Users/fabiopsh/Documents/Progetti Università Magistrale/Solidarities Link - SOLI/solidarities-link/soli-backend/src/main/java/it/soli/entity/User.java. Using fallback presentation compiler.
+2026.02.19 15:20:16 WARN  no build target for: /Users/fabiopsh/Documents/Progetti Università Magistrale/Solidarities Link - SOLI/solidarities-link/soli-backend/src/main/java/it/soli/entity/User.java
+2026.02.19 15:20:16 INFO  no build target found for /Users/fabiopsh/Documents/Progetti Università Magistrale/Solidarities Link - SOLI/solidarities-link/soli-backend/src/main/java/it/soli/entity/User.java. Using fallback presentation compiler.
+2026.02.19 15:20:16 WARN  Running javac-semanticdb failed for file:///Users/fabiopsh/Documents/Progetti%20Universita%CC%80%20Magistrale/Solidarities%20Link%20-%20SOLI/solidarities-link/soli-backend/src/main/java/it/soli/entity/User.java. Output:
+
+2026.02.19 15:20:16 INFO  no build target found for /Users/fabiopsh/Documents/Progetti Università Magistrale/Solidarities Link - SOLI/solidarities-link/soli-backend/src/main/java/it/soli/entity/User.java. Using fallback presentation compiler.
+2026.02.19 15:20:38 INFO  no build target found for /Users/fabiopsh/Documents/Progetti Università Magistrale/Solidarities Link - SOLI/solidarities-link/soli-backend/src/main/java/it/soli/entity/User.java. Using fallback presentation compiler.
