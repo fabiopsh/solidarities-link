@@ -1,0 +1,107 @@
+{
+	"realm": "soli",
+	"enabled": true,
+	"registrationAllowed": true,
+	"registrationEmailAsUsername": true,
+	"loginWithEmailAllowed": true,
+	"sslRequired": "none",
+	"loginTheme": "soli",
+	"roles": {
+		"realm": [
+			{ "name": "volunteer", "description": "Volontario Civico" },
+			{ "name": "requester", "description": "Richiedente" },
+			{ "name": "caregiver", "description": "Caregiver" },
+			{ "name": "admin", "description": "Amministratore" }
+		]
+	},
+	"defaultRoles": ["requester"],
+	"clients": [
+		{
+			"clientId": "soli-frontend",
+			"name": "SOLI Frontend",
+			"enabled": true,
+			"publicClient": true,
+			"directAccessGrantsEnabled": true,
+			"standardFlowEnabled": true,
+			"implicitFlowEnabled": false,
+			"protocol": "openid-connect",
+			"redirectUris": ["http://localhost:3000/*", "http://localhost:5173/*"],
+			"webOrigins": ["http://localhost:3000", "http://localhost:5173"],
+			"attributes": {
+				"pkce.code.challenge.method": "S256",
+				"post.logout.redirect.uris": "http://localhost:3000/*##http://localhost:5173/*"
+			},
+			"protocolMappers": [
+				{
+					"name": "audience-mapper",
+					"protocol": "openid-connect",
+					"protocolMapper": "oidc-audience-mapper",
+					"consentRequired": false,
+					"config": {
+						"included.client.audience": "soli-backend",
+						"id.token.claim": "false",
+						"access.token.claim": "true"
+					}
+				}
+			]
+		},
+		{
+			"clientId": "soli-mobile",
+			"name": "SOLI Mobile",
+			"enabled": true,
+			"publicClient": true,
+			"directAccessGrantsEnabled": false,
+			"standardFlowEnabled": true,
+			"implicitFlowEnabled": false,
+			"protocol": "openid-connect",
+			"redirectUris": ["solimobile://callback"],
+			"webOrigins": [],
+			"attributes": {
+				"pkce.code.challenge.method": "S256"
+			},
+			"protocolMappers": [
+				{
+					"name": "audience-mapper",
+					"protocol": "openid-connect",
+					"protocolMapper": "oidc-audience-mapper",
+					"consentRequired": false,
+					"config": {
+						"included.client.audience": "soli-backend",
+						"id.token.claim": "false",
+						"access.token.claim": "true"
+					}
+				}
+			]
+		},
+		{
+			"clientId": "soli-backend",
+			"name": "SOLI Backend",
+			"enabled": true,
+			"publicClient": false,
+			"bearerOnly": false,
+			"serviceAccountsEnabled": true,
+			"standardFlowEnabled": false,
+			"directAccessGrantsEnabled": false,
+			"protocol": "openid-connect",
+			"secret": "soli-backend-secret"
+		}
+	],
+	"users": [
+		{
+			"username": "admin@soli.it",
+			"email": "admin@soli.it",
+			"firstName": "Admin",
+			"lastName": "SOLI",
+			"enabled": true,
+			"emailVerified": true,
+			"credentials": [
+				{
+					"type": "password",
+					"value": "admin",
+					"temporary": false
+				}
+			],
+			"realmRoles": ["admin"]
+		}
+	]
+}
