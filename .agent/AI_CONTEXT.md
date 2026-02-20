@@ -41,7 +41,7 @@
 - Endpoint protetti: `/api/*` → richiede autenticazione
 - Endpoint pubblici: `/api/health`, `/q/*`
 
-### Frontend
+### Frontend (Web)
 
 | Tecnologia             | Versione | Note                         |
 | ---------------------- | -------- | ---------------------------- |
@@ -53,26 +53,41 @@
 | **oidc-client-ts**     | latest   | Libreria OIDC core           |
 | **react-oidc-context** | latest   | React wrapper per OIDC       |
 
+### Frontend (Mobile)
+
+| Tecnologia               | Versione | Note                                        |
+| ------------------------ | -------- | ------------------------------------------- |
+| **React Native**         | 0.81.x   | Framework mobile cross-platform             |
+| **Expo**                 | 54.x     | Managed workflow, build & dev tools         |
+| **TypeScript**           | 5.9.x    | Tipizzazione statica                        |
+| **expo-router**          | 6.x      | File-based routing (come Next.js)           |
+| **expo-auth-session**    | latest   | OAuth2/OIDC con browser di sistema          |
+| **expo-secure-store**    | latest   | Storage sicuro (Keychain/Keystore)          |
+| **expo-crypto**          | latest   | PKCE code verifier/challenge                |
+| **expo-linear-gradient** | latest   | Gradienti (equivalente CSS linear-gradient) |
+
 ### Autenticazione
 
-| Tecnologia          | Valore                         |
-| ------------------- | ------------------------------ |
-| **Keycloak**        | 26.x                           |
-| **Protocollo**      | OAuth2 + OpenID Connect        |
-| **Flusso**          | Authorization Code + PKCE      |
-| **Realm**           | `soli`                         |
-| **Client frontend** | `soli-frontend` (public, PKCE) |
-| **Client backend**  | `soli-backend` (confidential)  |
+| Tecnologia                 | Valore                         |
+| -------------------------- | ------------------------------ |
+| **Keycloak**               | 26.x                           |
+| **Protocollo**             | OAuth2 + OpenID Connect        |
+| **Flusso**                 | Authorization Code + PKCE      |
+| **Realm**                  | `soli`                         |
+| **Client frontend web**    | `soli-frontend` (public, PKCE) |
+| **Client frontend mobile** | `soli-mobile` (public, PKCE)   |
+| **Client backend**         | `soli-backend` (confidential)  |
 
 ### Infrastruttura
 
-| Servizio        | Porta esterna | Container               |
-| --------------- | ------------- | ----------------------- |
-| PostgreSQL      | 5433          | `soli-postgres`         |
-| Keycloak        | 8180          | `soli-keycloak`         |
-| Backend Quarkus | 8080          | `soli-backend`          |
-| Frontend (prod) | 3000          | `soli-frontend` (Nginx) |
-| Frontend (dev)  | 5173          | Vite dev server         |
+| Servizio            | Porta esterna | Container               |
+| ------------------- | ------------- | ----------------------- |
+| PostgreSQL          | 5433          | `soli-postgres`         |
+| Keycloak            | 8180          | `soli-keycloak`         |
+| Backend Quarkus     | 8080          | `soli-backend`          |
+| Frontend web (prod) | 3000          | `soli-frontend` (Nginx) |
+| Frontend web (dev)  | 5173          | Vite dev server         |
+| Frontend mobile     | 8081          | Expo dev server         |
 
 ---
 
@@ -249,6 +264,18 @@ solidarities-link/
 │       ├── config/auth.ts      # Config OIDC
 │       ├── components/         # Layout, ProtectedRoute, componenti riutilizzabili
 │       └── pages/              # LoginPage, DashboardPage, CallbackPage
+├── soli-mobile/
+│   ├── app.json                # Configurazione Expo (scheme: solimobile)
+│   ├── package.json
+│   ├── app/
+│   │   ├── _layout.tsx         # Root layout (AuthProvider + navigation guard)
+│   │   ├── login.tsx           # Login screen
+│   │   └── (tabs)/
+│   │       ├── _layout.tsx     # Tab navigator layout
+│   │       └── home.tsx        # Home screen (placeholder)
+│   ├── config/auth.ts          # Config OIDC per mobile
+│   ├── context/AuthContext.tsx  # Auth state management
+│   └── constants/theme.ts      # Design system SoLi per RN
 └── soli-documentation/
     └── original_doc.md         # Documentazione di progetto originale
 ```
@@ -257,15 +284,33 @@ solidarities-link/
 
 ## 6. Convenzioni di Codice
 
-| Convenzione            | Regola                                                                                   |
-| ---------------------- | ---------------------------------------------------------------------------------------- |
-| **File naming**        | `PascalCase.tsx` per componenti React, `camelCase.ts` per utility                        |
-| **Component export**   | `export default function NomeComponente()`                                               |
-| **Stili**              | MUI `sx` prop inline, **mai CSS separato per componenti** (solo `index.css` per globali) |
-| **API base path**      | `/api/` (proxy Vite in dev, Nginx reverse proxy in prod)                                 |
-| **Entità JPA**         | Panache active record (public fields, no getter/setter)                                  |
-| **REST path**          | `@Path("/api/<risorsa>")`                                                                |
-| **Lingua stringhe UI** | Italiano                                                                                 |
+### Generali
+
+| Convenzione            | Regola                                                            |
+| ---------------------- | ----------------------------------------------------------------- |
+| **File naming**        | `PascalCase.tsx` per componenti React, `camelCase.ts` per utility |
+| **Component export**   | `export default function NomeComponente()`                        |
+| **API base path**      | `/api/` (proxy Vite in dev, Nginx reverse proxy in prod)          |
+| **Entità JPA**         | Panache active record (public fields, no getter/setter)           |
+| **REST path**          | `@Path("/api/<risorsa>")`                                         |
+| **Lingua stringhe UI** | Italiano                                                          |
+
+### Frontend Web
+
+| Convenzione | Regola                                                                                   |
+| ----------- | ---------------------------------------------------------------------------------------- |
+| **Stili**   | MUI `sx` prop inline, **mai CSS separato per componenti** (solo `index.css` per globali) |
+
+### Frontend Mobile
+
+| Convenzione       | Regola                                                                    |
+| ----------------- | ------------------------------------------------------------------------- |
+| **Stili**         | `StyleSheet.create()` con oggetti inline, mai stylesheet globali separati |
+| **Navigazione**   | File-based routing via `expo-router`                                      |
+| **Auth tokens**   | `expo-secure-store` (Keychain iOS / Keystore Android), mai AsyncStorage   |
+| **Colori/Design** | Importare da `@/constants/theme.ts` (`SoliColors`, `SoliGradients`, etc.) |
+| **Gradienti**     | `expo-linear-gradient` (`LinearGradient` component)                       |
+| **Path alias**    | `@/` → root del progetto mobile (configurato in `tsconfig.json`)          |
 
 ---
 
@@ -275,7 +320,8 @@ solidarities-link/
 # Sviluppo locale
 docker-compose up postgres keycloak       # DB + Auth
 cd soli-backend && ./mvnw quarkus:dev     # Backend (porta 8080)
-cd soli-frontend && npm run dev           # Frontend (porta 5173)
+cd soli-frontend && npm run dev           # Frontend web (porta 5173)
+cd soli-mobile && npx expo start          # Frontend mobile (porta 8081)
 
 # Produzione (Docker)
 docker-compose up --build                 # Tutto insieme
