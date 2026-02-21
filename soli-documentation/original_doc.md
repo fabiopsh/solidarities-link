@@ -255,29 +255,23 @@ _Al meglio delle nostre conoscenze_, il nostro gruppo ha identificato i seguenti
 
 **Come** Caregiver (figlio/a di un genitore anziano che vive solo), **Voglio** poter inserire una richiesta per conto del mio familiare e monitorare in tempo reale lo stato di avanzamento del servizio (check-in/check-out) visualizzando il profilo del volontario assegnato, **Affinché** io abbia la totale tranquillità che mio padre/madre stia interagendo con una persona identificata, affidabile e che il servizio sia stato effettivamente erogato in sicurezza, anche se non posso essere fisicamente presente.
 
-**4\. L'Utente Attivo e la Gratificazione (Gamification e Reward)**
+### 4\. L'Utente Attivo e la Gratificazione (Gamification e Reward)**
 
 **Titolo:** Validazione del servizio e riscatto Crediti SOLI
 
 **Come** Volontario che ha appena completato un servizio, **Voglio** poter scansionare un codice univoco (Token/QR) sul dispositivo del richiedente per chiudere ufficialmente il task e vedere immediatamente accreditati i "Crediti SOLI" sul mio Wallet Digitale, **Affinché**  il mio impegno venga riconosciuto in modo trasparente e io possa accumulare punti per riscattare premialità concrete vincolate alla donazione, sentendomi parte valorizzata di un'economia circolare e solidale.
 
-### 4\. Il Nuovo Volontario e l'Onboarding (Identità Certificata)
+### 5\. Il Nuovo Volontario e l'Onboarding (Identità Certificata)
 
 **Titolo:** Registrazione rapida e sicura tramite SPID
 
 **Come** cittadino che vuole diventare Volontario per la prima volta, **Voglio** potermi registrare sull'app utilizzando le mie credenziali SPID esistenti senza dover inviare scansioni di documenti o attendere validazioni manuali, **Affinché** la mia identità venga certificata istantaneamente secondo gli standard AgID, permettendomi di diventare operativo subito e garantendo alla comunità che sono una persona reale e verificata.
 
-### 5\. Il Coordinamento Operativo (Privacy e Comunicazione)
+### 6\. Il Coordinamento Operativo (Privacy e Comunicazione)
 
 **Titolo:** Chat contestuale anonimizzata
 
 **Come** Volontario che ha accettato una richiesta di spesa (es. farmacia o supermercato), **Voglio** poter contattare il richiedente tramite una chat integrata nell'app per chiarire dubbi dell'ultimo minuto (es. _"preferisce il marchio X o Y?"_) senza dover scambiare il mio numero di telefono privato, **Affinché** possa offrire un servizio preciso tutelando la privacy di entrambi ed evitando contatti fuori piattaforma non tracciati.
-
-### 6\. Il Controllo Qualità (Trust e Reputazione)
-
-**Titolo:** Feedback reciproco post-servizio
-
-**Come** Richiedente che ha appena ricevuto aiuto, **Voglio** poter lasciare una valutazione rapida (stelle) e un commento opzionale sull'operato del volontario, **Affinché** il suo "Trust Score" venga aggiornato, premiando i comportamenti virtuosi e segnalando alla piattaforma eventuali comportamenti inadeguati per mantenere alta la qualità della community.
 
 ### 7\. La Resilienza del Sistema (Gestione Imprevisti)
 
