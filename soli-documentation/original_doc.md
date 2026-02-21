@@ -143,7 +143,7 @@ _Al meglio delle nostre conoscenze_, il nostro gruppo ha identificato i seguenti
 ## Glossario
 
 - **Richiedente**: utente dell’applicazione che pubblica una richiesta di assistenza personale;
-- **Volontario Civico Certificatp**: utente dell’applicazione che accetta una richiesta ottenuta per notifica, che può accettare o rifiutare.
+- **Volontario Civico Certificato**: utente dell’applicazione che accetta una richiesta ottenuta per notifica, che può accettare o rifiutare.
 - **Caregiver**: utente che gestisce volontariamente le richieste di un terzo soggetto.
 - **Task**: unità di lavoro atomica gestito del sistema. Ha uno stato interno: aperto (in attesa di essere accettato) / chiuso (richiesta accettata);
 - **Algoritmo di matching**: algoritmo che permette di incrociare domanda e offerta basandosi su diversi parametri (disponibilità oraria, competenza, prossimità, rotazione equa);
@@ -247,7 +247,7 @@ _Al meglio delle nostre conoscenze_, il nostro gruppo ha identificato i seguenti
 
 **Titolo:** Ricezione notifiche mirate per prossimità
 
-**Come** Volontario Civico Certificato con poco tempo a disposizione, **Voglio** ricevere notifiche push _solo_ per richieste di aiuto che si trovano nel mio raggio di azione immediato (quartiere/isolato) e che corrispondono alle mie competenze certificate (es. "Supporto Digitale"), **Affinché** io possa accettare ed eseguire task ("Micro-Task Solidali") mentre sto già compiendo i miei spostamenti quotidiani, riducendo l'impatto ambientale e massimizzando l'utilità del mio tempo senza dover filtrare manualmente centinaia di richieste non pertinenti.
+**Come** Volontario Civico Certificato con poco tempo a disposizione, **Voglio** ricevere notifiche push _solo_ per richieste di aiuto che si trovano nel mio raggio di azione immediato (quartiere/isolato) e che corrispondono alle mie competenze certificate (es. "Supporto Digitale"), **Affinché** io possa accettare ed eseguire task mentre sto già compiendo i miei spostamenti quotidiani, riducendo l'impatto ambientale e massimizzando l'utilità del mio tempo senza dover filtrare manualmente centinaia di richieste non pertinenti.
 
 ### 3\. Il Caregiver e la Sicurezza (Monitoraggio)
 
@@ -255,7 +255,7 @@ _Al meglio delle nostre conoscenze_, il nostro gruppo ha identificato i seguenti
 
 **Come** Caregiver (figlio/a di un genitore anziano che vive solo), **Voglio** poter inserire una richiesta per conto del mio familiare e monitorare in tempo reale lo stato di avanzamento del servizio (check-in/check-out) visualizzando il profilo del volontario assegnato, **Affinché** io abbia la totale tranquillità che mio padre/madre stia interagendo con una persona identificata, affidabile e che il servizio sia stato effettivamente erogato in sicurezza, anche se non posso essere fisicamente presente.
 
-### 4\. L'Utente Attivo e la Gratificazione (Gamification e Reward)**
+### 4\. L'Utente Attivo e la Gratificazione (Gamification e Reward)
 
 **Titolo:** Validazione del servizio e riscatto Crediti SOLI
 
