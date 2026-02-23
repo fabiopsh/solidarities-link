@@ -36,7 +36,114 @@ cd solidarities-link
 
 ---
 
-## 2. Avviare l'Infrastruttura (PostgreSQL + Keycloak)
+## 2. Installare JDK 21 e configurare JAVA_HOME
+
+Il backend utilizza **Java 21 (LTS)**. È necessario installare un JDK 21 e configurare la variabile d'ambiente `JAVA_HOME` affinché Maven e Quarkus funzionino correttamente.
+
+> 💡 Consigliamo la distribuzione **Eclipse Temurin** (ex AdoptOpenJDK), ma qualsiasi distribuzione OpenJDK 21 è compatibile (es. Amazon Corretto, Oracle JDK, GraalVM).
+
+### Windows
+
+#### Opzione A — Installer grafico (consigliata)
+
+1. Vai su [https://adoptium.net/temurin/releases/?version=21](https://adoptium.net/temurin/releases/?version=21)
+2. Scarica il file `.msi` per **Windows x64**
+3. Esegui l'installer e **assicurati di selezionare le opzioni**:
+   - ✅ *Set JAVA_HOME variable*
+   - ✅ *Add to PATH*
+4. Completa l'installazione
+
+> L'installer Temurin configura automaticamente `JAVA_HOME` e il `PATH`. Dopo l'installazione, **chiudi e riapri il terminale**.
+
+#### Opzione B — winget (da terminale)
+
+```powershell
+winget install EclipseAdoptium.Temurin.21.JDK
+```
+
+> ⚠️ Dopo l'installazione con `winget`, potrebbe essere necessario configurare `JAVA_HOME` manualmente (vedi sotto).
+
+#### Configurazione manuale di JAVA_HOME (Windows)
+
+Se `JAVA_HOME` non è stato impostato automaticamente dall'installer, configuralo tramite PowerShell:
+
+```powershell
+# 1. Trova il percorso esatto del JDK installato
+#    (la versione nel nome della cartella cambia ad ogni aggiornamento!)
+Get-ChildItem "C:\Program Files\Eclipse Adoptium\" | Select-Object -ExpandProperty FullName
+
+# 2. Imposta JAVA_HOME con il percorso trovato al passo precedente
+#    ⚠️ SOSTITUISCI il percorso con quello effettivo mostrato dal comando sopra!
+[Environment]::SetEnvironmentVariable("JAVA_HOME", "C:\Program Files\Eclipse Adoptium\jdk-21.0.10.7-hotspot", "User")
+
+# 3. Aggiungi il bin di Java al PATH utente
+$javaHome = [Environment]::GetEnvironmentVariable("JAVA_HOME", "User")
+$currentPath = [Environment]::GetEnvironmentVariable("Path", "User")
+[Environment]::SetEnvironmentVariable("Path", "$currentPath;$javaHome\bin", "User")
+```
+
+> ⚠️ **Importante:** le variabili impostate con `[Environment]::SetEnvironmentVariable` hanno effetto solo nei **nuovi terminali**. Per usarle subito nella sessione corrente, esegui anche:
+>
+> ```powershell
+> $env:JAVA_HOME = "C:\Program Files\Eclipse Adoptium\jdk-21.0.10.7-hotspot"
+> $env:Path = "$env:JAVA_HOME\bin;$env:Path"
+> ```
+>
+> In alternativa, **chiudi e riapri il terminale**.
+
+In alternativa, puoi configurare le variabili d'ambiente tramite GUI:
+
+1. Cerca **"Variabili d'ambiente"** nel menu Start → *Modifica le variabili d'ambiente relative al sistema*
+2. Click su **Variabili d'ambiente…**
+3. Nelle **Variabili utente**, click **Nuova…**:
+   - Nome: `JAVA_HOME`
+   - Valore: il percorso del JDK (es. `C:\Program Files\Eclipse Adoptium\jdk-21.0.10.7-hotspot`)
+4. Seleziona la variabile `Path` → **Modifica…** → **Nuovo** → aggiungi `%JAVA_HOME%\bin`
+5. Click **OK** su tutte le finestre
+
+### macOS
+
+```bash
+# Installa JDK 21 con Homebrew
+brew install --cask temurin@21
+
+# Aggiungi JAVA_HOME al profilo shell (~/.zshrc)
+echo 'export JAVA_HOME=$(/usr/libexec/java_home -v 21)' >> ~/.zshrc
+source ~/.zshrc
+```
+
+### Linux (Debian/Ubuntu)
+
+```bash
+# Installa JDK 21 (Eclipse Temurin)
+sudo apt install -y wget apt-transport-https gpg
+wget -qO - https://packages.adoptium.net/artifactory/api/gpg/key/public | sudo gpg --dearmor -o /usr/share/keyrings/adoptium.gpg
+echo "deb [signed-by=/usr/share/keyrings/adoptium.gpg] https://packages.adoptium.net/artifactory/deb $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/adoptium.list
+sudo apt update
+sudo apt install -y temurin-21-jdk
+
+# Aggiungi JAVA_HOME al profilo shell (~/.bashrc)
+echo 'export JAVA_HOME=/usr/lib/jvm/temurin-21-jdk-amd64' >> ~/.bashrc
+echo 'export PATH=$PATH:$JAVA_HOME/bin' >> ~/.bashrc
+source ~/.bashrc
+```
+
+### Verifica (tutti i sistemi)
+
+```bash
+java --version
+# Deve mostrare: openjdk 21.x.x ...
+
+echo $JAVA_HOME        # macOS/Linux
+echo $env:JAVA_HOME    # Windows PowerShell
+# Deve mostrare il percorso del JDK 21
+```
+
+> ✅ Se `java --version` mostra la versione 21 e `JAVA_HOME` punta alla cartella corretta, sei pronto per procedere.
+
+---
+
+## 3. Avviare l'Infrastruttura (PostgreSQL + Keycloak)
 
 ```bash
 docker-compose up postgres keycloak
@@ -65,7 +172,7 @@ Al primo avvio, Keycloak importa automaticamente il file `keycloak/realm-export.
 
 ---
 
-## 3. Avviare il Backend (Quarkus)
+## 4. Avviare il Backend (Quarkus)
 
 ```bash
 cd soli-backend
@@ -83,7 +190,7 @@ Il backend si avvia sulla porta **8080** in modalità dev (hot-reload automatico
 
 ---
 
-## 4. Avviare il Frontend Web (React + Vite)
+## 5. Avviare il Frontend Web (React + Vite)
 
 ```bash
 cd soli-frontend
@@ -101,13 +208,13 @@ Il frontend si avvia sulla porta **5173** con Vite dev server (HMR abilitato).
 
 ---
 
-## 5. Configurazione Emulatore Android — Solo Terminale
+## 6. Configurazione Emulatore Android — Solo Terminale
 
 > Questa sezione configura l'emulatore Android **interamente da terminale**, senza bisogno di aprire Android Studio. Se usi un **dispositivo fisico** con l'app **Expo Go**, puoi saltare questa sezione.
 >
 > Le istruzioni coprono **macOS** e **Windows**. Segui i comandi relativi al tuo sistema operativo.
 
-### 5.1 Installare i Command-Line Tools
+### 6.1 Installare i Command-Line Tools
 
 Scarica e installa i command-line tools di Android nella cartella SDK.
 
@@ -141,7 +248,7 @@ Move-Item -Force "$env:TEMP\cmdline-tools-extract\cmdline-tools" "$env:LOCALAPPD
 Remove-Item -Recurse -Force "$env:TEMP\cmdline-tools.zip", "$env:TEMP\cmdline-tools-extract"
 ```
 
-### 5.2 Configurare le Variabili d'Ambiente
+### 6.2 Configurare le Variabili d'Ambiente
 
 #### macOS
 
@@ -184,7 +291,7 @@ $newPaths = "$androidHome\emulator;$androidHome\platform-tools;$androidHome\cmdl
 sdkmanager --version   # deve mostrare la versione (es. 12.0)
 ```
 
-### 5.3 Installare SDK, Emulatore e System Image
+### 6.3 Installare SDK, Emulatore e System Image
 
 > ⏳ Il download della system image è di circa 1 GB — richiede tempo.
 
@@ -219,7 +326,7 @@ sdkmanager --install `
 
 > 💡 **Nota sulla system image:** macOS con Apple Silicon usa `arm64-v8a`, Windows con CPU Intel/AMD usa `x86_64`. Se hai un PC Windows con ARM (es. Surface Pro X), usa `arm64-v8a`.
 
-### 5.4 Creare il Dispositivo Virtuale (AVD)
+### 6.4 Creare il Dispositivo Virtuale (AVD)
 
 #### macOS
 
@@ -257,7 +364,7 @@ $configPath = "$env:USERPROFILE\.android\avd\soli-android.avd\config.ini"
 
 Questo crea un AVD chiamato `soli-android` con profilo hardware Pixel 7 e Android 15.
 
-### 5.5 Avviare l'Emulatore
+### 6.5 Avviare l'Emulatore
 
 ```bash
 emulator -avd soli-android
@@ -270,7 +377,7 @@ emulator -avd soli-android
 > - **macOS:** `emulator -avd soli-android -no-window &`
 > - **Windows:** `Start-Process emulator -ArgumentList "-avd soli-android -no-window"`
 
-### 5.6 Verifica
+### 6.6 Verifica
 
 In un altro terminale, controlla che il dispositivo sia visibile:
 
@@ -289,7 +396,7 @@ emulator-5554   device
 
 ---
 
-## 6. Avviare il Frontend Mobile (React Native + Expo)
+## 7. Avviare il Frontend Mobile (React Native + Expo)
 
 ```bash
 cd soli-mobile
@@ -304,7 +411,7 @@ Questo avvia il dev server Expo sulla porta **8081**.
 | Piattaforma | Comando nel terminale Expo | Prerequisito                                                                   |
 | ----------- | -------------------------- | ------------------------------------------------------------------------------ |
 | iOS         | Premi `i`                  | Xcode installato                                                               |
-| Android     | Premi `a`                  | Emulatore attivo (vedi [sezione 5](#5-configurazione-emulatore-android-macos)) |
+| Android     | Premi `a`                  | Emulatore attivo (vedi [sezione 6](#6-configurazione-emulatore-android--solo-terminale)) |
 | Web         | Premi `w`                  | —                                                                              |
 
 ### ⚠️ Configurazione Keycloak per Mobile (primo avvio)
