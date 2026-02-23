@@ -19,11 +19,11 @@ Assicurati di avere installato:
 
 > **Opzionale per lo sviluppo mobile:**
 >
-> | Software           | Note                                                  |
-> | ------------------ | ----------------------------------------------------- |
-> | **Xcode**          | Per il simulatore iOS (solo macOS)                    |
-> | **Android Studio** | Per l'emulatore Android + SDK                         |
-> | **Expo Go**        | App da installare su dispositivo fisico (iOS/Android) |
+> | Software            | Note                                                           |
+> | ------------------- | -------------------------------------------------------------- |
+> | **Xcode**           | Per il simulatore iOS (solo macOS)                             |
+> | **Android SDK CLI** | Per l'emulatore Android (installazione guidata alla sezione 5) |
+> | **Expo Go**         | App da installare su dispositivo fisico (iOS/Android)          |
 
 ---
 
@@ -101,7 +101,115 @@ Il frontend si avvia sulla porta **5173** con Vite dev server (HMR abilitato).
 
 ---
 
-## 5. Avviare il Frontend Mobile (React Native + Expo)
+## 5. Configurazione Emulatore Android (macOS) — Solo Terminale
+
+> Questa sezione configura l'emulatore Android **interamente da terminale**, senza bisogno di aprire Android Studio. Se usi un **dispositivo fisico** con l'app **Expo Go**, puoi saltare questa sezione.
+
+### 5.1 Installare i Command-Line Tools
+
+Scarica e installa i command-line tools di Android nella cartella SDK:
+
+```bash
+# Crea la cartella SDK (se non esiste)
+mkdir -p ~/Library/Android/sdk/cmdline-tools
+
+# Scarica i command-line tools
+curl -o /tmp/cmdline-tools.zip https://dl.google.com/android/repository/commandlinetools-mac-11076708_latest.zip
+
+# Installa nella posizione corretta
+unzip -o /tmp/cmdline-tools.zip -d /tmp/cmdline-tools-extract
+mv /tmp/cmdline-tools-extract/cmdline-tools ~/Library/Android/sdk/cmdline-tools/latest
+rm -rf /tmp/cmdline-tools.zip /tmp/cmdline-tools-extract
+```
+
+### 5.2 Configurare le Variabili d'Ambiente
+
+Aggiungi queste righe al tuo `~/.zshrc`:
+
+```bash
+# Android SDK (per emulatore Android con Expo)
+export ANDROID_HOME=$HOME/Library/Android/sdk
+export PATH=$PATH:$ANDROID_HOME/emulator
+export PATH=$PATH:$ANDROID_HOME/platform-tools
+export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin
+```
+
+Poi ricarica il profilo:
+
+```bash
+source ~/.zshrc
+```
+
+**Verifica:**
+
+```bash
+sdkmanager --version   # deve mostrare la versione (es. 12.0)
+```
+
+### 5.3 Installare SDK, Emulatore e System Image
+
+```bash
+# Accetta le licenze
+yes | sdkmanager --licenses
+
+# Installa i componenti necessari (~2 GB di download)
+sdkmanager --install \
+  "platform-tools" \
+  "emulator" \
+  "platforms;android-35" \
+  "system-images;android-35;google_apis;arm64-v8a"
+```
+
+> ⏳ Il download della system image è di circa 1 GB — richiede tempo.
+
+### 5.4 Creare il Dispositivo Virtuale (AVD)
+
+```bash
+echo "no" | avdmanager create avd \
+  -n soli-android \
+  -k "system-images;android-35;google_apis;arm64-v8a" \
+  -d "pixel_7"
+```
+
+Dopo la creazione, abilita la tastiera hardware (necessario per Expo):
+
+```bash
+sed -i '' 's/hw.keyboard = no/hw.keyboard = yes/' ~/.android/avd/soli-android.avd/config.ini
+sed -i '' 's/hw.mainKeys = no/hw.mainKeys = yes/' ~/.android/avd/soli-android.avd/config.ini
+```
+
+Questo crea un AVD chiamato `soli-android` con profilo hardware Pixel 7 e Android 15.
+
+### 5.5 Avviare l'Emulatore
+
+```bash
+emulator -avd soli-android
+```
+
+> 💡 **Tip:** L'emulatore deve essere **completamente avviato** (schermata Home visibile) prima di premere `a` nel terminale Expo.
+>
+> Per avviarlo in background (senza finestra), usa: `emulator -avd soli-android -no-window &`
+
+### 5.6 Verifica
+
+In un altro terminale, controlla che il dispositivo sia visibile:
+
+```bash
+adb devices
+```
+
+L'output deve mostrare:
+
+```
+List of devices attached
+emulator-5554   device
+```
+
+✅ Ora sei pronto per avviare l'app mobile con `npx expo start` e premere `a`.
+
+---
+
+## 6. Avviare il Frontend Mobile (React Native + Expo)
 
 ```bash
 cd soli-mobile
@@ -113,11 +221,11 @@ Questo avvia il dev server Expo sulla porta **8081**.
 
 ### Eseguire su simulatore/dispositivo
 
-| Piattaforma | Comando nel terminale Expo | Prerequisito     |
-| ----------- | -------------------------- | ---------------- |
-| iOS         | Premi `i`                  | Xcode installato |
-| Android     | Premi `a`                  | Emulatore attivo |
-| Web         | Premi `w`                  | —                |
+| Piattaforma | Comando nel terminale Expo | Prerequisito                                                                   |
+| ----------- | -------------------------- | ------------------------------------------------------------------------------ |
+| iOS         | Premi `i`                  | Xcode installato                                                               |
+| Android     | Premi `a`                  | Emulatore attivo (vedi [sezione 5](#5-configurazione-emulatore-android-macos)) |
+| Web         | Premi `w`                  | —                                                                              |
 
 ### ⚠️ Configurazione Keycloak per Mobile (primo avvio)
 
@@ -203,6 +311,9 @@ cd soli-backend && ./mvnw quarkus:dev
 # Avvia frontend web (in un terminale separato)
 cd soli-frontend && npm run dev
 
+# Avvia emulatore Android (in un terminale separato)
+emulator -avd soli-android
+
 # Avvia frontend mobile (in un terminale separato)
 cd soli-mobile && npx expo start
 
@@ -227,7 +338,7 @@ docker logs soli-keycloak
 
 ### "Client not found" su Keycloak (dalla mobile app)
 
-Il client `soli-mobile` non è stato importato. Segui la sezione "Configurazione Keycloak per Mobile" al punto 5.
+Il client `soli-mobile` non è stato importato. Segui la sezione "Configurazione Keycloak per Mobile" al punto 6.
 
 ### "Invalid parameter: redirect_uri" durante il login mobile
 
