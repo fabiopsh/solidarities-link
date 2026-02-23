@@ -18,7 +18,7 @@ function AuthNavigationGuard({ children }: { children: React.ReactNode }) {
 	useEffect(() => {
 		if (isLoading) return;
 
-		const inAuthGroup = segments[0] === "login";
+		const inAuthGroup = segments[0] === "login" || segments[0] === "callback";
 
 		if (!isAuthenticated && !inAuthGroup) {
 			// Not authenticated and not on login page → redirect to login
@@ -42,6 +42,7 @@ export default function RootLayout() {
 				<Stack screenOptions={{ headerShown: false }}>
 					<Stack.Screen name="index" options={{ headerShown: false }} />
 					<Stack.Screen name="login" options={{ headerShown: false }} />
+					<Stack.Screen name="callback" options={{ headerShown: false, animation: "none" }} />
 					<Stack.Screen name="(tabs)" options={{ headerShown: false }} />
 				</Stack>
 				<StatusBar style="auto" />

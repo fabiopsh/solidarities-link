@@ -54,7 +54,13 @@
 			"standardFlowEnabled": true,
 			"implicitFlowEnabled": false,
 			"protocol": "openid-connect",
-			"redirectUris": ["solimobile://callback"],
+			"redirectUris": [
+				"solimobile://callback",
+				"exp://127.0.0.1:8081/*",
+				"exp://localhost:8081/*",
+				"exp://10.0.2.2:8081/*",
+				"exp://*/*"
+			],
 			"webOrigins": [],
 			"attributes": {
 				"pkce.code.challenge.method": "S256"

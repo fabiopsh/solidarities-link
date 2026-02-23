@@ -1,15 +1,16 @@
 import * as AuthSession from "expo-auth-session";
+import { Platform } from "react-native";
 
 /**
  * Keycloak OIDC configuration for the SOLI mobile app.
  * Uses Authorization Code flow with PKCE (S256).
  */
 
-// Keycloak server base URL — adjust for your dev environment:
+// Keycloak server base URL — selected automatically per platform:
 // - iOS Simulator: http://localhost:8180
-// - Android Emulator: http://10.0.2.2:8180
-// - Physical device: http://<YOUR_LAN_IP>:8180
-const KEYCLOAK_BASE_URL = "http://localhost:8180";
+// - Android Emulator: http://10.0.2.2:8180 (special alias for host loopback)
+// - Physical device: replace with http://<YOUR_LAN_IP>:8180
+const KEYCLOAK_BASE_URL = Platform.OS === "android" ? "http://10.0.2.2:8180" : "http://localhost:8180";
 const REALM = "soli";
 const CLIENT_ID = "soli-mobile";
 
