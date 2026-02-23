@@ -101,13 +101,17 @@ Il frontend si avvia sulla porta **5173** con Vite dev server (HMR abilitato).
 
 ---
 
-## 5. Configurazione Emulatore Android (macOS) — Solo Terminale
+## 5. Configurazione Emulatore Android — Solo Terminale
 
 > Questa sezione configura l'emulatore Android **interamente da terminale**, senza bisogno di aprire Android Studio. Se usi un **dispositivo fisico** con l'app **Expo Go**, puoi saltare questa sezione.
+>
+> Le istruzioni coprono **macOS** e **Windows**. Segui i comandi relativi al tuo sistema operativo.
 
 ### 5.1 Installare i Command-Line Tools
 
-Scarica e installa i command-line tools di Android nella cartella SDK:
+Scarica e installa i command-line tools di Android nella cartella SDK.
+
+#### macOS (zsh/bash)
 
 ```bash
 # Crea la cartella SDK (se non esiste)
@@ -122,7 +126,24 @@ mv /tmp/cmdline-tools-extract/cmdline-tools ~/Library/Android/sdk/cmdline-tools/
 rm -rf /tmp/cmdline-tools.zip /tmp/cmdline-tools-extract
 ```
 
+#### Windows (PowerShell)
+
+```powershell
+# Crea la cartella SDK (se non esiste)
+New-Item -ItemType Directory -Force -Path "$env:LOCALAPPDATA\Android\Sdk\cmdline-tools"
+
+# Scarica i command-line tools
+Invoke-WebRequest -Uri "https://dl.google.com/android/repository/commandlinetools-win-11076708_latest.zip" -OutFile "$env:TEMP\cmdline-tools.zip"
+
+# Estrai nella posizione corretta
+Expand-Archive -Path "$env:TEMP\cmdline-tools.zip" -DestinationPath "$env:TEMP\cmdline-tools-extract" -Force
+Move-Item -Force "$env:TEMP\cmdline-tools-extract\cmdline-tools" "$env:LOCALAPPDATA\Android\Sdk\cmdline-tools\latest"
+Remove-Item -Recurse -Force "$env:TEMP\cmdline-tools.zip", "$env:TEMP\cmdline-tools-extract"
+```
+
 ### 5.2 Configurare le Variabili d'Ambiente
+
+#### macOS
 
 Aggiungi queste righe al tuo `~/.zshrc`:
 
@@ -140,13 +161,34 @@ Poi ricarica il profilo:
 source ~/.zshrc
 ```
 
-**Verifica:**
+#### Windows
+
+Imposta le variabili d'ambiente tramite PowerShell (**esegui come Amministratore**):
+
+```powershell
+# Imposta ANDROID_HOME a livello di sistema
+[Environment]::SetEnvironmentVariable("ANDROID_HOME", "$env:LOCALAPPDATA\Android\Sdk", "User")
+
+# Aggiungi i tool al PATH utente
+$androidHome = "$env:LOCALAPPDATA\Android\Sdk"
+$currentPath = [Environment]::GetEnvironmentVariable("Path", "User")
+$newPaths = "$androidHome\emulator;$androidHome\platform-tools;$androidHome\cmdline-tools\latest\bin"
+[Environment]::SetEnvironmentVariable("Path", "$currentPath;$newPaths", "User")
+```
+
+> ⚠️ **Dopo aver impostato le variabili, chiudi e riapri il terminale** affinché le modifiche abbiano effetto.
+
+#### Verifica (entrambi i sistemi)
 
 ```bash
 sdkmanager --version   # deve mostrare la versione (es. 12.0)
 ```
 
 ### 5.3 Installare SDK, Emulatore e System Image
+
+> ⏳ Il download della system image è di circa 1 GB — richiede tempo.
+
+#### macOS
 
 ```bash
 # Accetta le licenze
@@ -160,9 +202,26 @@ sdkmanager --install \
   "system-images;android-35;google_apis;arm64-v8a"
 ```
 
-> ⏳ Il download della system image è di circa 1 GB — richiede tempo.
+#### Windows (PowerShell)
+
+```powershell
+# Accetta le licenze (rispondi 'y' a ogni prompt)
+sdkmanager --licenses
+
+# Installa i componenti necessari (~2 GB di download)
+# NOTA: su Windows con CPU Intel/AMD, usa x86_64 invece di arm64-v8a
+sdkmanager --install `
+  "platform-tools" `
+  "emulator" `
+  "platforms;android-35" `
+  "system-images;android-35;google_apis;x86_64"
+```
+
+> 💡 **Nota sulla system image:** macOS con Apple Silicon usa `arm64-v8a`, Windows con CPU Intel/AMD usa `x86_64`. Se hai un PC Windows con ARM (es. Surface Pro X), usa `arm64-v8a`.
 
 ### 5.4 Creare il Dispositivo Virtuale (AVD)
+
+#### macOS
 
 ```bash
 echo "no" | avdmanager create avd \
@@ -171,11 +230,29 @@ echo "no" | avdmanager create avd \
   -d "pixel_7"
 ```
 
-Dopo la creazione, abilita la tastiera hardware (necessario per Expo):
+Abilita la tastiera hardware (necessario per Expo):
 
 ```bash
 sed -i '' 's/hw.keyboard = no/hw.keyboard = yes/' ~/.android/avd/soli-android.avd/config.ini
 sed -i '' 's/hw.mainKeys = no/hw.mainKeys = yes/' ~/.android/avd/soli-android.avd/config.ini
+```
+
+#### Windows (PowerShell)
+
+```powershell
+echo "no" | avdmanager create avd `
+  -n soli-android `
+  -k "system-images;android-35;google_apis;x86_64" `
+  -d "pixel_7"
+```
+
+Abilita la tastiera hardware (necessario per Expo):
+
+```powershell
+$configPath = "$env:USERPROFILE\.android\avd\soli-android.avd\config.ini"
+(Get-Content $configPath) -replace 'hw.keyboard = no', 'hw.keyboard = yes' `
+                          -replace 'hw.mainKeys = no', 'hw.mainKeys = yes' |
+  Set-Content $configPath
 ```
 
 Questo crea un AVD chiamato `soli-android` con profilo hardware Pixel 7 e Android 15.
@@ -188,7 +265,10 @@ emulator -avd soli-android
 
 > 💡 **Tip:** L'emulatore deve essere **completamente avviato** (schermata Home visibile) prima di premere `a` nel terminale Expo.
 >
-> Per avviarlo in background (senza finestra), usa: `emulator -avd soli-android -no-window &`
+> Per avviarlo in background:
+>
+> - **macOS:** `emulator -avd soli-android -no-window &`
+> - **Windows:** `Start-Process emulator -ArgumentList "-avd soli-android -no-window"`
 
 ### 5.6 Verifica
 
@@ -355,3 +435,7 @@ docker ps | grep soli-postgres
 ### Maven scarica dipendenze lentamente
 
 È normale alla prima esecuzione. Le dipendenze vengono cachate in `~/.m2/repository` per le esecuzioni successive.
+
+### Keycloak non raggiungibile dall'emulatore Android
+
+L'emulatore Android **non** può accedere a `localhost` della macchina host — `localhost` nell'emulatore si riferisce all'emulatore stesso. La configurazione in `soli-mobile/config/auth.ts` gestisce questo automaticamente usando `10.0.2.2` (alias speciale Android per il loopback dell'host). Se usi un **dispositivo fisico**, devi sostituire l'URL con l'IP LAN della tua macchina (es. `http://192.168.1.x:8180`).
