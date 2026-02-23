@@ -426,11 +426,13 @@ Questo avvia il dev server Expo sulla porta **8081**.
    - `solimobile://callback`
    - `exp://127.0.0.1:8081/*`
    - `exp://localhost:8081/*`
-   - `exp://10.0.2.2:8081/*`
+   - `exp://10.0.2.2:8081/*`  
+     _(Fai "Save" e sei a posto per gli emulatori!)_
+4. **Solo se testi su un dispositivo fisico reale via Wi-Fi**, aggiungi anche il tuo IP LAN:
    - `exp://<IL_TUO_IP_LAN>:8081/*`
-      > 💡 Trova il tuo IP LAN (es. `192.168.1.71`) dal log nel terminale di Expo dove dice:
+      > 💡 Trova l'IP LAN corretto (es. `192.168.1.71`) dal log nel terminale di Expo dove dice:
       > `🔑 SOLI Mobile Redirect URI: exp://<IP>:8081/--/callback`
-4. Clicca **Save** in basso.
+5. Clicca **Save** in basso.
 
 _(In questo modo l'app Expo si collegherà senza errori dal simulatore Android su Windows o macOS)._
 
