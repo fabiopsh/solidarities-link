@@ -49,8 +49,8 @@ Il backend utilizza **Java 21 (LTS)**. È necessario installare un JDK 21 e conf
 1. Vai su [https://adoptium.net/temurin/releases/?version=21](https://adoptium.net/temurin/releases/?version=21)
 2. Scarica il file `.msi` per **Windows x64**
 3. Esegui l'installer e **assicurati di selezionare le opzioni**:
-   - ✅ *Set JAVA_HOME variable*
-   - ✅ *Add to PATH*
+   - ✅ _Set JAVA_HOME variable_
+   - ✅ _Add to PATH_
 4. Completa l'installazione
 
 > L'installer Temurin configura automaticamente `JAVA_HOME` e il `PATH`. Dopo l'installazione, **chiudi e riapri il terminale**.
@@ -93,7 +93,7 @@ $currentPath = [Environment]::GetEnvironmentVariable("Path", "User")
 
 In alternativa, puoi configurare le variabili d'ambiente tramite GUI:
 
-1. Cerca **"Variabili d'ambiente"** nel menu Start → *Modifica le variabili d'ambiente relative al sistema*
+1. Cerca **"Variabili d'ambiente"** nel menu Start → _Modifica le variabili d'ambiente relative al sistema_
 2. Click su **Variabili d'ambiente…**
 3. Nelle **Variabili utente**, click **Nuova…**:
    - Nome: `JAVA_HOME`
@@ -408,31 +408,29 @@ Questo avvia il dev server Expo sulla porta **8081**.
 
 ### Eseguire su simulatore/dispositivo
 
-| Piattaforma | Comando nel terminale Expo | Prerequisito                                                                   |
-| ----------- | -------------------------- | ------------------------------------------------------------------------------ |
-| iOS         | Premi `i`                  | Xcode installato                                                               |
+| Piattaforma | Comando nel terminale Expo | Prerequisito                                                                             |
+| ----------- | -------------------------- | ---------------------------------------------------------------------------------------- |
+| iOS         | Premi `i`                  | Xcode installato                                                                         |
 | Android     | Premi `a`                  | Emulatore attivo (vedi [sezione 6](#6-configurazione-emulatore-android--solo-terminale)) |
-| Web         | Premi `w`                  | —                                                                              |
+| Web         | Premi `w`                  | —                                                                                        |
 
-### ⚠️ Configurazione Keycloak per Mobile (primo avvio)
+### ⚠️ Configurazione Keycloak per Mobile
 
-Il client `soli-mobile` viene importato automaticamente al primo avvio di Keycloak. Se Keycloak era già stato avviato in precedenza (il realm esiste già), devi aggiungere il client **manualmente**:
+> **Attenzione:** Se hai avviato Keycloak per la prima volta **dopo** questo aggiornamento, il client `soli-mobile` avrà già le redirect URI giuste (grazie al file `realm-export.json`).
+>
+> Se invece il tuo database Keycloak esisteva già (hai avviato i container prima di ora), **devi aggiornare manualmente le _Valid redirect URIs_** per far funzionare la login (altrimenti otterrai l'errore `Invalid parameter: redirect_uri`):
 
 1. Accedi alla **Admin Console** → [http://localhost:8180](http://localhost:8180)
-2. Seleziona il realm **soli**
-3. **Clients** → **Create client**
-4. **Client ID**: `soli-mobile`, **Client type**: `OpenID Connect` → **Next**
-5. **Client authentication**: OFF, **Standard flow**: ON → **Next**
-6. **Valid redirect URIs**: aggiungi tutte queste:
-   ```
-   solimobile://callback
-   exp://127.0.0.1:8081/*
-   exp://localhost:8081/*
-   exp://<IL_TUO_IP_LAN>:8081/*
-   ```
-   > Trova il tuo IP LAN dal log di Expo: `🔑 SOLI Mobile Redirect URI: exp://<IP>:8081/--/callback`
-7. **Save**
-8. Tab **Advanced** → **Proof Key for Code Exchange Code Challenge Method**: `S256` → **Save**
+2. Seleziona il realm **soli** e vai su **Clients** → **soli-mobile**
+3. Nella sezione **Valid redirect URIs**, aggiungi:
+   - `solimobile://callback`
+   - `exp://127.0.0.1:8081/*`
+   - `exp://localhost:8081/*`
+   - `exp://10.0.2.2:8081/*`
+   - `exp://*/*` (⚠️ necessario per Expo su Windows/LAN)
+4. Clicca **Save** in basso.
+
+_(In questo modo, Keycloak accetterà le richieste indipendentemente dall'indirizzo IP locale usato da Expo Go)._
 
 ### Verifica
 
