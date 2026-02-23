@@ -427,10 +427,9 @@ Questo avvia il dev server Expo sulla porta **8081**.
    - `exp://127.0.0.1:8081/*`
    - `exp://localhost:8081/*`
    - `exp://10.0.2.2:8081/*`
-   - `exp://*/*` (⚠️ necessario per Expo su Windows/LAN)
 4. Clicca **Save** in basso.
 
-_(In questo modo, Keycloak accetterà le richieste indipendentemente dall'indirizzo IP locale usato da Expo Go)._
+_(In questo modo l'app Expo si collegherà senza errori dal simulatore Android su Windows o macOS)._
 
 ### Verifica
 
