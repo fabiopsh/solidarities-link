@@ -34,18 +34,10 @@ export const discovery: AuthSession.DiscoveryDocument = {
 /**
  * Redirect URI using the `solimobile` custom scheme defined in app.json.
  */
-export let redirectUri = AuthSession.makeRedirectUri({
+export const redirectUri = AuthSession.makeRedirectUri({
 	scheme: "solimobile",
 	path: "callback",
 });
-
-// Fix for Expo Go on Android (Windows Emulator / LAN testing):
-// makeRedirectUri() generates `exp://<LAN_IP>:8081/--/callback` dynamically.
-// Keycloak rejects wildcards in the host part, so it fails on dynamic IPs.
-// We force the IP to 10.0.2.2 (which is statically whitelisted in Keycloak).
-if (__DEV__ && Platform.OS === "android" && redirectUri.startsWith("exp://")) {
-	redirectUri = redirectUri.replace(/exp:\/\/[0-9.]+(:[0-9]+)?/, "exp://10.0.2.2$1");
-}
 
 // Log the actual redirect URI so we can add it to Keycloak
 console.log("🔑 SOLI Mobile Redirect URI:", redirectUri);
