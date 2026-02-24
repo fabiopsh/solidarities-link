@@ -1,5 +1,7 @@
-*
-!target/*-runner
+target/
 !target/*-runner.jar
-!target/lib/*
-!target/quarkus-app/*
+.mvn/wrapper/maven-wrapper.jar
+*.log
+.git
+.vscode
+.idea
