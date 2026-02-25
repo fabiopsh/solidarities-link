@@ -224,9 +224,11 @@ a:hover {
 #kc-registration span {
 	text-align: center !important;
 	margin-top: 16px !important;
+	color: #424242 !important;
 }
 
-#kc-registration a {
+#kc-registration a,
+#kc-registration span a {
 	color: #00796b !important;
 	font-weight: 600 !important;
 }
