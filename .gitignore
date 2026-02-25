@@ -2,3 +2,4 @@
 .vscode
 .metals/*
 .metals
+.DS_Store
