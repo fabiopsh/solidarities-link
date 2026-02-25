@@ -299,7 +299,7 @@ sdkmanager --version   # deve mostrare la versione (es. 12.0)
 
 ```bash
 # Accetta le licenze
-yes | sdkmanager --licenses
+sdkmanager --licenses
 
 # Installa i componenti necessari (~2 GB di download)
 sdkmanager --install \
