@@ -1,12 +1,17 @@
 package it.soli.entity;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntity;
+import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @Table(name = "soli_users")
-public class User extends PanacheEntity {
+public class User extends PanacheEntityBase {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    public UUID id;
 
     @Column(name = "keycloak_id", unique = true)
     public String keycloakId;
@@ -20,9 +25,25 @@ public class User extends PanacheEntity {
     @Column(name = "last_name")
     public String lastName;
 
+    @Column(name = "fiscal_code", unique = true)
+    public String fiscalCode;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     public UserRole role = UserRole.REQUESTER;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "certification_level")
+    public CertificationLevel certificationLevel;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    public UserStatus status = UserStatus.ACTIVE;
+
+    // For simplicity without PostGIS, storing as String (e.g. "lat,lon") or JSON
+    // If PostGIS is available, this should be a Geometry/Point type.
+    @Column(name = "last_known_location")
+    public String lastKnownLocation;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     public LocalDateTime createdAt;
