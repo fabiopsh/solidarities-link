@@ -46,12 +46,6 @@ services:
       depends_on:
          postgres:
             condition: service_healthy
-      healthcheck:
-         test: ["CMD-SHELL", "curl -f http://localhost:8080/health/ready || exit 1"]
-         interval: 20s
-         timeout: 10s
-         retries: 30
-         start_period: 300s
       deploy:
          resources:
             limits:
@@ -82,7 +76,7 @@ services:
          postgres:
             condition: service_healthy
          keycloak:
-            condition: service_healthy
+            condition: service_started
       networks:
          - soli-network
 
