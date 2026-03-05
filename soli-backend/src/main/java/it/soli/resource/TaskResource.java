@@ -4,6 +4,8 @@ import io.quarkus.security.identity.SecurityIdentity;
 import it.soli.entity.User;
 import it.soli.entity.UserRole;
 import it.soli.entity.Task;
+import it.soli.entity.TaskStatus;
+import it.soli.service.TaskService;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
@@ -14,6 +16,7 @@ import org.eclipse.microprofile.jwt.JsonWebToken;
 
 import java.util.List;
 import java.util.UUID;
+import org.jboss.logging.Logger;
 
 @Path("/api/tasks")
 @Produces(MediaType.APPLICATION_JSON)
@@ -21,10 +24,15 @@ import java.util.UUID;
 public class TaskResource {
 
     @Inject
+    TaskService taskService;
+
+    @Inject
     SecurityIdentity securityIdentity;
 
     @Inject
     JsonWebToken jwt;
+
+    private static final Logger LOG = Logger.getLogger(TaskResource.class);
 
     private User getAuthenticatedUser() {
         String keycloakId = jwt.getSubject();
@@ -54,20 +62,38 @@ public class TaskResource {
     @Transactional
     @RolesAllowed({"REQUESTER", "CAREGIVER", "ADMIN"})
     public Response create(Task task) {
-        User currentUser = getAuthenticatedUser();
-        if (currentUser == null) return Response.status(Response.Status.UNAUTHORIZED).build();
+        try {
+            User currentUser = getAuthenticatedUser();
+            if (currentUser == null) {
+                LOG.error("CREATE TASK: currentUser is null - jwt.getSubject() = " + jwt.getSubject());
+                return Response.status(Response.Status.UNAUTHORIZED).build();
+            }
+            LOG.infof("CREATE TASK: user=%s (id=%s, role=%s)", currentUser.email, currentUser.id, currentUser.role);
+            LOG.infof("CREATE TASK: payload title=%s, category=%s, urgency=%s, creatorId=%s, beneficiaryId=%s",
+                task.title, task.category, task.urgencyLevel, task.creatorId, task.beneficiaryId);
 
-        // Enforce the creator to be the current user, unless admin is doing it for someone else
-        if (task.creatorId != null && !task.creatorId.equals(currentUser.id) && !securityIdentity.hasRole(UserRole.ADMIN.name())) {
-            return Response.status(Response.Status.FORBIDDEN).build();
-        }
-        
-        if (task.creatorId == null) {
-            task.creatorId = currentUser.id;
-        }
+            // Enforce the creator to be the current user, unless admin is doing it for someone else
+            if (task.creatorId != null && !task.creatorId.equals(currentUser.id) && !securityIdentity.hasRole(UserRole.ADMIN.name())) {
+                LOG.warn("CREATE TASK: Forbidden - creatorId mismatch");
+                return Response.status(Response.Status.FORBIDDEN).build();
+            }
+            
+            if (task.creatorId == null) {
+                task.creatorId = currentUser.id;
+            }
 
-        task.persist();
-        return Response.status(Response.Status.CREATED).entity(task).build();
+            if (task.beneficiaryId == null) {
+                task.beneficiaryId = task.creatorId;
+            }
+
+            LOG.infof("CREATE TASK: final creatorId=%s, beneficiaryId=%s", task.creatorId, task.beneficiaryId);
+            task = taskService.createTask(task);
+            LOG.infof("CREATE TASK: SUCCESS id=%s", task.id);
+            return Response.status(Response.Status.CREATED).entity(task).build();
+        } catch (Exception e) {
+            LOG.error("CREATE TASK: EXCEPTION", e);
+            throw e; // Re-throw so Quarkus can handle it
+        }
     }
 
     @PUT
@@ -82,23 +108,41 @@ public class TaskResource {
         User currentUser = getAuthenticatedUser();
         if (currentUser == null) return Response.status(Response.Status.UNAUTHORIZED).build();
 
+        // Allow if user is becoming the volunteer
+        boolean isBecomingVolunteer = task.status == TaskStatus.OPEN && updatedTask.status == TaskStatus.ACCEPTED;
+
         // Only creator, assigned volunteer, or admin can update the task
-        boolean isCreator = task.creatorId.equals(currentUser.id);
+        boolean isCreator = task.creatorId != null && task.creatorId.equals(currentUser.id);
         boolean isVolunteer = task.volunteerId != null && task.volunteerId.equals(currentUser.id);
         boolean isAdmin = securityIdentity.hasRole(UserRole.ADMIN.name());
 
-        if (!isCreator && !isVolunteer && !isAdmin) {
+        if (!isCreator && !isVolunteer && !isAdmin && !isBecomingVolunteer) {
             return Response.status(Response.Status.FORBIDDEN).build();
         }
 
-        task.title = updatedTask.title;
-        task.description = updatedTask.description;
-        task.status = updatedTask.status;
-        task.scheduledAt = updatedTask.scheduledAt;
+        if (updatedTask.title != null) task.title = updatedTask.title;
+        if (updatedTask.description != null) task.description = updatedTask.description;
+        if (updatedTask.scheduledAt != null) task.scheduledAt = updatedTask.scheduledAt;
+        if (updatedTask.category != null) task.category = updatedTask.category;
+        if (updatedTask.targetAddress != null) task.targetAddress = updatedTask.targetAddress;
+        if (updatedTask.targetLocation != null) task.targetLocation = updatedTask.targetLocation;
+        if (updatedTask.latitude != null) task.latitude = updatedTask.latitude;
+        if (updatedTask.longitude != null) task.longitude = updatedTask.longitude;
+
+        if (updatedTask.status != null && task.status != updatedTask.status) {
+            if (updatedTask.status == TaskStatus.ACCEPTED) {
+                UUID volId = updatedTask.volunteerId != null ? updatedTask.volunteerId : currentUser.id;
+                taskService.assignTask(id, volId);
+            } else if (updatedTask.status == TaskStatus.CANCELLED) {
+                taskService.cancelTask(id, currentUser.id);
+            } else {
+                task.status = updatedTask.status;
+            }
+        }
         
         if (isAdmin || isCreator) {
-            task.rewardCredits = updatedTask.rewardCredits;
-            task.urgencyLevel = updatedTask.urgencyLevel;
+            if (updatedTask.rewardCredits != null) task.rewardCredits = updatedTask.rewardCredits;
+            if (updatedTask.urgencyLevel != null) task.urgencyLevel = updatedTask.urgencyLevel;
         }
 
         return Response.ok(task).build();
@@ -116,11 +160,53 @@ public class TaskResource {
         User currentUser = getAuthenticatedUser();
         if (currentUser == null) return Response.status(Response.Status.UNAUTHORIZED).build();
 
-        if (!task.creatorId.equals(currentUser.id) && !securityIdentity.hasRole(UserRole.ADMIN.name())) {
+        if (task.creatorId != null && !task.creatorId.equals(currentUser.id) && !securityIdentity.hasRole(UserRole.ADMIN.name())) {
             return Response.status(Response.Status.FORBIDDEN).build();
         }
 
         task.delete();
         return Response.noContent().build();
+    }
+
+    public static class TokenDto {
+        public String token;
+    }
+
+    @POST
+    @Path("/{id}/checkin")
+    @Transactional
+    public Response checkIn(@PathParam("id") UUID id, TokenDto payload) {
+        User currentUser = getAuthenticatedUser();
+        if (currentUser == null) return Response.status(Response.Status.UNAUTHORIZED).build();
+
+        if (payload == null || payload.token == null || payload.token.isBlank()) {
+            return Response.status(Response.Status.BAD_REQUEST).entity("Token is required").build();
+        }
+
+        try {
+            Task task = taskService.checkInTask(id, currentUser.id, payload.token);
+            return Response.ok(task).build();
+        } catch (IllegalArgumentException e) {
+            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
+        }
+    }
+
+    @POST
+    @Path("/{id}/checkout")
+    @Transactional
+    public Response checkOut(@PathParam("id") UUID id, TokenDto payload) {
+        User currentUser = getAuthenticatedUser();
+        if (currentUser == null) return Response.status(Response.Status.UNAUTHORIZED).build();
+
+        if (payload == null || payload.token == null || payload.token.isBlank()) {
+            return Response.status(Response.Status.BAD_REQUEST).entity("Token is required").build();
+        }
+
+        try {
+            Task task = taskService.checkOutTask(id, currentUser.id, payload.token);
+            return Response.ok(task).build();
+        } catch (IllegalArgumentException e) {
+            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
+        }
     }
 }

@@ -3,6 +3,7 @@ package it.soli.resource;
 import io.quarkus.security.identity.SecurityIdentity;
 import it.soli.entity.User;
 import it.soli.entity.UserRole;
+import it.soli.entity.VolunteerProfile;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
@@ -25,30 +26,51 @@ public class UserResource {
     @Inject
     JsonWebToken jwt;
 
+    public static class LocationUpdateDto {
+        public Double latitude;
+        public Double longitude;
+    }
+
+    /**
+     * PUT /api/users/me/location - Update user's geolocation silently
+     */
+    @PUT
+    @Path("/me/location")
+    @Transactional
+    public Response updateLocation(LocationUpdateDto location) {
+        if (jwt.getSubject() == null) {
+            return Response.status(Response.Status.UNAUTHORIZED).build();
+        }
+
+        User user = User.findByKeycloakId(jwt.getSubject());
+        if (user == null) {
+            return Response.status(Response.Status.NOT_FOUND).build();
+        }
+
+        VolunteerProfile profile = VolunteerProfile.findByUserId(user.id);
+        if (profile != null) {
+            profile.lastLatitude = location.latitude;
+            profile.lastLongitude = location.longitude;
+            return Response.ok().build();
+        }
+
+        return Response.status(Response.Status.NOT_FOUND).entity("Volunteer profile not found").build();
+    }
+
     /**
      * GET /api/users/me - Get current user profile from OIDC token.
      * Auto-creates the user in DB on first login.
      */
     @GET
     @Path("/me")
-    @Transactional
     public Response getCurrentUser() {
         if (jwt.getSubject() == null) {
             return Response.status(Response.Status.UNAUTHORIZED).build();
         }
         
-        String keycloakId = jwt.getSubject();
-        User user = User.findByKeycloakId(keycloakId);
-
+        User user = User.findByKeycloakId(jwt.getSubject());
         if (user == null) {
-            // First login: create user from token claims
-            user = new User();
-            user.keycloakId = keycloakId;
-            user.email = jwt.getClaim("email");
-            user.firstName = jwt.getClaim("given_name");
-            user.lastName = jwt.getClaim("family_name");
-            user.role = UserRole.REQUESTER;
-            user.persist();
+            return Response.status(Response.Status.NOT_FOUND).build();
         }
 
         return Response.ok(user).build();

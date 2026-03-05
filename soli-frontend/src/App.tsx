@@ -6,6 +6,8 @@ import DashboardLayout from "./components/DashboardLayout";
 import LoginPage from "./pages/LoginPage";
 import CallbackPage from "./pages/CallbackPage";
 import DashboardPage from "./pages/DashboardPage";
+import TaskWizardPage from "./pages/TaskWizardPage";
+import TaskDetailPage from "./pages/TaskDetailPage";
 
 export default function App() {
 	return (
@@ -18,7 +20,6 @@ export default function App() {
 					{/* OIDC callback handler */}
 					<Route path="/callback" element={<CallbackPage />} />
 
-					{/* Protected routes — require authentication */}
 					<Route
 						path="/dashboard"
 						element={
@@ -28,12 +29,11 @@ export default function App() {
 						}
 					>
 						<Route index element={<DashboardPage />} />
-						<Route path="requests" element={<PlaceholderPage title="Richieste" />} />
-						<Route path="volunteers" element={<PlaceholderPage title="Volontari" />} />
-						<Route path="users" element={<PlaceholderPage title="Utenti" />} />
-						<Route path="chat" element={<PlaceholderPage title="Chat" />} />
-						<Route path="credits" element={<PlaceholderPage title="Crediti SOLI" />} />
-						<Route path="settings" element={<PlaceholderPage title="Impostazioni" />} />
+						<Route path="requests" element={<DashboardPage />} />
+						<Route path="requests/new" element={<TaskWizardPage />} />
+						<Route path="requests/:id" element={<TaskDetailPage />} />
+						<Route path="wallet" element={<PlaceholderPage title="Wallet" />} />
+						<Route path="profile" element={<PlaceholderPage title="Profilo" />} />
 					</Route>
 
 					{/* Default: redirect to dashboard (ProtectedRoute handles unauth) */}

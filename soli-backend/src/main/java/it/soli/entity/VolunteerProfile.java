@@ -35,6 +35,12 @@ public class VolunteerProfile extends PanacheEntityBase {
     @Column(name = "max_task_distance_meters")
     public Integer maxTaskDistanceMeters = 5000;
 
+    @Column(name = "last_latitude")
+    public Double lastLatitude;
+
+    @Column(name = "last_longitude")
+    public Double lastLongitude;
+
     public static VolunteerProfile findByUserId(UUID userId) {
         return find("userId", userId).firstResult();
     }

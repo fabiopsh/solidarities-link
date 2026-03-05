@@ -45,6 +45,12 @@ public class Task extends PanacheEntityBase {
     @Column(name = "target_address")
     public String targetAddress;
 
+    @Column(name = "latitude")
+    public Double latitude;
+
+    @Column(name = "longitude")
+    public Double longitude;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     public TaskStatus status = TaskStatus.OPEN;

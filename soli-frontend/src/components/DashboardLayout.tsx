@@ -23,12 +23,8 @@ import {
 import MenuIcon from "@mui/icons-material/Menu";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import DashboardIcon from "@mui/icons-material/Dashboard";
-import PeopleIcon from "@mui/icons-material/People";
-import VolunteerActivismIcon from "@mui/icons-material/VolunteerActivism";
 import AssignmentIcon from "@mui/icons-material/Assignment";
-import ChatIcon from "@mui/icons-material/Chat";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
-import SettingsIcon from "@mui/icons-material/Settings";
 import LogoutIcon from "@mui/icons-material/Logout";
 import PersonIcon from "@mui/icons-material/Person";
 import HandshakeIcon from "@mui/icons-material/Handshake";
@@ -45,13 +41,10 @@ interface NavItem {
 const navItems: NavItem[] = [
 	{ label: "Dashboard", icon: <DashboardIcon />, path: "/dashboard" },
 	{ label: "Richieste", icon: <AssignmentIcon />, path: "/dashboard/requests" },
-	{ label: "Volontari", icon: <VolunteerActivismIcon />, path: "/dashboard/volunteers" },
-	{ label: "Utenti", icon: <PeopleIcon />, path: "/dashboard/users" },
-	{ label: "Chat", icon: <ChatIcon />, path: "/dashboard/chat" },
-	{ label: "Crediti SOLI", icon: <EmojiEventsIcon />, path: "/dashboard/credits" },
+	{ label: "Wallet", icon: <EmojiEventsIcon />, path: "/dashboard/wallet" },
 ];
 
-const bottomNavItems: NavItem[] = [{ label: "Impostazioni", icon: <SettingsIcon />, path: "/dashboard/settings" }];
+const bottomNavItems: NavItem[] = [{ label: "Profilo", icon: <PersonIcon />, path: "/dashboard/profile" }];
 
 export default function DashboardLayout() {
 	const theme = useTheme();
@@ -248,19 +241,17 @@ export default function DashboardLayout() {
 						transformOrigin={{ horizontal: "right", vertical: "top" }}
 						anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
 					>
-						<MenuItem onClick={handleMenuClose}>
+						<MenuItem
+							onClick={() => {
+								handleMenuClose();
+								handleNav("/dashboard/profile");
+							}}
+						>
 							<ListItemIcon>
 								<PersonIcon fontSize="small" />
 							</ListItemIcon>
 							Profilo
 						</MenuItem>
-						<MenuItem onClick={handleMenuClose}>
-							<ListItemIcon>
-								<SettingsIcon fontSize="small" />
-							</ListItemIcon>
-							Impostazioni
-						</MenuItem>
-						<Divider />
 						<MenuItem onClick={handleLogout}>
 							<ListItemIcon>
 								<LogoutIcon fontSize="small" />

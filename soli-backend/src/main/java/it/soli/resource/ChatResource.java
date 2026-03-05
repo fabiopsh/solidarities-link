@@ -27,6 +27,9 @@ public class ChatResource {
     @Inject
     JsonWebToken jwt;
 
+    @Inject
+    it.soli.service.MockAIService mockAIService;
+
     private User getAuthenticatedUser() {
         String keycloakId = jwt.getSubject();
         if (keycloakId == null) return null;
@@ -70,10 +73,20 @@ public class ChatResource {
         User currentUser = getAuthenticatedUser();
         if (currentUser == null) return Response.status(Response.Status.UNAUTHORIZED).build();
 
+        if (!mockAIService.isMessageSafe(message.content)) {
+            // "Messaggio bloccato per policy compliance".
+            return Response.status(Response.Status.BAD_REQUEST).entity(new ErrorResponse("Messaggio bloccato per policy compliance")).build();
+        }
+
         message.chatSessionId = sessionId;
         message.senderId = currentUser.id;
         message.persist();
 
         return Response.status(Response.Status.CREATED).entity(message).build();
+    }
+
+    public static class ErrorResponse {
+        public String error;
+        public ErrorResponse(String error) { this.error = error; }
     }
 }
