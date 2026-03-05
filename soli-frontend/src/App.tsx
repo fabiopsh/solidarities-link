@@ -8,6 +8,8 @@ import CallbackPage from "./pages/CallbackPage";
 import DashboardPage from "./pages/DashboardPage";
 import TaskWizardPage from "./pages/TaskWizardPage";
 import TaskDetailPage from "./pages/TaskDetailPage";
+import ProfilePage from "./pages/ProfilePage";
+import WalletPage from "./pages/WalletPage";
 
 export default function App() {
 	return (
@@ -32,8 +34,8 @@ export default function App() {
 						<Route path="requests" element={<DashboardPage />} />
 						<Route path="requests/new" element={<TaskWizardPage />} />
 						<Route path="requests/:id" element={<TaskDetailPage />} />
-						<Route path="wallet" element={<PlaceholderPage title="Wallet" />} />
-						<Route path="profile" element={<PlaceholderPage title="Profilo" />} />
+						<Route path="wallet" element={<WalletPage />} />
+						<Route path="profile" element={<ProfilePage />} />
 					</Route>
 
 					{/* Default: redirect to dashboard (ProtectedRoute handles unauth) */}
@@ -41,14 +43,5 @@ export default function App() {
 				</Routes>
 			</BrowserRouter>
 		</AuthProvider>
-	);
-}
-
-function PlaceholderPage({ title }: { title: string }) {
-	return (
-		<div style={{ padding: "24px" }}>
-			<h2>{title}</h2>
-			<p style={{ color: "#666" }}>Questa sezione è in fase di sviluppo.</p>
-		</div>
 	);
 }

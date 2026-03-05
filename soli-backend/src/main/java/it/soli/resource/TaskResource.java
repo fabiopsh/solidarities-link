@@ -60,7 +60,6 @@ public class TaskResource {
 
     @POST
     @Transactional
-    @RolesAllowed({"REQUESTER", "CAREGIVER", "ADMIN"})
     public Response create(Task task) {
         try {
             User currentUser = getAuthenticatedUser();

@@ -41,6 +41,21 @@ public class VolunteerProfileResource {
     }
 
     @GET
+    @Path("/my")
+    @Transactional
+    public Response getMyProfile() {
+        User currentUser = getAuthenticatedUser();
+        if (currentUser == null) return Response.status(Response.Status.UNAUTHORIZED).build();
+
+        VolunteerProfile profile = VolunteerProfile.findByUserId(currentUser.id);
+        if (profile == null) {
+            return Response.status(Response.Status.NOT_FOUND).build();
+        }
+
+        return Response.ok(profile).build();
+    }
+
+    @GET
     @Path("/{id}")
     @Transactional
     public Response getById(@PathParam("id") UUID id) {
@@ -62,7 +77,6 @@ public class VolunteerProfileResource {
 
     @POST
     @Transactional
-    @RolesAllowed({"VOLUNTEER", "ADMIN"})
     public Response create(VolunteerProfile profile) {
         User currentUser = getAuthenticatedUser();
         if (currentUser == null) return Response.status(Response.Status.UNAUTHORIZED).build();
@@ -79,7 +93,6 @@ public class VolunteerProfileResource {
     @PUT
     @Path("/{id}")
     @Transactional
-    @RolesAllowed({"VOLUNTEER", "ADMIN"})
     public Response update(@PathParam("id") UUID id, VolunteerProfile updatedProfile) {
         VolunteerProfile profile = VolunteerProfile.findById(id);
         if (profile == null) {

@@ -34,7 +34,6 @@ public class TaskNotificationResource {
     }
 
     @GET
-    @RolesAllowed({"VOLUNTEER", "ADMIN"})
     public Response listMyNotifications(
             @QueryParam("page") @DefaultValue("0") int page,
             @QueryParam("size") @DefaultValue("20") int size) {
@@ -51,7 +50,6 @@ public class TaskNotificationResource {
     @PUT
     @Path("/{id}/respond")
     @Transactional
-    @RolesAllowed({"VOLUNTEER"})
     public Response respondToNotification(@PathParam("id") UUID id, TaskNotification responseData) {
         TaskNotification notification = TaskNotification.findById(id);
         if (notification == null) {

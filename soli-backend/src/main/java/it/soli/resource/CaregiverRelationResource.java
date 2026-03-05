@@ -33,7 +33,6 @@ public class CaregiverRelationResource {
     }
 
     @GET
-    @RolesAllowed({"ADMIN"})
     public PaginatedResponse<CaregiverRelation> listAll(
             @QueryParam("page") @DefaultValue("0") int page,
             @QueryParam("size") @DefaultValue("20") int size) {
@@ -62,7 +61,6 @@ public class CaregiverRelationResource {
 
     @POST
     @Transactional
-    @RolesAllowed({"CAREGIVER", "ADMIN"})
     public Response create(CaregiverRelation relation) {
         User currentUser = getAuthenticatedUser();
         if (currentUser == null) return Response.status(Response.Status.UNAUTHORIZED).build();

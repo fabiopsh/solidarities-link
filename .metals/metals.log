@@ -489,3 +489,132 @@ AVVERTENZA: Unmatched cancel notification for request id 51
 2026.03.05 16:22:17 WARN  Running javac-semanticdb failed for file:///Users/fabiopsh/Documents/Progetti%20Universita%CC%80%20Magistrale/Solidarities%20Link%20-%20SOLI/solidarities-link/soli-backend/src/main/java/it/soli/resource/TaskResource.java. Output:
 
 2026.03.05 16:25:17 INFO  no build target found for /Users/fabiopsh/Documents/Progetti Università Magistrale/Solidarities Link - SOLI/solidarities-link/soli-backend/src/main/java/it/soli/resource/TaskResource.java. Using fallback presentation compiler.
+2026.03.05 16:46:05 INFO  no build target found for /Users/fabiopsh/Documents/Progetti Università Magistrale/Solidarities Link - SOLI/solidarities-link/soli-backend/src/main/java/it/soli/resource/VolunteerProfileResource.java. Using fallback presentation compiler.
+2026.03.05 16:46:05 WARN  no build target for: /Users/fabiopsh/Documents/Progetti Università Magistrale/Solidarities Link - SOLI/solidarities-link/soli-backend/src/main/java/it/soli/resource/VolunteerProfileResource.java
+2026.03.05 16:46:05 WARN  Running javac-semanticdb failed for file:///Users/fabiopsh/Documents/Progetti%20Universita%CC%80%20Magistrale/Solidarities%20Link%20-%20SOLI/solidarities-link/soli-backend/src/main/java/it/soli/resource/VolunteerProfileResource.java. Output:
+
+2026.03.05 16:46:20 INFO  no build target found for /Users/fabiopsh/Documents/Progetti Università Magistrale/Solidarities Link - SOLI/solidarities-link/soli-backend/src/main/java/it/soli/resource/TaskResource.java. Using fallback presentation compiler.
+2026.03.05 16:46:20 WARN  no build target for: /Users/fabiopsh/Documents/Progetti Università Magistrale/Solidarities Link - SOLI/solidarities-link/soli-backend/src/main/java/it/soli/resource/TaskResource.java
+2026.03.05 16:46:20 WARN  Running javac-semanticdb failed for file:///Users/fabiopsh/Documents/Progetti%20Universita%CC%80%20Magistrale/Solidarities%20Link%20-%20SOLI/solidarities-link/soli-backend/src/main/java/it/soli/resource/TaskResource.java. Output:
+
+2026.03.05 16:46:52 INFO  no build target found for /Users/fabiopsh/Documents/Progetti Università Magistrale/Solidarities Link - SOLI/solidarities-link/soli-backend/src/main/java/it/soli/resource/TaskNotificationResource.java. Using fallback presentation compiler.
+2026.03.05 16:46:52 WARN  no build target for: /Users/fabiopsh/Documents/Progetti Università Magistrale/Solidarities Link - SOLI/solidarities-link/soli-backend/src/main/java/it/soli/resource/TaskNotificationResource.java
+2026.03.05 16:46:52 WARN  Running javac-semanticdb failed for file:///Users/fabiopsh/Documents/Progetti%20Universita%CC%80%20Magistrale/Solidarities%20Link%20-%20SOLI/solidarities-link/soli-backend/src/main/java/it/soli/resource/TaskNotificationResource.java. Output:
+
+2026.03.05 16:47:04 INFO  no build target found for /Users/fabiopsh/Documents/Progetti Università Magistrale/Solidarities Link - SOLI/solidarities-link/soli-backend/src/main/java/it/soli/resource/CaregiverRelationResource.java. Using fallback presentation compiler.
+2026.03.05 16:47:04 WARN  no build target for: /Users/fabiopsh/Documents/Progetti Università Magistrale/Solidarities Link - SOLI/solidarities-link/soli-backend/src/main/java/it/soli/resource/CaregiverRelationResource.java
+2026.03.05 16:47:05 WARN  Running javac-semanticdb failed for file:///Users/fabiopsh/Documents/Progetti%20Universita%CC%80%20Magistrale/Solidarities%20Link%20-%20SOLI/solidarities-link/soli-backend/src/main/java/it/soli/resource/CaregiverRelationResource.java. Output:
+
+2026.03.05 16:49:05 INFO  no build target found for /Users/fabiopsh/Documents/Progetti Università Magistrale/Solidarities Link - SOLI/solidarities-link/soli-backend/src/main/java/it/soli/resource/VolunteerProfileResource.java. Using fallback presentation compiler.
+2026.03.05 16:49:20 INFO  no build target found for /Users/fabiopsh/Documents/Progetti Università Magistrale/Solidarities Link - SOLI/solidarities-link/soli-backend/src/main/java/it/soli/resource/TaskResource.java. Using fallback presentation compiler.
+2026.03.05 16:49:52 INFO  no build target found for /Users/fabiopsh/Documents/Progetti Università Magistrale/Solidarities Link - SOLI/solidarities-link/soli-backend/src/main/java/it/soli/resource/TaskNotificationResource.java. Using fallback presentation compiler.
+2026.03.05 16:50:04 INFO  no build target found for /Users/fabiopsh/Documents/Progetti Università Magistrale/Solidarities Link - SOLI/solidarities-link/soli-backend/src/main/java/it/soli/resource/CaregiverRelationResource.java. Using fallback presentation compiler.
+2026.03.05 16:53:07 INFO  no build target found for /Users/fabiopsh/Documents/Progetti Università Magistrale/Solidarities Link - SOLI/solidarities-link/soli-backend/src/main/java/it/soli/resource/VolunteerProfileResource.java. Using fallback presentation compiler.
+2026.03.05 16:53:07 INFO  no build target found for /Users/fabiopsh/Documents/Progetti Università Magistrale/Solidarities Link - SOLI/solidarities-link/soli-backend/src/main/java/it/soli/resource/TaskResource.java. Using fallback presentation compiler.
+2026.03.05 16:53:07 INFO  no build target found for /Users/fabiopsh/Documents/Progetti Università Magistrale/Solidarities Link - SOLI/solidarities-link/soli-backend/src/main/java/it/soli/resource/TaskNotificationResource.java. Using fallback presentation compiler.
+2026.03.05 16:53:07 INFO  no build target found for /Users/fabiopsh/Documents/Progetti Università Magistrale/Solidarities Link - SOLI/solidarities-link/soli-backend/src/main/java/it/soli/resource/CaregiverRelationResource.java. Using fallback presentation compiler.
+2026.03.05 16:53:57 INFO  Shutting down server
+2026.03.05 16:53:57 INFO  Memory monitor stopped
+2026.03.05 16:53:57 INFO  shutting down Metals
+2026.03.05 16:53:57 INFO  Exiting server
+2026.03.05 16:53:57 ERROR Unexpected error initializing server: 
+org.eclipse.lsp4j.jsonrpc.ResponseErrorException: Request window/showMessageRequest failed with message: Canceled
+	at org.eclipse.lsp4j.jsonrpc.RemoteEndpoint.handleResponse(RemoteEndpoint.java:214)
+	at org.eclipse.lsp4j.jsonrpc.RemoteEndpoint.consume(RemoteEndpoint.java:198)
+	at org.eclipse.lsp4j.jsonrpc.json.StreamMessageProducer.handleMessage(StreamMessageProducer.java:189)
+	at org.eclipse.lsp4j.jsonrpc.json.StreamMessageProducer.listen(StreamMessageProducer.java:97)
+	at org.eclipse.lsp4j.jsonrpc.json.ConcurrentMessageProcessor.run(ConcurrentMessageProcessor.java:97)
+	at java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:572)
+	at java.util.concurrent.FutureTask.run(FutureTask.java:317)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+	at java.lang.Thread.run(Thread.java:1583)
+
+2026.03.05 17:13:14 INFO  Started: Metals version 1.6.6 in folders '/Users/fabiopsh/Documents/Progetti Università Magistrale/Solidarities Link - SOLI/solidarities-link' for client Antigravity 1.107.0.
+2026.03.05 17:13:14 INFO  Memory monitor started
+2026.03.05 17:13:14 WARN  Using H2 2.4.240 which is newer than the version Flyway has been verified with. The latest verified version of H2 is 2.3.232.
+2026.03.05 17:16:13 INFO  no build target found for /Users/fabiopsh/Documents/Progetti Università Magistrale/Solidarities Link - SOLI/solidarities-link/soli-backend/src/main/java/it/soli/resource/CaregiverRelationResource.java. Using fallback presentation compiler.
+2026.03.05 17:16:13 INFO  no build target found for /Users/fabiopsh/Documents/Progetti Università Magistrale/Solidarities Link - SOLI/solidarities-link/soli-backend/src/main/java/it/soli/resource/TaskNotificationResource.java. Using fallback presentation compiler.
+2026.03.05 17:16:13 INFO  no build target found for /Users/fabiopsh/Documents/Progetti Università Magistrale/Solidarities Link - SOLI/solidarities-link/soli-backend/src/main/java/it/soli/resource/VolunteerProfileResource.java. Using fallback presentation compiler.
+2026.03.05 17:16:13 INFO  no build target found for /Users/fabiopsh/Documents/Progetti Università Magistrale/Solidarities Link - SOLI/solidarities-link/soli-backend/src/main/java/it/soli/security/SecurityService.java. Using fallback presentation compiler.
+2026.03.05 17:16:13 INFO  no build target found for /Users/fabiopsh/Documents/Progetti Università Magistrale/Solidarities Link - SOLI/solidarities-link/soli-backend/src/main/java/it/soli/security/SoliSecurityAugmentor.java. Using fallback presentation compiler.
+2026.03.05 17:16:13 INFO  no build target found for /Users/fabiopsh/Documents/Progetti Università Magistrale/Solidarities Link - SOLI/solidarities-link/soli-backend/src/main/java/it/soli/resource/ChatResource.java. Using fallback presentation compiler.
+2026.03.05 17:16:13 INFO  no build target found for /Users/fabiopsh/Documents/Progetti Università Magistrale/Solidarities Link - SOLI/solidarities-link/soli-backend/src/main/java/it/soli/resource/WalletResource.java. Using fallback presentation compiler.
+2026.03.05 17:16:13 INFO  no build target found for /Users/fabiopsh/Documents/Progetti Università Magistrale/Solidarities Link - SOLI/solidarities-link/soli-backend/src/main/java/it/soli/resource/AssistantResource.java. Using fallback presentation compiler.
+2026.03.05 17:16:13 INFO  no build target found for /Users/fabiopsh/Documents/Progetti Università Magistrale/Solidarities Link - SOLI/solidarities-link/soli-backend/src/main/java/it/soli/service/MockAIService.java. Using fallback presentation compiler.
+2026.03.05 17:16:13 INFO  no build target found for /Users/fabiopsh/Documents/Progetti Università Magistrale/Solidarities Link - SOLI/solidarities-link/soli-backend/src/main/java/it/soli/service/WalletService.java. Using fallback presentation compiler.
+2026.03.05 17:16:13 INFO  no build target found for /Users/fabiopsh/Documents/Progetti Università Magistrale/Solidarities Link - SOLI/solidarities-link/soli-backend/src/main/java/it/soli/service/MatchingService.java. Using fallback presentation compiler.
+2026.03.05 17:16:13 INFO  no build target found for /Users/fabiopsh/Documents/Progetti Università Magistrale/Solidarities Link - SOLI/solidarities-link/soli-backend/src/main/java/it/soli/resource/UserResource.java. Using fallback presentation compiler.
+2026.03.05 17:16:13 INFO  no build target found for /Users/fabiopsh/Documents/Progetti Università Magistrale/Solidarities Link - SOLI/solidarities-link/soli-backend/src/main/java/it/soli/entity/VolunteerProfile.java. Using fallback presentation compiler.
+2026.03.05 17:16:13 INFO  no build target found for /Users/fabiopsh/Documents/Progetti Università Magistrale/Solidarities Link - SOLI/solidarities-link/soli-backend/src/main/java/it/soli/entity/Task.java. Using fallback presentation compiler.
+2026.03.05 17:16:13 INFO  no build target found for /Users/fabiopsh/Documents/Progetti Università Magistrale/Solidarities Link - SOLI/solidarities-link/soli-backend/src/main/java/it/soli/resource/TaskResource.java. Using fallback presentation compiler.
+2026.03.05 17:16:13 INFO  no build target found for /Users/fabiopsh/Documents/Progetti Università Magistrale/Solidarities Link - SOLI/solidarities-link/soli-backend/src/main/java/it/soli/service/TaskService.java. Using fallback presentation compiler.
+2026.03.05 17:16:13 INFO  no build target found for /Users/fabiopsh/Documents/Progetti Università Magistrale/Solidarities Link - SOLI/solidarities-link/soli-backend/src/main/java/it/soli/exception/IllegalTaskStateException.java. Using fallback presentation compiler.
+2026.03.05 18:33:57 INFO  no build target found for /Users/fabiopsh/Documents/Progetti Università Magistrale/Solidarities Link - SOLI/solidarities-link/soli-backend/src/main/java/it/soli/resource/CaregiverRelationResource.java. Using fallback presentation compiler.
+2026.03.05 18:33:57 INFO  no build target found for /Users/fabiopsh/Documents/Progetti Università Magistrale/Solidarities Link - SOLI/solidarities-link/soli-backend/src/main/java/it/soli/resource/CaregiverRelationResource.java. Using fallback presentation compiler.
+2026.03.05 18:34:20 INFO  Shutting down server
+2026.03.05 18:34:20 INFO  Memory monitor stopped
+2026.03.05 18:34:20 INFO  shutting down Metals
+2026.03.05 18:34:20 INFO  Exiting server
+2026.03.05 18:34:20 ERROR Unexpected error initializing server: 
+org.eclipse.lsp4j.jsonrpc.ResponseErrorException: Request window/showMessageRequest failed with message: Canceled
+	at org.eclipse.lsp4j.jsonrpc.RemoteEndpoint.handleResponse(RemoteEndpoint.java:214)
+	at org.eclipse.lsp4j.jsonrpc.RemoteEndpoint.consume(RemoteEndpoint.java:198)
+	at org.eclipse.lsp4j.jsonrpc.json.StreamMessageProducer.handleMessage(StreamMessageProducer.java:189)
+	at org.eclipse.lsp4j.jsonrpc.json.StreamMessageProducer.listen(StreamMessageProducer.java:97)
+	at org.eclipse.lsp4j.jsonrpc.json.ConcurrentMessageProcessor.run(ConcurrentMessageProcessor.java:97)
+	at java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:572)
+	at java.util.concurrent.FutureTask.run(FutureTask.java:317)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+	at java.lang.Thread.run(Thread.java:1583)
+
+2026.03.05 19:32:53 INFO  Started: Metals version 1.6.6 in folders '/Users/fabiopsh/Documents/Progetti Università Magistrale/Solidarities Link - SOLI/solidarities-link' for client Antigravity 1.107.0.
+2026.03.05 19:32:53 INFO  Memory monitor started
+2026.03.05 19:32:54 WARN  Using H2 2.4.240 which is newer than the version Flyway has been verified with. The latest verified version of H2 is 2.3.232.
+2026.03.05 19:32:54 INFO  no build target found for /Users/fabiopsh/Documents/Progetti Università Magistrale/Solidarities Link - SOLI/solidarities-link/soli-backend/src/main/java/it/soli/resource/CaregiverRelationResource.java. Using fallback presentation compiler.
+mar 05, 2026 7:32:55 PM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+AVVERTENZA: Unmatched cancel notification for request id 2
+mar 05, 2026 7:32:55 PM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+AVVERTENZA: Unmatched cancel notification for request id 1
+2026.03.05 19:32:58 INFO  no build target found for /Users/fabiopsh/Documents/Progetti Università Magistrale/Solidarities Link - SOLI/solidarities-link/soli-backend/src/main/java/it/soli/resource/CaregiverRelationResource.java. Using fallback presentation compiler.
+2026.03.05 19:32:58 WARN  no build target for: /Users/fabiopsh/Documents/Progetti Università Magistrale/Solidarities Link - SOLI/solidarities-link/soli-backend/src/main/java/it/soli/resource/CaregiverRelationResource.java
+2026.03.05 19:32:58 INFO  no build target found for /Users/fabiopsh/Documents/Progetti Università Magistrale/Solidarities Link - SOLI/solidarities-link/soli-backend/src/main/java/it/soli/resource/CaregiverRelationResource.java. Using fallback presentation compiler.
+mar 05, 2026 7:32:59 PM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+AVVERTENZA: Unmatched cancel notification for request id 7
+2026.03.05 19:32:58 INFO  no build target found for /Users/fabiopsh/Documents/Progetti Università Magistrale/Solidarities Link - SOLI/solidarities-link/soli-backend/src/main/java/it/soli/resource/CaregiverRelationResource.java. Using fallback presentation compiler.
+2026.03.05 19:32:58 INFO  no build target found for /Users/fabiopsh/Documents/Progetti Università Magistrale/Solidarities Link - SOLI/solidarities-link/soli-backend/src/main/java/it/soli/resource/CaregiverRelationResource.java. Using fallback presentation compiler.
+mar 05, 2026 7:32:59 PM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+AVVERTENZA: Unmatched cancel notification for request id 11
+2026.03.05 19:35:55 INFO  no build target found for /Users/fabiopsh/Documents/Progetti Università Magistrale/Solidarities Link - SOLI/solidarities-link/soli-backend/src/main/java/it/soli/resource/TaskNotificationResource.java. Using fallback presentation compiler.
+2026.03.05 19:35:55 INFO  no build target found for /Users/fabiopsh/Documents/Progetti Università Magistrale/Solidarities Link - SOLI/solidarities-link/soli-backend/src/main/java/it/soli/resource/VolunteerProfileResource.java. Using fallback presentation compiler.
+2026.03.05 19:35:55 INFO  no build target found for /Users/fabiopsh/Documents/Progetti Università Magistrale/Solidarities Link - SOLI/solidarities-link/soli-backend/src/main/java/it/soli/security/SoliSecurityAugmentor.java. Using fallback presentation compiler.
+2026.03.05 19:35:55 INFO  no build target found for /Users/fabiopsh/Documents/Progetti Università Magistrale/Solidarities Link - SOLI/solidarities-link/soli-backend/src/main/java/it/soli/security/SecurityService.java. Using fallback presentation compiler.
+2026.03.05 19:35:55 INFO  no build target found for /Users/fabiopsh/Documents/Progetti Università Magistrale/Solidarities Link - SOLI/solidarities-link/soli-backend/src/main/java/it/soli/resource/ChatResource.java. Using fallback presentation compiler.
+2026.03.05 19:35:55 INFO  no build target found for /Users/fabiopsh/Documents/Progetti Università Magistrale/Solidarities Link - SOLI/solidarities-link/soli-backend/src/main/java/it/soli/service/MockAIService.java. Using fallback presentation compiler.
+2026.03.05 19:35:55 INFO  no build target found for /Users/fabiopsh/Documents/Progetti Università Magistrale/Solidarities Link - SOLI/solidarities-link/soli-backend/src/main/java/it/soli/resource/AssistantResource.java. Using fallback presentation compiler.
+2026.03.05 19:35:55 INFO  no build target found for /Users/fabiopsh/Documents/Progetti Università Magistrale/Solidarities Link - SOLI/solidarities-link/soli-backend/src/main/java/it/soli/resource/WalletResource.java. Using fallback presentation compiler.
+2026.03.05 19:35:55 INFO  no build target found for /Users/fabiopsh/Documents/Progetti Università Magistrale/Solidarities Link - SOLI/solidarities-link/soli-backend/src/main/java/it/soli/service/WalletService.java. Using fallback presentation compiler.
+2026.03.05 19:35:55 INFO  no build target found for /Users/fabiopsh/Documents/Progetti Università Magistrale/Solidarities Link - SOLI/solidarities-link/soli-backend/src/main/java/it/soli/service/MatchingService.java. Using fallback presentation compiler.
+2026.03.05 19:35:55 INFO  no build target found for /Users/fabiopsh/Documents/Progetti Università Magistrale/Solidarities Link - SOLI/solidarities-link/soli-backend/src/main/java/it/soli/entity/VolunteerProfile.java. Using fallback presentation compiler.
+2026.03.05 19:35:55 INFO  no build target found for /Users/fabiopsh/Documents/Progetti Università Magistrale/Solidarities Link - SOLI/solidarities-link/soli-backend/src/main/java/it/soli/resource/UserResource.java. Using fallback presentation compiler.
+2026.03.05 19:35:55 INFO  no build target found for /Users/fabiopsh/Documents/Progetti Università Magistrale/Solidarities Link - SOLI/solidarities-link/soli-backend/src/main/java/it/soli/service/TaskService.java. Using fallback presentation compiler.
+2026.03.05 19:35:55 INFO  no build target found for /Users/fabiopsh/Documents/Progetti Università Magistrale/Solidarities Link - SOLI/solidarities-link/soli-backend/src/main/java/it/soli/resource/TaskResource.java. Using fallback presentation compiler.
+2026.03.05 19:35:55 INFO  no build target found for /Users/fabiopsh/Documents/Progetti Università Magistrale/Solidarities Link - SOLI/solidarities-link/soli-backend/src/main/java/it/soli/exception/IllegalTaskStateException.java. Using fallback presentation compiler.
+2026.03.05 19:35:55 INFO  no build target found for /Users/fabiopsh/Documents/Progetti Università Magistrale/Solidarities Link - SOLI/solidarities-link/soli-backend/src/main/java/it/soli/entity/Task.java. Using fallback presentation compiler.
+2026.03.05 19:36:10 INFO  no build target found for /Users/fabiopsh/Documents/Progetti Università Magistrale/Solidarities Link - SOLI/solidarities-link/soli-backend/src/main/java/it/soli/resource/CaregiverRelationResource.java. Using fallback presentation compiler.
+2026.03.05 19:42:56 INFO  no build target found for /Users/fabiopsh/Documents/Progetti Università Magistrale/Solidarities Link - SOLI/solidarities-link/soli-backend/src/main/java/it/soli/resource/VolunteerProfileResource.java. Using fallback presentation compiler.
+2026.03.05 19:42:57 WARN  no build target for: /Users/fabiopsh/Documents/Progetti Università Magistrale/Solidarities Link - SOLI/solidarities-link/soli-backend/src/main/java/it/soli/resource/VolunteerProfileResource.java
+2026.03.05 19:42:56 INFO  no build target found for /Users/fabiopsh/Documents/Progetti Università Magistrale/Solidarities Link - SOLI/solidarities-link/soli-backend/src/main/java/it/soli/resource/VolunteerProfileResource.java. Using fallback presentation compiler.
+mar 05, 2026 7:42:57 PM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+AVVERTENZA: Unmatched cancel notification for request id 19
+2026.03.05 19:42:57 WARN  Running javac-semanticdb failed for file:///Users/fabiopsh/Documents/Progetti%20Universita%CC%80%20Magistrale/Solidarities%20Link%20-%20SOLI/solidarities-link/soli-backend/src/main/java/it/soli/resource/VolunteerProfileResource.java. Output:
+
+2026.03.05 19:44:16 INFO  no build target found for /Users/fabiopsh/Documents/Progetti Università Magistrale/Solidarities Link - SOLI/solidarities-link/soli-backend/src/main/java/it/soli/resource/VolunteerProfileResource.java. Using fallback presentation compiler.
+mar 05, 2026 7:46:30 PM org.eclipse.lsp4j.jsonrpc.services.GenericEndpoint notify
+INFORMAZIONI: Unsupported notification method: $/setTrace
+2026.03.05 19:46:32 INFO  no build target found for /Users/fabiopsh/Documents/Progetti Università Magistrale/Solidarities Link - SOLI/solidarities-link/soli-backend/src/main/java/it/soli/resource/VolunteerProfileResource.java. Using fallback presentation compiler.
+2026.03.05 19:46:32 INFO  no build target found for /Users/fabiopsh/Documents/Progetti Università Magistrale/Solidarities Link - SOLI/solidarities-link/soli-backend/src/main/java/it/soli/resource/VolunteerProfileResource.java. Using fallback presentation compiler.
+2026.03.05 19:46:49 INFO  no build target found for /Users/fabiopsh/Documents/Progetti Università Magistrale/Solidarities Link - SOLI/solidarities-link/soli-backend/src/main/java/it/soli/resource/VolunteerProfileResource.java. Using fallback presentation compiler.
+2026.03.05 19:47:29 INFO  no build target found for /Users/fabiopsh/Documents/Progetti Università Magistrale/Solidarities Link - SOLI/solidarities-link/soli-backend/src/main/java/it/soli/resource/VolunteerProfileResource.java. Using fallback presentation compiler.
+2026.03.05 19:47:30 INFO  no build target found for /Users/fabiopsh/Documents/Progetti Università Magistrale/Solidarities Link - SOLI/solidarities-link/soli-backend/src/main/java/it/soli/resource/VolunteerProfileResource.java. Using fallback presentation compiler.
