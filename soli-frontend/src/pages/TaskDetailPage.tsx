@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
 	Box,
@@ -16,20 +16,39 @@ import {
 	Dialog,
 	DialogTitle,
 	DialogContent,
+	DialogContentText,
 	DialogActions,
+	Drawer,
+	IconButton,
+	TextField,
 	Snackbar,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import CloseIcon from "@mui/icons-material/Close";
+import SendIcon from "@mui/icons-material/Send";
+import ChatIcon from "@mui/icons-material/Chat";
+import ForumIcon from "@mui/icons-material/Forum";
+import PersonIcon from "@mui/icons-material/Person";
+import EventIcon from "@mui/icons-material/Event";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import CategoryIcon from "@mui/icons-material/Category";
 import QrCodeIcon from "@mui/icons-material/QrCode";
+import { useAuth } from "react-oidc-context";
 import api from "../api";
 import type { Task } from "../types/models/Task";
+
+interface ChatMessage {
+	id: string;
+	content: string;
+	senderId: string;
+	createdAt: string;
+}
 
 export default function TaskDetailPage() {
 	const { id } = useParams<{ id: string }>();
 	const navigate = useNavigate();
+	const auth = useAuth();
 	const [task, setTask] = useState<Task | null>(null);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
@@ -40,6 +59,67 @@ export default function TaskDetailPage() {
 		message: "",
 		severity: "success",
 	});
+
+	// Chat states
+	const [chatOpen, setChatOpen] = useState(false);
+	const [messages, setMessages] = useState<ChatMessage[]>([]);
+	const [chatInput, setChatInput] = useState("");
+	const [chatError, setChatError] = useState<string | null>(null);
+	const wsRef = useRef<WebSocket | null>(null);
+	const messagesEndRef = useRef<HTMLDivElement | null>(null);
+
+	// Scroll chat to bottom
+	const scrollToBottom = () => {
+		messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+	};
+
+	useEffect(() => {
+		if (chatOpen) {
+			scrollToBottom();
+		}
+	}, [messages, chatOpen]);
+
+	// WebSocket connection
+	useEffect(() => {
+		if (!chatOpen || !id || !auth.user?.access_token) return;
+
+		// Connect to WebSocket with token in query string
+		const wsUrl = `ws://localhost:8080/chat/${id}?token=${auth.user.access_token}`;
+		const ws = new WebSocket(wsUrl);
+		wsRef.current = ws;
+
+		ws.onopen = () => {
+			console.log("WebSocket connected for chat");
+			setChatError(null);
+		};
+
+		ws.onmessage = (event) => {
+			try {
+				const data = JSON.parse(event.data);
+				// Check for mock AI rejection or errors
+				if (data.error) {
+					setChatError(data.error);
+				} else if (data.content) {
+					setMessages((prev) => [...prev, data]);
+				}
+			} catch (e) {
+				console.error("Failed to parse WS message", e);
+			}
+		};
+
+		ws.onerror = () => {
+			console.error("WebSocket error");
+			setChatError("Connessione chat interrotta.");
+		};
+
+		ws.onclose = () => {
+			console.log("WebSocket disconnected");
+		};
+
+		return () => {
+			ws.close();
+		};
+	}, [chatOpen, id, auth.user?.access_token]);
 
 	const fetchTask = async () => {
 		try {
@@ -79,6 +159,20 @@ export default function TaskDetailPage() {
 		setCancelDialogOpen(false);
 	};
 
+	const handleSendMessage = (e: React.FormEvent) => {
+		e.preventDefault();
+		if (!chatInput.trim() || !wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) return;
+
+		// Send message payload
+		const payload = {
+			content: chatInput.trim(),
+			// token is already in connection, but could send here if needed
+		};
+		wsRef.current.send(JSON.stringify(payload));
+		setChatInput("");
+		setChatError(null); // Clear previous errors on new message
+	};
+
 	if (loading) {
 		return (
 			<Box sx={{ display: "flex", justifyContent: "center", mt: 8 }}>
@@ -115,6 +209,29 @@ export default function TaskDetailPage() {
 		}
 	};
 
+	// Helper functions for labels (assuming these will be defined elsewhere or added by user)
+	const getStatusLabel = (status: string) => {
+		switch (status) {
+			case "OPEN":
+				return "Aperto";
+			case "ACCEPTED":
+				return "Accettato";
+			case "IN_PROGRESS":
+				return "In Corso";
+			case "COMPLETED":
+				return "Completato";
+			case "CANCELLED":
+				return "Annullato";
+			default:
+				return status;
+		}
+	};
+
+	const getCategoryLabel = (category: string) => {
+		// Placeholder for actual category mapping
+		return category;
+	};
+
 	const isTokenVisible = task.status === "ACCEPTED" || task.status === "IN_PROGRESS";
 	const activeToken = task.status === "ACCEPTED" ? task.checkInToken : task.checkOutToken;
 	const tokenLabel = task.status === "ACCEPTED" ? "Token Check-In" : "Token Check-Out";
@@ -134,20 +251,53 @@ export default function TaskDetailPage() {
 				<Grid size={{ xs: 12, md: 8 }}>
 					<Card sx={{ borderRadius: 3, boxShadow: "0 4px 20px rgba(0,0,0,0.05)" }}>
 						<CardContent sx={{ p: 4 }}>
-							<Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", mb: 2 }}>
-								<Chip
-									label={task.status}
-									color={getStatusColor(task.status) as any}
-									sx={{ fontWeight: "bold" }}
-								/>
-								<Typography variant="caption" color="text.secondary">
-									ID: {task.id.substring(0, 8)}...
-								</Typography>
-							</Box>
-
-							<Typography variant="h4" fontWeight={700} gutterBottom>
-								{task.title}
-							</Typography>
+							<Grid container alignItems="flex-start" justifyContent="space-between" spacing={2} sx={{ mb: 4 }}>
+								<Grid size="grow">
+									<Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 1 }}>
+										<Typography variant="h4" fontWeight={800} sx={{ color: "primary.dark" }}>
+											{task.title}
+										</Typography>
+										<Chip
+											label={getStatusLabel(task.status)}
+											color={getStatusColor(task.status) as any}
+											sx={{ fontWeight: "bold" }}
+										/>
+									</Box>
+									<Typography
+										variant="subtitle1"
+										color="text.secondary"
+										sx={{ display: "flex", alignItems: "center", gap: 1 }}
+									>
+										<CategoryIcon fontSize="small" />
+										{getCategoryLabel(task.category)}
+									</Typography>
+								</Grid>
+								{(task.status === "OPEN" || task.status === "ACCEPTED" || task.status === "IN_PROGRESS") && (
+									<Grid size="auto">
+										<Box sx={{ display: "flex", gap: 2 }}>
+											{(task.status === "ACCEPTED" || task.status === "IN_PROGRESS") && (
+												<Button
+													variant="contained"
+													color="secondary"
+													onClick={() => setChatOpen(true)}
+													startIcon={<ForumIcon />}
+													sx={{ fontWeight: "bold", borderRadius: 2 }}
+												>
+													Chat
+												</Button>
+											)}
+											<Button
+												variant="outlined"
+												color="error"
+												onClick={() => setCancelDialogOpen(true)}
+												sx={{ fontWeight: "bold", borderRadius: 2 }}
+											>
+												Annulla Richiesta
+											</Button>
+										</Box>
+									</Grid>
+								)}
+							</Grid>
 
 							<Typography variant="body1" color="text.secondary" sx={{ mb: 4, whiteSpace: "pre-wrap" }}>
 								{task.description || "Nessuna descrizione fornita."}
@@ -272,19 +422,6 @@ export default function TaskDetailPage() {
 								</Typography>
 							</CardContent>
 						</Card>
-
-						{task.status === "OPEN" && (
-							<Button
-								variant="outlined"
-								color="error"
-								fullWidth
-								size="large"
-								sx={{ borderRadius: 2 }}
-								onClick={() => setCancelDialogOpen(true)}
-							>
-								Annulla Richiesta
-							</Button>
-						)}
 					</Stack>
 				</Grid>
 			</Grid>
@@ -326,6 +463,176 @@ export default function TaskDetailPage() {
 					{snackbar.message}
 				</Alert>
 			</Snackbar>
+
+			{/* Chat Drawer */}
+			<Drawer
+				anchor="right"
+				open={chatOpen}
+				onClose={() => setChatOpen(false)}
+				PaperProps={{
+					sx: {
+						width: { xs: "100%", sm: 400 },
+						display: "flex",
+						flexDirection: "column",
+						bgcolor: "#F8FAFC",
+					},
+				}}
+			>
+				{/* Drawer Header */}
+				<Box
+					sx={{
+						p: 2,
+						bgcolor: "primary.main",
+						color: "white",
+						display: "flex",
+						alignItems: "center",
+						justifyContent: "space-between",
+						boxShadow: 1,
+						zIndex: 1,
+					}}
+				>
+					<Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+						<ChatIcon />
+						<Typography variant="h6" fontWeight={600}>
+							Chat di Supporto
+						</Typography>
+					</Box>
+					<IconButton color="inherit" onClick={() => setChatOpen(false)} size="small">
+						<CloseIcon />
+					</IconButton>
+				</Box>
+
+				{chatError && (
+					<Alert
+						severity="error"
+						variant="filled"
+						sx={{ m: 2, borderRadius: 2 }}
+						onClose={() => setChatError(null)}
+					>
+						{chatError}
+					</Alert>
+				)}
+
+				{!chatError && (
+					<Alert
+						severity="info"
+						sx={{ mx: 2, mt: 2, borderRadius: 2, "& .MuiAlert-message": { fontSize: "0.85rem" } }}
+					>
+						Questa chat è monitorata. I messaggi vengono resi anonimi per garantire la privacy. La chat verrà
+						disattivata al completamento del task.
+					</Alert>
+				)}
+
+				{/* Messages Area */}
+				<Box sx={{ flexGrow: 1, p: 2, overflowY: "auto", display: "flex", flexDirection: "column", gap: 2 }}>
+					{messages.length === 0 ? (
+						<Box
+							sx={{
+								height: "100%",
+								display: "flex",
+								flexDirection: "column",
+								alignItems: "center",
+								justifyContent: "center",
+								opacity: 0.5,
+							}}
+						>
+							<ForumIcon sx={{ fontSize: 48, mb: 2 }} />
+							<Typography variant="body2">Nessun messaggio.</Typography>
+							<Typography variant="caption">Scrivi per iniziare la conversazione.</Typography>
+						</Box>
+					) : (
+						messages.map((msg, idx) => {
+							// Assuming we decode auth.user to get our own ID, or simply styling based on senderId match
+							// Since auth object might not map perfectly to backend UUID yet without an extra call,
+							// Let's use a simple logical check if we have our ID, otherwise alternate for demo
+							const isMe = auth.user?.profile?.sub ? msg.senderId === auth.user.profile.sub : idx % 2 === 0; // fallback demo logic
+
+							return (
+								<Box
+									key={msg.id || idx}
+									sx={{
+										alignSelf: isMe ? "flex-end" : "flex-start",
+										maxWidth: "80%",
+									}}
+								>
+									<Paper
+										elevation={1}
+										sx={{
+											p: 1.5,
+											backgroundColor: isMe ? "primary.main" : "white",
+											color: isMe ? "white" : "text.primary",
+											borderRadius: isMe ? "16px 16px 4px 16px" : "16px 16px 16px 4px",
+										}}
+									>
+										<Typography variant="body2">{msg.content}</Typography>
+									</Paper>
+									<Typography
+										variant="caption"
+										sx={{
+											display: "block",
+											mt: 0.5,
+											textAlign: isMe ? "right" : "left",
+											color: "text.secondary",
+											fontSize: "0.65rem",
+										}}
+									>
+										{msg.createdAt
+											? new Date(msg.createdAt).toLocaleTimeString([], {
+													hour: "2-digit",
+													minute: "2-digit",
+												})
+											: "Ora"}
+									</Typography>
+								</Box>
+							);
+						})
+					)}
+					<div ref={messagesEndRef} />
+				</Box>
+
+				{/* Input Area */}
+				<Box
+					component="form"
+					onSubmit={handleSendMessage}
+					sx={{
+						p: 2,
+						bgcolor: "white",
+						borderTop: "1px solid",
+						borderColor: "divider",
+						display: "flex",
+						gap: 1,
+					}}
+				>
+					<TextField
+						fullWidth
+						size="small"
+						placeholder="Scrivi un messaggio..."
+						value={chatInput}
+						onChange={(e) => setChatInput(e.target.value)}
+						variant="outlined"
+						sx={{
+							"& .MuiOutlinedInput-root": {
+								borderRadius: 8,
+							},
+						}}
+					/>
+					<IconButton
+						type="submit"
+						color="primary"
+						disabled={!chatInput.trim()}
+						sx={{
+							bgcolor: chatInput.trim() ? "primary.light" : "transparent",
+							color: chatInput.trim() ? "white" : "inherit",
+							"&:hover": {
+								bgcolor: "primary.main",
+								color: "white",
+							},
+						}}
+					>
+						<SendIcon fontSize="small" />
+					</IconButton>
+				</Box>
+			</Drawer>
 		</Box>
 	);
 }

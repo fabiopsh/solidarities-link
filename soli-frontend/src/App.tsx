@@ -10,6 +10,7 @@ import TaskWizardPage from "./pages/TaskWizardPage";
 import TaskDetailPage from "./pages/TaskDetailPage";
 import ProfilePage from "./pages/ProfilePage";
 import WalletPage from "./pages/WalletPage";
+import AdminDashboardPage from "./pages/AdminDashboardPage";
 
 export default function App() {
 	return (
@@ -36,6 +37,7 @@ export default function App() {
 						<Route path="requests/:id" element={<TaskDetailPage />} />
 						<Route path="wallet" element={<WalletPage />} />
 						<Route path="profile" element={<ProfilePage />} />
+						<Route path="admin" element={<AdminDashboardPage />} />
 					</Route>
 
 					{/* Default: redirect to dashboard (ProtectedRoute handles unauth) */}

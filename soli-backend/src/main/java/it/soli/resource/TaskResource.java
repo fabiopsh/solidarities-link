@@ -44,8 +44,20 @@ public class TaskResource {
     public PaginatedResponse<Task> listAll(
             @QueryParam("page") @DefaultValue("0") int page,
             @QueryParam("size") @DefaultValue("20") int size) {
-        // In a real app, this would be filtered by proximity, permissions, etc.
-        return PaginatedResponse.of(Task.findAll().page(page, size));
+        
+        User currentUser = getAuthenticatedUser();
+        if (currentUser == null) {
+            throw new WebApplicationException(Response.Status.UNAUTHORIZED);
+        }
+
+        if (securityIdentity.hasRole(UserRole.ADMIN.name())) {
+            return PaginatedResponse.of(Task.findAll().page(page, size));
+        }
+
+        return PaginatedResponse.of(
+            Task.find("creatorId = ?1 OR volunteerId = ?1 OR status = ?2", 
+                currentUser.id, TaskStatus.OPEN).page(page, size)
+        );
     }
 
     @GET

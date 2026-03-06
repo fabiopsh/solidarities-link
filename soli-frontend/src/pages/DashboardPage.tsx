@@ -17,13 +17,20 @@ import {
 	DialogActions,
 	Snackbar,
 	Alert,
+	Tabs,
+	Tab,
 } from "@mui/material";
 import VolunteerActivismIcon from "@mui/icons-material/VolunteerActivism";
 import AssignmentIcon from "@mui/icons-material/Assignment";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 import AddIcon from "@mui/icons-material/Add";
+import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
+import EventIcon from "@mui/icons-material/Event";
+import CategoryIcon from "@mui/icons-material/Category";
+import LocationOnIcon from "@mui/icons-material/LocationOn";
 import api from "../api";
 import type { Task } from "../types/models/Task";
+import type { User } from "../types/models/User";
 
 export default function DashboardPage() {
 	const auth = useAuth();
@@ -35,42 +42,51 @@ export default function DashboardPage() {
 	const [tasks, setTasks] = useState<Task[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
-	const [taskToCancel, setTaskToCancel] = useState<string | null>(null);
+	const [taskToCancel, setTaskToCancel] = useState<Task | null>(null);
 	const [cancelling, setCancelling] = useState(false);
+	const [error, setError] = useState<string | null>(null);
+
+	// Tab state for requests page
+	const [tabValue, setTabValue] = useState(0);
+
+	const [dbUser, setDbUser] = useState<User | null>(null);
+
 	const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: "success" | "error" }>({
 		open: false,
 		message: "",
 		severity: "success",
 	});
 
-	const fetchTasks = async () => {
+	const fetchTasksAndUser = async () => {
 		try {
-			const res = await api.get("/api/tasks");
-			// Sort by creation date descending
-			const sortedTasks = (res.data.data || []).sort(
-				(a: Task, b: Task) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-			);
-			setTasks(sortedTasks);
+			// Fetch current backend user to get the DB id (which matches creatorId/volunteerId)
+			const userRes = await api.get("/api/users/me");
+			setDbUser(userRes.data);
+
+			// Now returns only tasks we are allowed to see based on backend RBAC
+			const res = await api.get("/api/tasks", { params: { size: 100 } });
+			setTasks(res.data.data || []);
 		} catch (err) {
 			console.error("Error fetching tasks:", err);
+			setError("Impossibile caricare i task. Riprova più tardi.");
 		} finally {
 			setLoading(false);
 		}
 	};
 
 	useEffect(() => {
-		fetchTasks();
-	}, []);
+		fetchTasksAndUser();
+	}, [location.pathname]);
 
 	const handleCancelTask = async () => {
 		if (!taskToCancel) return;
 		setCancelling(true);
 		try {
-			await api.put(`/api/tasks/${taskToCancel}`, { status: "CANCELLED" });
+			await api.put(`/api/tasks/${taskToCancel.id}`, { status: "CANCELLED" });
 			setCancelDialogOpen(false);
 			setTaskToCancel(null);
 			setSnackbar({ open: true, message: "Richiesta annullata con successo.", severity: "success" });
-			fetchTasks();
+			fetchTasksAndUser();
 		} catch (err) {
 			console.error("Error cancelling task:", err);
 			setSnackbar({ open: true, message: "Errore durante l'annullamento della richiesta.", severity: "error" });
@@ -102,7 +118,211 @@ export default function DashboardPage() {
 		}
 	};
 
-	const displayedTasks = isRequestsPage ? tasks : tasks.slice(0, 4);
+	const getStatusLabel = (status: string) => {
+		switch (status) {
+			case "OPEN":
+				return "Aperto";
+			case "ACCEPTED":
+				return "Accettato";
+			case "IN_PROGRESS":
+				return "In Corso";
+			case "COMPLETED":
+				return "Completato";
+			case "CANCELLED":
+				return "Annullato";
+			default:
+				return status;
+		}
+	};
+
+	const getCategoryLabel = (category: string) => {
+		switch (category) {
+			case "SHOPPING":
+				return "Spesa";
+			case "DELIVERY":
+				return "Consegna";
+			case "HOUSEHOLD":
+				return "Faccende Domestiche";
+			case "TRANSPORT":
+				return "Trasporto";
+			case "COMPANY":
+				return "Compagnia";
+			case "OTHER":
+				return "Altro";
+			default:
+				return category;
+		}
+	};
+
+	// Derived state
+	const currentUserId = dbUser?.id;
+
+	// Filter tasks for the tabs
+	// "My Tasks": Created by me, or assigned to me
+	const myTasks = tasks.filter((t) => t.creatorId === currentUserId || t.volunteerId === currentUserId);
+	// "Available Tasks": OPEN status, AND not created by me (so I can accept them)
+	const availableTasks = tasks.filter((t) => t.status === "OPEN" && t.creatorId !== currentUserId);
+
+	// On dashboard overview, show up to 4 recent tasks from myTasks
+	const recentMyTasks = myTasks.slice(0, 4);
+
+	if (loading) {
+		return (
+			<Box sx={{ display: "flex", justifyContent: "center", mt: 8 }}>
+				<CircularProgress />
+			</Box>
+		);
+	}
+
+	if (error) {
+		return (
+			<Box sx={{ mt: 4 }}>
+				<Alert severity="error">{error}</Alert>
+			</Box>
+		);
+	}
+
+	// Reusable Task Card Renderer
+	const renderTaskCards = (taskList: Task[]) => {
+		if (taskList.length === 0) {
+			return (
+				<Card
+					sx={{
+						p: 6,
+						textAlign: "center",
+						borderRadius: 3,
+						border: "2px dashed",
+						borderColor: "divider",
+						bgcolor: "transparent",
+					}}
+				>
+					<AssignmentIcon sx={{ fontSize: 48, color: "text.disabled", mb: 2 }} />
+					<Typography variant="h6" color="text.secondary">
+						Nessun task trovato in questa sezione.
+					</Typography>
+					{isRequestsPage && tabValue === 0 && (
+						<Button variant="outlined" sx={{ mt: 2 }} onClick={() => navigate("/dashboard/requests/new")}>
+							Crea una nuova richiesta
+						</Button>
+					)}
+				</Card>
+			);
+		}
+
+		return (
+			<Grid container spacing={3}>
+				{taskList.map((task) => (
+					<Grid size={{ xs: 12, sm: 6, md: 4 }} key={task.id}>
+						<Card
+							sx={{
+								height: "100%",
+								display: "flex",
+								flexDirection: "column",
+								borderRadius: 3,
+								boxShadow: "0 4px 20px rgba{0,0,0,0.05}",
+								transition: "transform 0.2s, box-shadow 0.2s",
+								"&:hover": {
+									transform: "translateY(-4px)",
+									boxShadow: "0 8px 24px rgba{0,0,0,0.1}",
+								},
+							}}
+						>
+							<CardContent sx={{ flexGrow: 1, p: 3 }}>
+								<Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
+									<Chip
+										label={getStatusLabel(task.status)}
+										color={getStatusColor(task.status) as any}
+										size="small"
+										sx={{ fontWeight: "bold" }}
+									/>
+									<Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
+										Urgenza {task.urgencyLevel}
+									</Typography>
+								</Box>
+
+								<Typography variant="h6" fontWeight={700} gutterBottom noWrap title={task.title}>
+									{task.title}
+								</Typography>
+
+								<Typography
+									variant="body2"
+									color="text.secondary"
+									sx={{
+										mb: 3,
+										display: "-webkit-box",
+										WebkitLineClamp: 2,
+										WebkitBoxOrient: "vertical",
+										overflow: "hidden",
+										minHeight: 40,
+									}}
+								>
+									{task.description || "Nessuna descrizione disponibile"}
+								</Typography>
+
+								<Stack spacing={1.5}>
+									<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+										<CategoryIcon fontSize="small" color="action" />
+										<Typography variant="subtitle2" color="text.primary">
+											{getCategoryLabel(task.category)}
+										</Typography>
+									</Box>
+									<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+										<LocationOnIcon fontSize="small" color="action" />
+										<Typography variant="body2" color="text.secondary" noWrap title={task.targetAddress}>
+											{task.targetAddress}
+										</Typography>
+									</Box>
+									{task.scheduledAt && (
+										<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+											<EventIcon fontSize="small" color="action" />
+											<Typography variant="body2" color="text.secondary">
+												{new Date(task.scheduledAt).toLocaleDateString([], {
+													month: "short",
+													day: "numeric",
+													hour: "2-digit",
+													minute: "2-digit",
+												})}
+											</Typography>
+										</Box>
+									)}
+								</Stack>
+							</CardContent>
+
+							<Box sx={{ p: 2, pt: 0, mt: "auto", borderTop: "1px solid", borderColor: "divider" }}>
+								<Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mt: 2 }}>
+									<Button
+										size="small"
+										variant="contained"
+										color="primary"
+										onClick={() => navigate(`/dashboard/requests/${task.id}`)}
+										sx={{ borderRadius: 2, textTransform: "none", fontWeight: 600 }}
+									>
+										Dettagli
+									</Button>
+
+									{/* Only show "Annulla" if I am the creator and it's OPEN */}
+									{task.status === "OPEN" && task.creatorId === currentUserId && (
+										<Button
+											size="small"
+											variant="outlined"
+											color="error"
+											onClick={() => {
+												setTaskToCancel(task);
+												setCancelDialogOpen(true);
+											}}
+											sx={{ borderRadius: 2, textTransform: "none", fontWeight: 600 }}
+										>
+											Annulla
+										</Button>
+									)}
+								</Box>
+							</Box>
+						</Card>
+					</Grid>
+				))}
+			</Grid>
+		);
+	};
 
 	return (
 		<Box>
@@ -194,117 +414,44 @@ export default function DashboardPage() {
 				</Grid>
 			)}
 
-			{!isRequestsPage && (
-				<Typography variant="h5" fontWeight={600} sx={{ mb: 3 }}>
-					Richieste Recenti
-				</Typography>
-			)}
+			{/* Tab Navigation for Requests Page */}
+			{isRequestsPage ? (
+				<>
+					<Box sx={{ borderBottom: 1, borderColor: "divider", mb: 4 }}>
+						<Tabs value={tabValue} onChange={(_, newValue) => setTabValue(newValue)} aria-label="task tabs">
+							<Tab label="Le Mie Richieste" sx={{ fontWeight: "bold" }} />
+							<Tab label="Task Disponibili" sx={{ fontWeight: "bold" }} />
+						</Tabs>
+					</Box>
 
-			{loading ? (
-				<Box sx={{ display: "flex", justifyContent: "center", p: 4 }}>
-					<CircularProgress />
-				</Box>
-			) : tasks.length === 0 ? (
-				<Card
-					sx={{
-						p: 6,
-						textAlign: "center",
-						borderRadius: 3,
-						border: "2px dashed",
-						borderColor: "divider",
-						bgcolor: "transparent",
-					}}
-				>
-					<AssignmentIcon sx={{ fontSize: 48, color: "text.disabled", mb: 2 }} />
-					<Typography variant="h6" color="text.secondary">
-						Non hai ancora creato nessuna richiesta.
-					</Typography>
-					<Button variant="outlined" sx={{ mt: 2 }} onClick={() => navigate("/dashboard/requests/new")}>
-						Inizia ora
-					</Button>
-				</Card>
+					{/* My Requests Tab */}
+					<Box role="tabpanel" hidden={tabValue !== 0}>
+						{tabValue === 0 && renderTaskCards(myTasks)}
+					</Box>
+
+					{/* Available Tasks Tab */}
+					<Box role="tabpanel" hidden={tabValue !== 1}>
+						{tabValue === 1 && renderTaskCards(availableTasks)}
+					</Box>
+				</>
 			) : (
-				<Grid container spacing={3}>
-					{displayedTasks.map((task) => (
-						<Grid size={{ xs: 12, md: 6 }} key={task.id}>
-							<Card
-								sx={{
-									borderRadius: 3,
-									transition: "transform 0.2s, box-shadow 0.2s",
-									"&:hover": { transform: "translateY(-4px)", boxShadow: "0 12px 24px rgba(0,0,0,0.12)" },
-								}}
-							>
-								<CardContent sx={{ p: 3 }}>
-									<Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
-										<Chip
-											label={task.status}
-											size="small"
-											color={getStatusColor(task.status) as any}
-											sx={{ fontWeight: "bold", fontSize: "0.75rem" }}
-										/>
-										<Typography variant="caption" color="text.secondary">
-											{new Date(task.createdAt).toLocaleDateString()}
-										</Typography>
-									</Box>
-									<Typography
-										variant="h6"
-										fontWeight={700}
-										gutterBottom
-										sx={{ cursor: "pointer" }}
-										onClick={() => navigate(`/dashboard/requests/${task.id}`)}
-									>
-										{task.title}
-									</Typography>
-									<Typography
-										variant="body2"
-										color="text.secondary"
-										sx={{
-											mb: 3,
-											display: "-webkit-box",
-											WebkitLineClamp: 2,
-											WebkitBoxOrient: "vertical",
-											overflow: "hidden",
-											height: "3em",
-										}}
-									>
-										{task.description || "Nessuna descrizione."}
-									</Typography>
-									<Stack direction="row" spacing={1} justifyContent="flex-end">
-										<Button
-											size="small"
-											variant="text"
-											onClick={() => navigate(`/dashboard/requests/${task.id}`)}
-										>
-											Dettaglio
-										</Button>
-										{task.status === "OPEN" && (
-											<Button
-												size="small"
-												color="error"
-												variant="outlined"
-												onClick={() => {
-													setTaskToCancel(task.id);
-													setCancelDialogOpen(true);
-												}}
-											>
-												Annulla
-											</Button>
-										)}
-									</Stack>
-								</CardContent>
-							</Card>
-						</Grid>
-					))}
-				</Grid>
-			)}
+				<>
+					{/* Recent Tasks List for General Dashboard */}
+					<Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
+						<Typography variant="h5" fontWeight={700}>
+							I tuoi task recenti
+						</Typography>
+						<Button
+							endIcon={<ArrowForwardIcon />}
+							onClick={() => navigate("/dashboard/requests")}
+							sx={{ fontWeight: 600 }}
+						>
+							Vedi tutte
+						</Button>
+					</Box>
 
-			{/* Link "Vedi tutte" — solo nella Dashboard quando ci sono più di 4 task */}
-			{!isRequestsPage && tasks.length > 4 && (
-				<Box sx={{ textAlign: "center", mt: 3 }}>
-					<Button variant="text" onClick={() => navigate("/dashboard/requests")}>
-						Vedi tutte le richieste ({tasks.length})
-					</Button>
-				</Box>
+					{renderTaskCards(recentMyTasks)}
+				</>
 			)}
 
 			{/* Dialog di Conferma Annullamento */}
