@@ -16,7 +16,6 @@ import {
 	Dialog,
 	DialogTitle,
 	DialogContent,
-	DialogContentText,
 	DialogActions,
 	Drawer,
 	IconButton,
@@ -28,8 +27,6 @@ import CloseIcon from "@mui/icons-material/Close";
 import SendIcon from "@mui/icons-material/Send";
 import ChatIcon from "@mui/icons-material/Chat";
 import ForumIcon from "@mui/icons-material/Forum";
-import PersonIcon from "@mui/icons-material/Person";
-import EventIcon from "@mui/icons-material/Event";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import CategoryIcon from "@mui/icons-material/Category";
@@ -37,6 +34,7 @@ import QrCodeIcon from "@mui/icons-material/QrCode";
 import { useAuth } from "react-oidc-context";
 import api from "../api";
 import type { Task } from "../types/models/Task";
+import type { User } from "../types/models/User";
 
 interface ChatMessage {
 	id: string;
@@ -54,11 +52,14 @@ export default function TaskDetailPage() {
 	const [error, setError] = useState<string | null>(null);
 	const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
 	const [cancelling, setCancelling] = useState(false);
+	const [accepting, setAccepting] = useState(false);
 	const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: "success" | "error" }>({
 		open: false,
 		message: "",
 		severity: "success",
 	});
+
+	const [dbUser, setDbUser] = useState<User | null>(null);
 
 	// Chat states
 	const [chatOpen, setChatOpen] = useState(false);
@@ -82,6 +83,22 @@ export default function TaskDetailPage() {
 	// WebSocket connection
 	useEffect(() => {
 		if (!chatOpen || !id || !auth.user?.access_token) return;
+
+		// Load existing messages from REST API first
+		const loadHistory = async () => {
+			try {
+				const sessionRes = await api.get(`/api/chat/sessions/task/${id}`);
+				if (sessionRes.data?.id) {
+					const msgRes = await api.get(`/api/chat/sessions/${sessionRes.data.id}/messages?size=100`);
+					const history = msgRes.data?.data || [];
+					// Map sentAt to createdAt for frontend consistency
+					setMessages(history.map((m: any) => ({ ...m, createdAt: m.sentAt || m.createdAt })));
+				}
+			} catch {
+				// No session or no messages yet — that's fine
+			}
+		};
+		loadHistory();
 
 		// Connect to WebSocket with token in query string
 		const wsUrl = `ws://localhost:8080/chat/${id}?token=${auth.user.access_token}`;
@@ -121,12 +138,13 @@ export default function TaskDetailPage() {
 		};
 	}, [chatOpen, id, auth.user?.access_token]);
 
-	const fetchTask = async () => {
+	const fetchTaskAndUser = async () => {
 		try {
-			const res = await api.get(`/api/tasks/${id}`);
-			setTask(res.data);
+			const [taskRes, userRes] = await Promise.all([api.get(`/api/tasks/${id}`), api.get("/api/users/me")]);
+			setTask(taskRes.data);
+			setDbUser(userRes.data);
 		} catch (err) {
-			console.error("Error fetching task details:", err);
+			console.error("Error fetching task details or user:", err);
 			setError("Impossibile recuperare i dettagli della richiesta.");
 		} finally {
 			setLoading(false);
@@ -134,8 +152,28 @@ export default function TaskDetailPage() {
 	};
 
 	useEffect(() => {
-		fetchTask();
+		fetchTaskAndUser();
 	}, [id]);
+
+	const handleAcceptTask = async () => {
+		if (!id) return;
+		setAccepting(true);
+		try {
+			// Status "ACCEPTED" will automatically assign backend volunteerId to current user
+			await api.put(`/api/tasks/${id}`, { status: "ACCEPTED" });
+			setSnackbar({
+				open: true,
+				message: "Hai preso in carico questa richiesta con successo!",
+				severity: "success",
+			});
+			await fetchTaskAndUser(); // Refresh to see chat and new tokens
+		} catch (err) {
+			console.error("Error accepting task:", err);
+			setSnackbar({ open: true, message: "Errore durante la presa in carico. Riprova.", severity: "error" });
+		} finally {
+			setAccepting(false);
+		}
+	};
 
 	const handleCancelTask = async () => {
 		if (!id) return;
@@ -232,6 +270,9 @@ export default function TaskDetailPage() {
 		return category;
 	};
 
+	const isCreator = dbUser?.id === task.creatorId;
+	const isVolunteer = dbUser?.id === task.volunteerId;
+
 	const isTokenVisible = task.status === "ACCEPTED" || task.status === "IN_PROGRESS";
 	const activeToken = task.status === "ACCEPTED" ? task.checkInToken : task.checkOutToken;
 	const tokenLabel = task.status === "ACCEPTED" ? "Token Check-In" : "Token Check-Out";
@@ -275,7 +316,7 @@ export default function TaskDetailPage() {
 								{(task.status === "OPEN" || task.status === "ACCEPTED" || task.status === "IN_PROGRESS") && (
 									<Grid size="auto">
 										<Box sx={{ display: "flex", gap: 2 }}>
-											{(task.status === "ACCEPTED" || task.status === "IN_PROGRESS") && (
+											{(task.status === "ACCEPTED" || task.status === "IN_PROGRESS") && isVolunteer && (
 												<Button
 													variant="contained"
 													color="secondary"
@@ -283,17 +324,44 @@ export default function TaskDetailPage() {
 													startIcon={<ForumIcon />}
 													sx={{ fontWeight: "bold", borderRadius: 2 }}
 												>
+													Chat (Volontario)
+												</Button>
+											)}
+											{(task.status === "ACCEPTED" || task.status === "IN_PROGRESS") && isCreator && (
+												<Button
+													variant="contained"
+													color="primary"
+													onClick={() => setChatOpen(true)}
+													startIcon={<ForumIcon />}
+													sx={{ fontWeight: "bold", borderRadius: 2 }}
+												>
 													Chat
 												</Button>
 											)}
-											<Button
-												variant="outlined"
-												color="error"
-												onClick={() => setCancelDialogOpen(true)}
-												sx={{ fontWeight: "bold", borderRadius: 2 }}
-											>
-												Annulla Richiesta
-											</Button>
+
+											{task.status === "OPEN" && !isCreator && (
+												<Button
+													variant="contained"
+													color="primary"
+													onClick={handleAcceptTask}
+													disabled={accepting}
+													startIcon={accepting && <CircularProgress size={20} color="inherit" />}
+													sx={{ fontWeight: "bold", borderRadius: 2, px: 4 }}
+												>
+													{accepting ? "Assegnazione..." : "Prendi in carico"}
+												</Button>
+											)}
+
+											{isCreator && (
+												<Button
+													variant="outlined"
+													color="error"
+													onClick={() => setCancelDialogOpen(true)}
+													sx={{ fontWeight: "bold", borderRadius: 2 }}
+												>
+													Annulla Richiesta
+												</Button>
+											)}
 										</Box>
 									</Grid>
 								)}
@@ -545,7 +613,7 @@ export default function TaskDetailPage() {
 							// Assuming we decode auth.user to get our own ID, or simply styling based on senderId match
 							// Since auth object might not map perfectly to backend UUID yet without an extra call,
 							// Let's use a simple logical check if we have our ID, otherwise alternate for demo
-							const isMe = auth.user?.profile?.sub ? msg.senderId === auth.user.profile.sub : idx % 2 === 0; // fallback demo logic
+							const isMe = dbUser?.id ? msg.senderId === dbUser.id : false;
 
 							return (
 								<Box

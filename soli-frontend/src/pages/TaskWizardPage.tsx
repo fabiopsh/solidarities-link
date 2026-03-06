@@ -42,6 +42,7 @@ export default function TaskWizardPage() {
 	const [description, setDescription] = useState("");
 	const [category, setCategory] = useState<ServiceCategory | "">("");
 	const [urgencyLevel, setUrgencyLevel] = useState<UrgencyLevel | "">("MEDIUM");
+	const [targetAddress, setTargetAddress] = useState("");
 
 	const handleNext = () => setActiveStep((prev) => prev + 1);
 	const handleBack = () => setActiveStep((prev) => prev - 1);
@@ -57,6 +58,7 @@ export default function TaskWizardPage() {
 				setTitle(res.data.title || "");
 				setDescription(res.data.description || "");
 				setCategory(res.data.category || "");
+				setTargetAddress(res.data.targetAddress || "");
 				handleNext(); // Move strictly to next step when done
 			}
 		} catch (err: any) {
@@ -76,6 +78,7 @@ export default function TaskWizardPage() {
 				description,
 				category,
 				urgencyLevel,
+				targetAddress,
 				beneficiaryId: null, // Backend will default to creatorId if null
 			});
 			// On success, redirect to requests
@@ -176,6 +179,16 @@ export default function TaskWizardPage() {
 							</Select>
 						</FormControl>
 						<TextField
+							label="Indirizzo / Luogo"
+							placeholder="Es: Via Roma 1, Milano (Oppure luogo di incontro)"
+							fullWidth
+							required
+							variant="outlined"
+							value={targetAddress}
+							onChange={(e) => setTargetAddress(e.target.value)}
+							InputProps={{ sx: { fontSize: "1.1rem" } }}
+						/>
+						<TextField
 							label="Descrizione Dettagliata"
 							fullWidth
 							multiline
@@ -193,7 +206,7 @@ export default function TaskWizardPage() {
 								variant="contained"
 								size="large"
 								onClick={handleNext}
-								disabled={!title || !category || !urgencyLevel}
+								disabled={!title || !category || !urgencyLevel || !targetAddress}
 								sx={{ px: 4, py: 1.5, fontSize: "1.1rem" }}
 							>
 								Avanti
@@ -235,6 +248,13 @@ export default function TaskWizardPage() {
 							</Typography>
 							<Typography variant="body1" gutterBottom>
 								{urgencyLevel}
+							</Typography>
+
+							<Typography variant="subtitle1" color="text.secondary" sx={{ mt: 2 }}>
+								Indirizzo / Luogo
+							</Typography>
+							<Typography variant="body1" gutterBottom>
+								{targetAddress}
 							</Typography>
 
 							<Typography variant="subtitle1" color="text.secondary" sx={{ mt: 2 }}>

@@ -78,6 +78,12 @@ public class TaskService {
         task.status = TaskStatus.ACCEPTED;
         task.checkInToken = generateToken(); // Generate token for check-in
 
+        // Create a ChatSession for real-time messaging between creator and volunteer
+        it.soli.entity.ChatSession session = new it.soli.entity.ChatSession();
+        session.taskId = taskId;
+        session.isActive = true;
+        session.persist();
+
         logStateChange(task, oldStatus, task.status, getCurrentUserId());
         return task;
     }
