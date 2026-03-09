@@ -16,6 +16,8 @@ export interface Task {
 	scheduledAt?: string;
 	targetLocation?: string;
 	targetAddress?: string;
+	latitude?: number;
+	longitude?: number;
 	status: TaskStatus;
 	checkInToken?: string;
 	checkOutToken?: string;

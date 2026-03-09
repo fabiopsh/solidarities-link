@@ -292,10 +292,10 @@ export default function TaskDetailPage() {
 				<Grid size={{ xs: 12, md: 8 }}>
 					<Card sx={{ borderRadius: 3, boxShadow: "0 4px 20px rgba(0,0,0,0.05)" }}>
 						<CardContent sx={{ p: 4 }}>
-							<Grid container alignItems="flex-start" justifyContent="space-between" spacing={2} sx={{ mb: 4 }}>
-								<Grid size="grow">
-									<Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 1 }}>
-										<Typography variant="h4" fontWeight={800} sx={{ color: "primary.dark" }}>
+							<Grid container alignItems="flex-start" justifyContent="space-between" spacing={3} sx={{ mb: 4 }}>
+								<Grid size={{ xs: 12, md: "grow" }}>
+									<Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 1, flexWrap: "wrap" }}>
+										<Typography variant="h4" fontWeight={800} sx={{ color: "primary.dark", wordBreak: "break-word" }}>
 											{task.title}
 										</Typography>
 										<Chip
@@ -314,15 +314,15 @@ export default function TaskDetailPage() {
 									</Typography>
 								</Grid>
 								{(task.status === "OPEN" || task.status === "ACCEPTED" || task.status === "IN_PROGRESS") && (
-									<Grid size="auto">
-										<Box sx={{ display: "flex", gap: 2 }}>
+									<Grid size={{ xs: 12, md: "auto" }}>
+										<Box sx={{ display: "flex", gap: 2, flexWrap: "wrap", justifyContent: { xs: "flex-start", md: "flex-end" } }}>
 											{(task.status === "ACCEPTED" || task.status === "IN_PROGRESS") && isVolunteer && (
 												<Button
 													variant="contained"
 													color="secondary"
 													onClick={() => setChatOpen(true)}
 													startIcon={<ForumIcon />}
-													sx={{ fontWeight: "bold", borderRadius: 2 }}
+													sx={{ fontWeight: "bold", borderRadius: 2, flex: { xs: 1, sm: "none" } }}
 												>
 													Chat (Volontario)
 												</Button>
@@ -333,7 +333,7 @@ export default function TaskDetailPage() {
 													color="primary"
 													onClick={() => setChatOpen(true)}
 													startIcon={<ForumIcon />}
-													sx={{ fontWeight: "bold", borderRadius: 2 }}
+													sx={{ fontWeight: "bold", borderRadius: 2, flex: { xs: 1, sm: "none" } }}
 												>
 													Chat
 												</Button>
@@ -346,18 +346,19 @@ export default function TaskDetailPage() {
 													onClick={handleAcceptTask}
 													disabled={accepting}
 													startIcon={accepting && <CircularProgress size={20} color="inherit" />}
-													sx={{ fontWeight: "bold", borderRadius: 2, px: 4 }}
+													sx={{ fontWeight: "bold", borderRadius: 2, px: 4, flex: { xs: 1, sm: "none" } }}
+													disableElevation
 												>
 													{accepting ? "Assegnazione..." : "Prendi in carico"}
 												</Button>
 											)}
 
-											{isCreator && (
+											{isCreator && task.status === "OPEN" && (
 												<Button
 													variant="outlined"
 													color="error"
 													onClick={() => setCancelDialogOpen(true)}
-													sx={{ fontWeight: "bold", borderRadius: 2 }}
+													sx={{ fontWeight: "bold", borderRadius: 2, flex: { xs: 1, sm: "none" } }}
 												>
 													Annulla Richiesta
 												</Button>
@@ -646,9 +647,9 @@ export default function TaskDetailPage() {
 									>
 										{msg.createdAt
 											? new Date(msg.createdAt).toLocaleTimeString([], {
-													hour: "2-digit",
-													minute: "2-digit",
-												})
+												hour: "2-digit",
+												minute: "2-digit",
+											})
 											: "Ora"}
 									</Typography>
 								</Box>

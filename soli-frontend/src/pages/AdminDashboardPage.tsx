@@ -96,8 +96,8 @@ export default function AdminDashboardPage() {
 
 			<Card sx={{ borderRadius: 3, boxShadow: "0 4px 20px rgba(0,0,0,0.05)" }}>
 				<CardContent sx={{ p: 0 }}>
-					<TableContainer component={Paper} elevation={0}>
-						<Table>
+					<TableContainer component={Paper} elevation={0} sx={{ overflowX: "auto" }}>
+						<Table sx={{ minWidth: 600 }}>
 							<TableHead sx={{ bgcolor: "grey.50" }}>
 								<TableRow>
 									<TableCell sx={{ fontWeight: "bold" }}>Titolo</TableCell>
@@ -117,12 +117,12 @@ export default function AdminDashboardPage() {
 								) : (
 									tasks.map((task) => (
 										<TableRow key={task.id} hover>
-											<TableCell>{task.title}</TableCell>
+											<TableCell sx={{ maxWidth: 200, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{task.title}</TableCell>
 											<TableCell>{task.category}</TableCell>
 											<TableCell>
 												<Chip
 													label={task.status}
-													color={getStatusColor(task.status)}
+													color={getStatusColor(task.status) as any}
 													size="small"
 													sx={{ fontWeight: "bold" }}
 												/>

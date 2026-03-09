@@ -200,7 +200,7 @@ export default function ProfilePage() {
 						</Box>
 						<CardContent sx={{ p: 3 }}>
 							<Stack spacing={2}>
-								<Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+								<Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 2, flexWrap: "wrap" }}>
 									<Typography variant="body2" color="text.secondary">
 										Ruolo
 									</Typography>
@@ -212,7 +212,7 @@ export default function ProfilePage() {
 									/>
 								</Box>
 								<Divider />
-								<Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+								<Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 2, flexWrap: "wrap" }}>
 									<Typography variant="body2" color="text.secondary">
 										Certificazione
 									</Typography>
@@ -225,7 +225,7 @@ export default function ProfilePage() {
 									/>
 								</Box>
 								<Divider />
-								<Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+								<Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 2, flexWrap: "wrap" }}>
 									<Typography variant="body2" color="text.secondary">
 										Stato
 									</Typography>
@@ -241,10 +241,10 @@ export default function ProfilePage() {
 									Membro dal{" "}
 									{user
 										? new Date(user.createdAt).toLocaleDateString("it-IT", {
-												year: "numeric",
-												month: "long",
-												day: "numeric",
-											})
+											year: "numeric",
+											month: "long",
+											day: "numeric",
+										})
 										: "—"}
 								</Typography>
 							</Stack>

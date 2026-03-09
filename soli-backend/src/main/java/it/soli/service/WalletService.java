@@ -17,7 +17,8 @@ public class WalletService {
      * Calculates earned credits, retrieves or creates the user's wallet,
      * updates the balance, and registers the transaction.
      */
-    @Transactional
+    @Transactional(Transactional.TxType.REQUIRES_NEW)
+    @jakarta.enterprise.context.control.ActivateRequestContext
     public void assignCreditsForTask(Task task) {
         if (task.volunteerId == null) {
             return;

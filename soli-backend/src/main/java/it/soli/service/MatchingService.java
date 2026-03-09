@@ -21,7 +21,8 @@ public class MatchingService {
      * Finds candidates, scores and sorts them, and creates TaskNotification entities
      * asynchronously or within the same transaction.
      */
-    @Transactional
+    @Transactional(Transactional.TxType.REQUIRES_NEW)
+    @jakarta.enterprise.context.control.ActivateRequestContext
     public void matchAndNotifyVolunteers(Task task) {
         if (task.latitude == null || task.longitude == null) {
             return; // Cannot perform geo-matching

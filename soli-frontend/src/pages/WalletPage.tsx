@@ -311,11 +311,11 @@ export default function WalletPage() {
 										}}
 									>
 										<CardContent sx={{ py: 2, px: 3, "&:last-child": { pb: 2 } }}>
-											<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+											<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 2 }}>
 												<Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
 													{getTransactionIcon(tx.transactionType)}
 													<Box>
-														<Typography variant="body1" fontWeight={600}>
+														<Typography variant="body1" fontWeight={600} sx={{ wordBreak: "break-word" }}>
 															{getTransactionLabel(tx.transactionType)}
 														</Typography>
 														<Typography variant="caption" color="text.secondary">
@@ -323,7 +323,7 @@ export default function WalletPage() {
 														</Typography>
 													</Box>
 												</Box>
-												<Box sx={{ textAlign: "right" }}>
+												<Box sx={{ textAlign: { xs: "left", sm: "right" }, width: { xs: "100%", sm: "auto" } }}>
 													<Typography
 														variant="h6"
 														fontWeight={700}
@@ -382,11 +382,12 @@ export default function WalletPage() {
 										display: "flex",
 										alignItems: "center",
 										gap: 2,
+										flexWrap: "wrap"
 									}}
 								>
 									{reward.icon}
-									<Box sx={{ flexGrow: 1 }}>
-										<Typography variant="subtitle1" fontWeight={700}>
+									<Box sx={{ flexGrow: 1, minWidth: 150 }}>
+										<Typography variant="subtitle1" fontWeight={700} sx={{ wordBreak: "break-word" }}>
 											{reward.title}
 										</Typography>
 										<Typography variant="caption" sx={{ opacity: 0.85 }}>

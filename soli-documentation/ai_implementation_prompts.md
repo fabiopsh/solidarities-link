@@ -229,11 +229,23 @@ Lavora in `soli-frontend`. Fornisci chat pseudo-anonima @[soli-documentation/fun
 
 ---
 
-## Livello Frontend Mobile (Expo React Native)
+### Iterazione 14: Selezione Posizione e Mappa nel Task Wizard (Frontend Web)
 
-**ATTENZIONE:** Il mobile è essenziale per il Volontario in strada. Anche qui i layout base sono minimali e vanno creati/espansi.
+**File di Riferimento da Includere:**
 
-### Iterazione 14: Navigazione Mobile, GPS Background e Lista Task
+- `@[soli-documentation/functional_requirements/fr-04-wizard-di-creazione-richiesta-guidata.md]`
+- `@[soli-documentation/functional_requirements/fr-08-geolocalizzazione-e-geofencing.md]`
+
+**Prompt per l'IA:**
+
+```text
+Lavora in `soli-frontend`. Integra la selezione della posizione nel wizard di creazione, soddisfacendo @[soli-documentation/functional_requirements/fr-08-geolocalizzazione-e-geofencing.md].
+1. In `TaskWizardPage.tsx`, aggiungi uno step dedicato alla "Posizione". Utilizza una mappa interattiva (es. `react-leaflet` o API Google Maps mockata) in stile Glovo per permettere all'utente di posizionare un pin spostando la mappa.
+2. Aggiungi un campo di input testuale (Autocompletamento indirizzo mockato) che aggiorni le coordinate del pin e viceversa.
+3. Salva la latidudine e la longitudine selezionate nello state del form per inviarle nel payload finale della `POST /api/tasks`.
+```
+
+### Iterazione 15: Visualizzazione Mappa dei Task per i Volontari (Frontend Web)
 
 **File di Riferimento da Includere:**
 
@@ -242,13 +254,65 @@ Lavora in `soli-frontend`. Fornisci chat pseudo-anonima @[soli-documentation/fun
 **Prompt per l'IA:**
 
 ```text
-Lavora in `soli-mobile`. Getta le fondamenta strutturali e la geolocazione da @[soli-documentation/functional_requirements/fr-08-geolocalizzazione-e-geofencing.md].
-1. Setta lo stack di `expo-router` in `(tabs)/_layout.tsx` inserendo tab bar logiche: Home/Radar, Wallet, Profilo.
-2. Usa `expo-location`. All'avvio loggato, richiedi permeessi OS e lancia aggiornamenti backgound/foreground HTTP a `PUT /api/users/me/location` ad ogni spostamento rilevante del device.
-3. Costruisci `home.tsx` (Radar): Esegui una `GET` al backend ed elenca in scroll le Card dei Task in zona aperti (in modo da bypassare temporaneamente il push event cloud complex e testare subito in UI).
+Lavora in `soli-frontend`. Aggiungi una visualizzazione geografica dei task per i volontari, come richiesto in @[soli-documentation/functional_requirements/fr-08-geolocalizzazione-e-geofencing.md].
+1. In `DashboardPage.tsx` o in una nuova vista `TaskRadarPage.tsx`, crea un Toggle Switch "Lista / Mappa".
+2. Nella visualizzazione Mappa, mostra una mappa a tutto schermo centrata sulla posizione attuale del volontario (recuperata dal browser via `navigator.geolocation`).
+3. Effettua una `GET /api/tasks` prelevando i task in stato OPEN e piazza dei marker sulla mappa.
+4. Cliccando su un marker, apri un popup (Tooltip) con il riassunto della richiesta e un pulsante per navigare al dettaglio.
 ```
 
-### Iterazione 15: Scanning QR Camera e Notifiche Push (Mobile)
+---
+
+## Livello Frontend Mobile (Expo React Native)
+
+**ATTENZIONE:** Il mobile è essenziale per il Volontario in strada. Anche qui i layout base sono minimali e vanno creati/espansi.
+
+### Iterazione 16: Navigazione Mobile e Lista Task (Mobile)
+
+**File di Riferimento da Includere:**
+
+- `@[soli-documentation/functional_requirements/fr-08-geolocalizzazione-e-geofencing.md]`
+
+**Prompt per l'IA:**
+
+```text
+Lavora in `soli-mobile`. Getta le fondamenta strutturali e la lista task da @[soli-documentation/functional_requirements/fr-08-geolocalizzazione-e-geofencing.md].
+1. Setta lo stack di `expo-router` in `(tabs)/_layout.tsx` inserendo tab bar logiche: Radar, Wallet, Profilo.
+2. Costruisci `home.tsx` (Lista): Esegui una `GET` al backend ed elenca in scroll le Card dei Task in zona aperti (in modo da bypassare temporaneamente il push event cloud complex e testare subito in UI).
+```
+
+### Iterazione 17: Radar Volontario - GPS e Mappa dei Task (Mobile)
+
+**File di Riferimento da Includere:**
+
+- `@[soli-documentation/functional_requirements/fr-08-geolocalizzazione-e-geofencing.md]`
+
+**Prompt per l'IA:**
+
+```text
+Lavora in `soli-mobile`. Aggiungi la visualizzazione mappa e il tracking GPS da @[soli-documentation/functional_requirements/fr-08-geolocalizzazione-e-geofencing.md].
+1. Usa `expo-location`. All'avvio loggato, richiedi permessi OS e lancia aggiornamenti background/foreground HTTP a `PUT /api/users/me/location` ad ogni spostamento rilevante del device.
+2. Aggiungi un toggle in `home.tsx` per passare dalla lista a una mappa interattiva (es. `react-native-maps`).
+3. Renderizza marker personalizzati per i task sulla mappa e permetti di aprire un bottom sheet al tap su un marker con i dettagli per accettarlo.
+```
+
+### Iterazione 18: Creazione Task da Mobile - Mappa e Posizione (Mobile)
+
+**File di Riferimento da Includere:**
+
+- `@[soli-documentation/functional_requirements/fr-04-wizard-di-creazione-richiesta-guidata.md]`
+- `@[soli-documentation/functional_requirements/fr-08-geolocalizzazione-e-geofencing.md]`
+
+**Prompt per l'IA:**
+
+```text
+Lavora in `soli-mobile`. Implementa la creazione di nuove richieste da app mobile.
+1. Crea `CreateTaskScreen.tsx`. Aggiungi lo step iniziale per la macro-categoria e descrizione della richiesta (innescando il Mock AI assist locale o remoto).
+2. Nello step della posizione, mostra una mappa (`react-native-maps`) con un marker fisso al centro dello schermo. L'utente sposta la mappa (pan & zoom) e ottiene la posizione centrale al rilascio (`onRegionChangeComplete`).
+3. Invia i dati tramite `POST /api/tasks` al termine del form.
+```
+
+### Iterazione 19: Scanning QR Camera e Check-in (Mobile)
 
 **File di Riferimento da Includere:**
 
@@ -258,8 +322,24 @@ Lavora in `soli-mobile`. Getta le fondamenta strutturali e la geolocazione da @[
 **Prompt per l'IA:**
 
 ```text
-Lavora in `soli-mobile`. Implementa lo scanning Checkin/Checkout in presenza @[soli-documentation/functional_requirements/fr-10-accettazione-rifiuto-e-rilascio-task.md] e @[soli-documentation/functional_requirements/fr-12-validazione-tramite-token-qr-code.md].
-1. Crea `ActiveTaskScreen.tsx`. Usa `@expo/camera` (o input textbox di fallback) per dare uno scanner al Volontario. Il fine è di inquadrare fisicamente il telefono del Richiedente sulla Web App.
-2. Parsata la stringa QR/Token, inviala a `POST /api/tasks/{taskId}/checkin`. In caso 200 OK mostra Toast di successo e muta stato visivo UI.
-3. Lo stesso scanner valga poi per Checkout finale. Su 200 OK di checkout triggera un Lottie / micro-animazione celebrativa e naviga automaticamente sulla vista Wallet mobile per ammirare i nuovi Crediti caricati!
+Lavora in `soli-mobile`. Implementa lo scanning Checkin in presenza per @[soli-documentation/functional_requirements/fr-10-accettazione-rifiuto-e-rilascio-task.md] e @[soli-documentation/functional_requirements/fr-12-validazione-tramite-token-qr-code.md].
+1. Crea `ActiveTaskScreen.tsx` che mostra i task assegnati in stato ASSIGNED o IN_PROGRESS.
+2. Usa `expo-camera` per permettere al Volontario di inquadrare fisicamente il telefono del Richiedente (il quale mostrerà il QR `checkInToken` nel Frontend Web).
+3. Parsata la stringa QR, inviala a `POST /api/tasks/{taskId}/checkin`. In caso 200 OK mostra Toast di successo e muta stato visivo della UI abilitando il "Check-out".
+```
+
+### Iterazione 20: Flusso di Check-out, Assegnazione Punti e Feedback (Web & Mobile)
+
+**File di Riferimento da Includere:**
+
+- `@[soli-documentation/functional_requirements/fr-12-validazione-tramite-token-qr-code.md]`
+- `@[soli-documentation/functional_requirements/fr-13-calcolo-e-assegnazione-crediti-soli.md]`
+
+**Prompt per l'IA:**
+
+```text
+Lavora in modo correlato su `soli-frontend` e `soli-mobile` per completare il task in base a @[soli-documentation/functional_requirements/fr-12-validazione-tramite-token-qr-code.md] e @[soli-documentation/functional_requirements/fr-13-calcolo-e-assegnazione-crediti-soli.md].
+1. In `soli-frontend` (Web): Aggiorna `TaskDetailPage.tsx` per i task IN_PROGRESS mostrando il SECONDO QR code (`checkOutToken`). A checkout avvenuto, mostra al richiedente una schermata per lasciare un feedback a 5 stelle al volontario.
+2. In `soli-mobile` (Mobile): Cliccando su "Completa Task", apri lo scanner fotocamera per leggere il `checkOutToken`.
+3. Invia a `POST /api/tasks/{taskId}/checkout`. Al 200 OK triggera una micro-animazione celebrativa (es. Lottie) su mobile e naviga automaticamente sulla vista Wallet per mostrare i nuovi Crediti SOLI guadagnati!
 ```

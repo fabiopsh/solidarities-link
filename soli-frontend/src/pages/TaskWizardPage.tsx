@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
 	Box,
@@ -24,7 +24,42 @@ import api from "../api";
 import type { ServiceCategory } from "../types/models/VolunteerProfile";
 import type { UrgencyLevel } from "../types/models/Task";
 
-const steps = ["SoliAssistant (Opzionale)", "Dettagli Richiesta", "Conferma"];
+import { MapContainer, TileLayer, Marker, useMap } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
+import L from "leaflet";
+import icon from "leaflet/dist/images/marker-icon.png";
+import iconShadow from "leaflet/dist/images/marker-shadow.png";
+
+const DefaultIcon = L.icon({
+	iconUrl: icon,
+	shadowUrl: iconShadow,
+	iconSize: [25, 41],
+	iconAnchor: [12, 41],
+});
+L.Marker.prototype.options.icon = DefaultIcon;
+
+const steps = ["SoliAssistant (Opzionale)", "Dettagli Richiesta", "Posizione", "Conferma"];
+
+function LocationMarker({ position, setPosition }: { position: [number, number]; setPosition: (p: L.LatLng) => void }) {
+	const map = useMap();
+
+	useEffect(() => {
+		map.flyTo(position, map.getZoom());
+	}, [position, map]);
+
+	return (
+		<Marker
+			position={position}
+			draggable={true}
+			eventHandlers={{
+				dragend: (e) => {
+					const marker = e.target;
+					setPosition(marker.getLatLng());
+				},
+			}}
+		/>
+	);
+}
 
 export default function TaskWizardPage() {
 	const theme = useTheme();
@@ -43,6 +78,9 @@ export default function TaskWizardPage() {
 	const [category, setCategory] = useState<ServiceCategory | "">("");
 	const [urgencyLevel, setUrgencyLevel] = useState<UrgencyLevel | "">("MEDIUM");
 	const [targetAddress, setTargetAddress] = useState("");
+	const [latitude, setLatitude] = useState<number>(45.4642);
+	const [longitude, setLongitude] = useState<number>(9.1900);
+	const [isSearchingAddress, setIsSearchingAddress] = useState(false);
 
 	const handleNext = () => setActiveStep((prev) => prev + 1);
 	const handleBack = () => setActiveStep((prev) => prev - 1);
@@ -69,6 +107,27 @@ export default function TaskWizardPage() {
 		}
 	};
 
+	const handleSearchAddress = async () => {
+		if (!targetAddress.trim()) return;
+		setIsSearchingAddress(true);
+		try {
+			const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(targetAddress)}`);
+			const data = await res.json();
+			if (data && data.length > 0) {
+				const lat = parseFloat(data[0].lat);
+				const lon = parseFloat(data[0].lon);
+				if (!isNaN(lat) && !isNaN(lon)) {
+					setLatitude(lat);
+					setLongitude(lon);
+				}
+			}
+		} catch (error) {
+			console.error("Error fetching address:", error);
+		} finally {
+			setIsSearchingAddress(false);
+		}
+	};
+
 	const handleSubmit = async () => {
 		setIsSubmitting(true);
 		setError(null);
@@ -79,6 +138,8 @@ export default function TaskWizardPage() {
 				category,
 				urgencyLevel,
 				targetAddress,
+				latitude,
+				longitude,
 				beneficiaryId: null, // Backend will default to creatorId if null
 			});
 			// On success, redirect to requests
@@ -179,16 +240,6 @@ export default function TaskWizardPage() {
 							</Select>
 						</FormControl>
 						<TextField
-							label="Indirizzo / Luogo"
-							placeholder="Es: Via Roma 1, Milano (Oppure luogo di incontro)"
-							fullWidth
-							required
-							variant="outlined"
-							value={targetAddress}
-							onChange={(e) => setTargetAddress(e.target.value)}
-							InputProps={{ sx: { fontSize: "1.1rem" } }}
-						/>
-						<TextField
 							label="Descrizione Dettagliata"
 							fullWidth
 							multiline
@@ -206,7 +257,7 @@ export default function TaskWizardPage() {
 								variant="contained"
 								size="large"
 								onClick={handleNext}
-								disabled={!title || !category || !urgencyLevel || !targetAddress}
+								disabled={!title || !category || !urgencyLevel}
 								sx={{ px: 4, py: 1.5, fontSize: "1.1rem" }}
 							>
 								Avanti
@@ -215,6 +266,57 @@ export default function TaskWizardPage() {
 					</Box>
 				);
 			case 2:
+				return (
+					<Box sx={{ display: "flex", flexDirection: "column", gap: 3, pt: 2 }}>
+						<Typography variant="body1" color="text.secondary">
+							Cerca l'indirizzo o sposta il pin sulla mappa per indicare la posizione esatta in cui serve aiuto.
+						</Typography>
+						<Box sx={{ display: "flex", gap: 2 }}>
+							<TextField
+								label="Indirizzo / Luogo"
+								placeholder="Es: Via Roma 1, Milano"
+								fullWidth
+								required
+								variant="outlined"
+								value={targetAddress}
+								onChange={(e) => setTargetAddress(e.target.value)}
+								InputProps={{ sx: { fontSize: "1.1rem" } }}
+							/>
+							<Button
+								variant="outlined"
+								onClick={handleSearchAddress}
+								disabled={isSearchingAddress || !targetAddress.trim()}
+								sx={{ minWidth: "120px", height: "56px" }}
+							>
+								{isSearchingAddress ? <CircularProgress size={24} /> : "Cerca"}
+							</Button>
+						</Box>
+						<Box sx={{ height: 350, width: "100%", borderRadius: 2, overflow: "hidden", border: "1px solid", borderColor: "divider", position: "relative", zIndex: 0 }}>
+							<MapContainer center={[latitude, longitude]} zoom={14} style={{ height: "100%", width: "100%" }}>
+								<TileLayer
+									attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+									url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+								/>
+								<LocationMarker position={[latitude, longitude]} setPosition={(p) => { setLatitude(p.lat); setLongitude(p.lng); }} />
+							</MapContainer>
+						</Box>
+						<Box sx={{ display: "flex", justifyContent: "space-between", mt: 2 }}>
+							<Button size="large" onClick={handleBack}>
+								Indietro
+							</Button>
+							<Button
+								variant="contained"
+								size="large"
+								onClick={handleNext}
+								disabled={!targetAddress}
+								sx={{ px: 4, py: 1.5, fontSize: "1.1rem" }}
+							>
+								Avanti
+							</Button>
+						</Box>
+					</Box>
+				);
+			case 3:
 				return (
 					<Box sx={{ display: "flex", flexDirection: "column", gap: 3, pt: 2 }}>
 						<Typography variant="h6" gutterBottom>

@@ -9,8 +9,6 @@ import {
 	Grid,
 	Button,
 	CircularProgress,
-	Chip,
-	Stack,
 	Dialog,
 	DialogTitle,
 	DialogContent,
@@ -19,18 +17,21 @@ import {
 	Alert,
 	Tabs,
 	Tab,
+	ToggleButton,
+	ToggleButtonGroup,
 } from "@mui/material";
 import VolunteerActivismIcon from "@mui/icons-material/VolunteerActivism";
+import ViewListIcon from "@mui/icons-material/ViewList";
+import MapIcon from "@mui/icons-material/Map";
 import AssignmentIcon from "@mui/icons-material/Assignment";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 import AddIcon from "@mui/icons-material/Add";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
-import EventIcon from "@mui/icons-material/Event";
-import CategoryIcon from "@mui/icons-material/Category";
-import LocationOnIcon from "@mui/icons-material/LocationOn";
 import api from "../api";
 import type { Task } from "../types/models/Task";
 import type { User } from "../types/models/User";
+import TaskMapView from "../components/TaskMapView";
+import TaskCard from "../components/TaskCard";
 
 export default function DashboardPage() {
 	const auth = useAuth();
@@ -48,6 +49,7 @@ export default function DashboardPage() {
 
 	// Tab state for requests page
 	const [tabValue, setTabValue] = useState(0);
+	const [viewMode, setViewMode] = useState<"LIST" | "MAP">("LIST");
 
 	const [dbUser, setDbUser] = useState<User | null>(null);
 
@@ -101,58 +103,7 @@ export default function DashboardPage() {
 		setTaskToCancel(null);
 	};
 
-	const getStatusColor = (status: string) => {
-		switch (status) {
-			case "OPEN":
-				return "success";
-			case "ACCEPTED":
-				return "info";
-			case "IN_PROGRESS":
-				return "warning";
-			case "COMPLETED":
-				return "primary";
-			case "CANCELLED":
-				return "error";
-			default:
-				return "default";
-		}
-	};
 
-	const getStatusLabel = (status: string) => {
-		switch (status) {
-			case "OPEN":
-				return "Aperto";
-			case "ACCEPTED":
-				return "Accettato";
-			case "IN_PROGRESS":
-				return "In Corso";
-			case "COMPLETED":
-				return "Completato";
-			case "CANCELLED":
-				return "Annullato";
-			default:
-				return status;
-		}
-	};
-
-	const getCategoryLabel = (category: string) => {
-		switch (category) {
-			case "SHOPPING":
-				return "Spesa";
-			case "DELIVERY":
-				return "Consegna";
-			case "HOUSEHOLD":
-				return "Faccende Domestiche";
-			case "TRANSPORT":
-				return "Trasporto";
-			case "COMPANY":
-				return "Compagnia";
-			case "OTHER":
-				return "Altro";
-			default:
-				return category;
-		}
-	};
 
 	// Derived state
 	const currentUserId = dbUser?.id;
@@ -213,111 +164,15 @@ export default function DashboardPage() {
 			<Grid container spacing={3}>
 				{taskList.map((task) => (
 					<Grid size={{ xs: 12, sm: 6, md: 4 }} key={task.id}>
-						<Card
-							sx={{
-								height: "100%",
-								display: "flex",
-								flexDirection: "column",
-								borderRadius: 3,
-								boxShadow: "0 4px 20px rgba{0,0,0,0.05}",
-								transition: "transform 0.2s, box-shadow 0.2s",
-								"&:hover": {
-									transform: "translateY(-4px)",
-									boxShadow: "0 8px 24px rgba{0,0,0,0.1}",
-								},
+						<TaskCard
+							task={task}
+							currentUserId={currentUserId}
+							onDetailsClick={(taskId) => navigate(`/dashboard/requests/${taskId}`)}
+							onCancelClick={(taskToCancel) => {
+								setTaskToCancel(taskToCancel);
+								setCancelDialogOpen(true);
 							}}
-						>
-							<CardContent sx={{ flexGrow: 1, p: 3 }}>
-								<Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
-									<Chip
-										label={getStatusLabel(task.status)}
-										color={getStatusColor(task.status) as any}
-										size="small"
-										sx={{ fontWeight: "bold" }}
-									/>
-									<Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
-										Urgenza {task.urgencyLevel}
-									</Typography>
-								</Box>
-
-								<Typography variant="h6" fontWeight={700} gutterBottom noWrap title={task.title}>
-									{task.title}
-								</Typography>
-
-								<Typography
-									variant="body2"
-									color="text.secondary"
-									sx={{
-										mb: 3,
-										display: "-webkit-box",
-										WebkitLineClamp: 2,
-										WebkitBoxOrient: "vertical",
-										overflow: "hidden",
-										minHeight: 40,
-									}}
-								>
-									{task.description || "Nessuna descrizione disponibile"}
-								</Typography>
-
-								<Stack spacing={1.5}>
-									<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-										<CategoryIcon fontSize="small" color="action" />
-										<Typography variant="subtitle2" color="text.primary">
-											{getCategoryLabel(task.category)}
-										</Typography>
-									</Box>
-									<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-										<LocationOnIcon fontSize="small" color="action" />
-										<Typography variant="body2" color="text.secondary" noWrap title={task.targetAddress}>
-											{task.targetAddress}
-										</Typography>
-									</Box>
-									{task.scheduledAt && (
-										<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-											<EventIcon fontSize="small" color="action" />
-											<Typography variant="body2" color="text.secondary">
-												{new Date(task.scheduledAt).toLocaleDateString([], {
-													month: "short",
-													day: "numeric",
-													hour: "2-digit",
-													minute: "2-digit",
-												})}
-											</Typography>
-										</Box>
-									)}
-								</Stack>
-							</CardContent>
-
-							<Box sx={{ p: 2, pt: 0, mt: "auto", borderTop: "1px solid", borderColor: "divider" }}>
-								<Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mt: 2 }}>
-									<Button
-										size="small"
-										variant="contained"
-										color="primary"
-										onClick={() => navigate(`/dashboard/requests/${task.id}`)}
-										sx={{ borderRadius: 2, textTransform: "none", fontWeight: 600 }}
-									>
-										Dettagli
-									</Button>
-
-									{/* Only show "Annulla" if I am the creator and it's OPEN */}
-									{task.status === "OPEN" && task.creatorId === currentUserId && (
-										<Button
-											size="small"
-											variant="outlined"
-											color="error"
-											onClick={() => {
-												setTaskToCancel(task);
-												setCancelDialogOpen(true);
-											}}
-											sx={{ borderRadius: 2, textTransform: "none", fontWeight: 600 }}
-										>
-											Annulla
-										</Button>
-									)}
-								</Box>
-							</Box>
-						</Card>
+						/>
 					</Grid>
 				))}
 			</Grid>
@@ -431,7 +286,34 @@ export default function DashboardPage() {
 
 					{/* Available Tasks Tab */}
 					<Box role="tabpanel" hidden={tabValue !== 1}>
-						{tabValue === 1 && renderTaskCards(availableTasks)}
+						{tabValue === 1 && (
+							<>
+								<Box sx={{ display: "flex", justifyContent: "flex-end", mb: 2 }}>
+									<ToggleButtonGroup
+										value={viewMode}
+										exclusive
+										onChange={(_, newMode) => {
+											if (newMode !== null) setViewMode(newMode);
+										}}
+										aria-label="view mode"
+										size="small"
+										sx={{ bgcolor: "background.paper" }}
+									>
+										<ToggleButton value="LIST" aria-label="list view">
+											<ViewListIcon sx={{ mr: 1 }} /> Lista
+										</ToggleButton>
+										<ToggleButton value="MAP" aria-label="map view">
+											<MapIcon sx={{ mr: 1 }} /> Mappa
+										</ToggleButton>
+									</ToggleButtonGroup>
+								</Box>
+								{viewMode === "LIST" ? (
+									renderTaskCards(availableTasks)
+								) : (
+									<TaskMapView tasks={availableTasks} />
+								)}
+							</>
+						)}
 					</Box>
 				</>
 			) : (
