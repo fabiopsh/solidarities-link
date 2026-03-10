@@ -1,5 +1,7 @@
-.metals/metals.log
-.vscode
-.metals/*
-.metals
+# IDE
+.vscode/
+.metals/
+.bsp/
+
+# OS
 .DS_Store
