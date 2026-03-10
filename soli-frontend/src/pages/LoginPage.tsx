@@ -7,6 +7,13 @@ import LoginIcon from "@mui/icons-material/Login";
 export default function LoginPage() {
 	const auth = useAuth();
 
+	const handleRegister = async () => {
+		// signinRedirect accetta un oggetto di configurazione
+		await auth.signinRedirect({
+			prompt: "create",
+		});
+	};
+
 	if (auth.isLoading) {
 		return (
 			<Box
@@ -85,7 +92,7 @@ export default function LoginPage() {
 						size="large"
 						fullWidth
 						startIcon={<LoginIcon />}
-						onClick={() => auth.signinRedirect()}
+						onClick={() => auth.signinRedirect({ extraQueryParams: { prompt: "login" } })}
 						sx={{
 							py: 1.5,
 							fontSize: "1rem",
@@ -104,19 +111,7 @@ export default function LoginPage() {
 						variant="outlined"
 						size="large"
 						fullWidth
-						onClick={() => {
-							// Keycloak registration URL
-							const registrationUrl =
-								(auth.settings.authority || "") +
-								"/protocol/openid-connect/registrations" +
-								"?client_id=" +
-								encodeURIComponent(auth.settings.client_id || "") +
-								"&redirect_uri=" +
-								encodeURIComponent(auth.settings.redirect_uri || window.location.origin) +
-								"&response_type=code" +
-								"&scope=openid profile email";
-							window.location.href = registrationUrl;
-						}}
+						onClick={handleRegister}
 						sx={{
 							py: 1.5,
 							fontSize: "1rem",

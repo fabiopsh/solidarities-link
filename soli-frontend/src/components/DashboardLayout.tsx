@@ -23,12 +23,8 @@ import {
 import MenuIcon from "@mui/icons-material/Menu";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import DashboardIcon from "@mui/icons-material/Dashboard";
-import PeopleIcon from "@mui/icons-material/People";
-import VolunteerActivismIcon from "@mui/icons-material/VolunteerActivism";
 import AssignmentIcon from "@mui/icons-material/Assignment";
-import ChatIcon from "@mui/icons-material/Chat";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
-import SettingsIcon from "@mui/icons-material/Settings";
 import LogoutIcon from "@mui/icons-material/Logout";
 import PersonIcon from "@mui/icons-material/Person";
 import HandshakeIcon from "@mui/icons-material/Handshake";
@@ -45,28 +41,37 @@ interface NavItem {
 const navItems: NavItem[] = [
 	{ label: "Dashboard", icon: <DashboardIcon />, path: "/dashboard" },
 	{ label: "Richieste", icon: <AssignmentIcon />, path: "/dashboard/requests" },
-	{ label: "Volontari", icon: <VolunteerActivismIcon />, path: "/dashboard/volunteers" },
-	{ label: "Utenti", icon: <PeopleIcon />, path: "/dashboard/users" },
-	{ label: "Chat", icon: <ChatIcon />, path: "/dashboard/chat" },
-	{ label: "Crediti SOLI", icon: <EmojiEventsIcon />, path: "/dashboard/credits" },
+	{ label: "Wallet", icon: <EmojiEventsIcon />, path: "/dashboard/wallet" },
 ];
 
-const bottomNavItems: NavItem[] = [{ label: "Impostazioni", icon: <SettingsIcon />, path: "/dashboard/settings" }];
+const adminNavItems: NavItem[] = [{ label: "Gestione Admin", icon: <DashboardIcon />, path: "/dashboard/admin" }];
+
+const bottomNavItems: NavItem[] = [{ label: "Profilo", icon: <PersonIcon />, path: "/dashboard/profile" }];
 
 export default function DashboardLayout() {
 	const theme = useTheme();
 	const isMobile = useMediaQuery(theme.breakpoints.down("md"));
-	const [drawerOpen, setDrawerOpen] = useState(!isMobile);
+	const [mobileOpen, setMobileOpen] = useState(false);
+	const [drawerCollapsed, setDrawerCollapsed] = useState(false);
 	const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 	const auth = useAuth();
 	const navigate = useNavigate();
 	const location = useLocation();
 
+	// Check if user has admin role
+	const isAdmin = (auth.user?.profile?.realm_access as any)?.roles?.includes("admin") || false;
+
 	const userName = auth.user?.profile?.given_name || auth.user?.profile?.name || "Utente";
 	const userEmail = auth.user?.profile?.email || "";
 	const userInitials = userName.charAt(0).toUpperCase();
 
-	const handleDrawerToggle = () => setDrawerOpen(!drawerOpen);
+	const handleDrawerToggle = () => {
+		if (isMobile) {
+			setMobileOpen(!mobileOpen);
+		} else {
+			setDrawerCollapsed(!drawerCollapsed);
+		}
+	};
 	const handleMenuOpen = (e: React.MouseEvent<HTMLElement>) => setAnchorEl(e.currentTarget);
 	const handleMenuClose = () => setAnchorEl(null);
 
@@ -77,7 +82,7 @@ export default function DashboardLayout() {
 
 	const handleNav = (path: string) => {
 		navigate(path);
-		if (isMobile) setDrawerOpen(false);
+		if (isMobile) setMobileOpen(false);
 	};
 
 	const drawerContent = (
@@ -87,11 +92,11 @@ export default function DashboardLayout() {
 				sx={{
 					display: "flex",
 					alignItems: "center",
-					justifyContent: drawerOpen ? "space-between" : "center",
-					px: drawerOpen ? 2 : 1,
+					justifyContent: (isMobile ? mobileOpen : !drawerCollapsed) ? "space-between" : "center",
+					px: (isMobile ? mobileOpen : !drawerCollapsed) ? 2 : 1,
 				}}
 			>
-				{drawerOpen && (
+				{(isMobile ? mobileOpen : !drawerCollapsed) && (
 					<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
 						<HandshakeIcon color="primary" sx={{ fontSize: 32 }} />
 						<Typography
@@ -110,50 +115,105 @@ export default function DashboardLayout() {
 					</Box>
 				)}
 				<IconButton onClick={handleDrawerToggle} size="small">
-					{drawerOpen ? <ChevronLeftIcon /> : <MenuIcon />}
+					{(isMobile ? mobileOpen : !drawerCollapsed) ? <ChevronLeftIcon /> : <MenuIcon />}
 				</IconButton>
 			</Toolbar>
 
 			<Divider />
 
-			{/* Main navigation */}
-			<List sx={{ flexGrow: 1, px: 1, pt: 1 }}>
+			{/* Main Nav Items */}
+			<List sx={{ flexGrow: 1, px: 1, py: 2 }}>
 				{navItems.map((item) => (
 					<ListItemButton
-						key={item.path}
-						selected={location.pathname === item.path}
+						key={item.label}
 						onClick={() => handleNav(item.path)}
+						selected={
+							location.pathname === item.path ||
+							(item.path !== "/dashboard" && location.pathname.startsWith(item.path))
+						}
 						sx={{
-							minHeight: 48,
-							justifyContent: drawerOpen ? "initial" : "center",
-							px: 2,
+							borderRadius: 2,
 							mb: 0.5,
+							minHeight: 48,
+							justifyContent: (isMobile ? mobileOpen : !drawerCollapsed) ? "initial" : "center",
+							px: 2,
+							"&.Mui-selected": {
+								bgcolor: "primary.main",
+								color: "primary.contrastText",
+								"&:hover": { bgcolor: "primary.dark" },
+								"& .MuiListItemIcon-root": { color: "inherit" },
+							},
 						}}
 					>
 						<ListItemIcon
 							sx={{
+								color: "inherit",
 								minWidth: 0,
-								mr: drawerOpen ? 2 : "auto",
+								mr: (isMobile ? mobileOpen : !drawerCollapsed) ? 2 : "auto",
 								justifyContent: "center",
-								color: location.pathname === item.path ? "primary.main" : "text.secondary",
 							}}
 						>
 							{item.icon}
 						</ListItemIcon>
-						{drawerOpen && (
-							<ListItemText
-								primary={item.label}
-								primaryTypographyProps={{
-									fontWeight: location.pathname === item.path ? 600 : 400,
-									fontSize: "0.9rem",
-								}}
-							/>
+						{!(isMobile ? false : drawerCollapsed) && (
+							<ListItemText primary={item.label} primaryTypographyProps={{ fontWeight: 600 }} />
 						)}
 					</ListItemButton>
 				))}
-			</List>
 
-			<Divider />
+				{isAdmin && (
+					<>
+						<Divider sx={{ my: 1 }} />
+						<Typography
+							variant="caption"
+							sx={{
+								px: (isMobile ? false : drawerCollapsed) ? 0 : 2,
+								display: "block",
+								textAlign: (isMobile ? false : drawerCollapsed) ? "center" : "left",
+								color: "text.secondary",
+								fontWeight: "bold",
+								mb: 1,
+							}}
+						>
+							{(isMobile ? false : drawerCollapsed) ? "ADM" : "ADMIN"}
+						</Typography>
+						{adminNavItems.map((item) => (
+							<ListItemButton
+								key={item.label}
+								onClick={() => handleNav(item.path)}
+								selected={location.pathname === item.path || location.pathname.startsWith(item.path)}
+								sx={{
+									borderRadius: 2,
+									mb: 0.5,
+									minHeight: 48,
+									justifyContent: (isMobile ? mobileOpen : !drawerCollapsed) ? "initial" : "center",
+									px: 2,
+									"&.Mui-selected": {
+										bgcolor: "secondary.main",
+										color: "secondary.contrastText",
+										"&:hover": { bgcolor: "secondary.dark" },
+										"& .MuiListItemIcon-root": { color: "inherit" },
+									},
+								}}
+							>
+								<ListItemIcon
+									sx={{
+										color: "inherit",
+										minWidth: 0,
+										mr: (isMobile ? mobileOpen : !drawerCollapsed) ? 2 : "auto",
+										justifyContent: "center",
+									}}
+								>
+									{item.icon}
+								</ListItemIcon>
+								{!(isMobile ? false : drawerCollapsed) && (
+									<ListItemText primary={item.label} primaryTypographyProps={{ fontWeight: 600 }} />
+								)}
+							</ListItemButton>
+						))}
+					</>
+				)}
+			</List>
 
 			{/* Bottom navigation */}
 			<List sx={{ px: 1, pb: 1 }}>
@@ -164,26 +224,28 @@ export default function DashboardLayout() {
 						onClick={() => handleNav(item.path)}
 						sx={{
 							minHeight: 48,
-							justifyContent: drawerOpen ? "initial" : "center",
+							justifyContent: (isMobile ? mobileOpen : !drawerCollapsed) ? "initial" : "center",
 							px: 2,
 						}}
 					>
 						<ListItemIcon
 							sx={{
 								minWidth: 0,
-								mr: drawerOpen ? 2 : "auto",
+								mr: (isMobile ? mobileOpen : !drawerCollapsed) ? 2 : "auto",
 								justifyContent: "center",
 							}}
 						>
 							{item.icon}
 						</ListItemIcon>
-						{drawerOpen && <ListItemText primary={item.label} primaryTypographyProps={{ fontSize: "0.9rem" }} />}
+						{(isMobile ? mobileOpen : !drawerCollapsed) && (
+							<ListItemText primary={item.label} primaryTypographyProps={{ fontSize: "0.9rem" }} />
+						)}
 					</ListItemButton>
 				))}
 			</List>
 
 			{/* User info at bottom */}
-			{drawerOpen && (
+			{(isMobile ? mobileOpen : !drawerCollapsed) && (
 				<>
 					<Divider />
 					<Box sx={{ p: 2, display: "flex", alignItems: "center", gap: 1.5 }}>
@@ -204,7 +266,7 @@ export default function DashboardLayout() {
 		</Box>
 	);
 
-	const currentDrawerWidth = drawerOpen ? DRAWER_WIDTH : DRAWER_WIDTH_COLLAPSED;
+	const currentDrawerWidth = !isMobile && !drawerCollapsed ? DRAWER_WIDTH : DRAWER_WIDTH_COLLAPSED;
 
 	return (
 		<Box sx={{ display: "flex", minHeight: "100vh" }}>
@@ -248,19 +310,17 @@ export default function DashboardLayout() {
 						transformOrigin={{ horizontal: "right", vertical: "top" }}
 						anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
 					>
-						<MenuItem onClick={handleMenuClose}>
+						<MenuItem
+							onClick={() => {
+								handleMenuClose();
+								handleNav("/dashboard/profile");
+							}}
+						>
 							<ListItemIcon>
 								<PersonIcon fontSize="small" />
 							</ListItemIcon>
 							Profilo
 						</MenuItem>
-						<MenuItem onClick={handleMenuClose}>
-							<ListItemIcon>
-								<SettingsIcon fontSize="small" />
-							</ListItemIcon>
-							Impostazioni
-						</MenuItem>
-						<Divider />
 						<MenuItem onClick={handleLogout}>
 							<ListItemIcon>
 								<LogoutIcon fontSize="small" />
@@ -275,7 +335,7 @@ export default function DashboardLayout() {
 			{isMobile ? (
 				<Drawer
 					variant="temporary"
-					open={drawerOpen}
+					open={mobileOpen}
 					onClose={handleDrawerToggle}
 					ModalProps={{ keepMounted: true }}
 					sx={{
