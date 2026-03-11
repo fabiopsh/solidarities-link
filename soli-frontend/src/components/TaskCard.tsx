@@ -5,7 +5,7 @@ import LocationOnIcon from "@mui/icons-material/LocationOn";
 import EventIcon from "@mui/icons-material/Event";
 import PersonIcon from "@mui/icons-material/Person";
 import type { Task } from "../types/models/Task";
-import api from "../api";
+import api, { USER_BASIC_CACHE_TTL } from "../api";
 
 interface TaskCardProps {
     task: Task;
@@ -60,11 +60,11 @@ export default function TaskCard({ task, currentUserId, onDetailsClick, onCancel
         const fetchNames = async () => {
             try {
                 if (task.creatorId) {
-                    const res = await api.get(`/api/users/${task.creatorId}/basic`);
+                    const res = await api.get(`/api/users/${task.creatorId}/basic`, { cache: { ttl: USER_BASIC_CACHE_TTL } });
                     if (isMounted) setCreator(res.data);
                 }
                 if (task.volunteerId) {
-                    const res = await api.get(`/api/users/${task.volunteerId}/basic`);
+                    const res = await api.get(`/api/users/${task.volunteerId}/basic`, { cache: { ttl: USER_BASIC_CACHE_TTL } });
                     if (isMounted) setVolunteer(res.data);
                 }
             } catch (err) {

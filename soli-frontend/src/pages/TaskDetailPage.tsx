@@ -36,7 +36,7 @@ import QrCodeIcon from "@mui/icons-material/QrCode";
 import LinearProgress from "@mui/material/LinearProgress";
 import PersonIcon from "@mui/icons-material/Person";
 import { useAuth } from "react-oidc-context";
-import api from "../api";
+import api, { USER_BASIC_CACHE_TTL } from "../api";
 import type { Task } from "../types/models/Task";
 import type { User } from "../types/models/User";
 
@@ -163,11 +163,11 @@ export default function TaskDetailPage() {
 
 			try {
 				if (fetchedTask.creatorId) {
-					const creatorRes = await api.get(`/api/users/${fetchedTask.creatorId}/basic`);
+					const creatorRes = await api.get(`/api/users/${fetchedTask.creatorId}/basic`, { cache: { ttl: USER_BASIC_CACHE_TTL } });
 					setCreator(creatorRes.data);
 				}
 				if (fetchedTask.volunteerId) {
-					const volRes = await api.get(`/api/users/${fetchedTask.volunteerId}/basic`);
+					const volRes = await api.get(`/api/users/${fetchedTask.volunteerId}/basic`, { cache: { ttl: USER_BASIC_CACHE_TTL } });
 					setVolunteer(volRes.data);
 				}
 			} catch (err) {

@@ -27,6 +27,8 @@ import AssignmentIcon from "@mui/icons-material/Assignment";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 import AddIcon from "@mui/icons-material/Add";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
+import SyncIcon from "@mui/icons-material/Sync";
+import Tooltip from "@mui/material/Tooltip";
 import api from "../api";
 import type { Task } from "../types/models/Task";
 import type { User } from "../types/models/User";
@@ -59,7 +61,11 @@ export default function DashboardPage() {
 		severity: "success",
 	});
 
-	const fetchTasksAndUser = async () => {
+	const [lastSync, setLastSync] = useState<Date | null>(null);
+	const [syncing, setSyncing] = useState(false);
+
+	const fetchTasksAndUser = async (isManualSync = false) => {
+		if (isManualSync) setSyncing(true);
 		try {
 			// Fetch current backend user to get the DB id (which matches creatorId/volunteerId)
 			const userRes = await api.get("/api/users/me");
@@ -68,11 +74,13 @@ export default function DashboardPage() {
 			// Now returns only tasks we are allowed to see based on backend RBAC
 			const res = await api.get("/api/tasks", { params: { size: 100 } });
 			setTasks(res.data.data || []);
+			setLastSync(new Date());
 		} catch (err) {
 			console.error("Error fetching tasks:", err);
 			setError("Impossibile caricare i task. Riprova più tardi.");
 		} finally {
 			setLoading(false);
+			if (isManualSync) setSyncing(false);
 		}
 	};
 
@@ -274,12 +282,49 @@ export default function DashboardPage() {
 			{/* Tab Navigation for Requests Page */}
 			{isRequestsPage ? (
 				<>
-					<Box sx={{ borderBottom: 1, borderColor: "divider", mb: 4 }}>
+					<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: 1, borderColor: "divider", mb: 4 }}>
 						<Tabs value={tabValue} onChange={(_, newValue) => setTabValue(newValue)} aria-label="task tabs">
 							<Tab label="Le Mie Richieste" sx={{ fontWeight: "bold" }} />
 							<Tab label="Task Disponibili" sx={{ fontWeight: "bold" }} />
 							<Tab label="Task Accettati" sx={{ fontWeight: "bold" }} />
 						</Tabs>
+						<Box sx={{ display: "flex", alignItems: "center", gap: 1, pb: 0.5 }}>
+							{lastSync && (
+								<Typography variant="caption" color="text.disabled" sx={{ whiteSpace: "nowrap" }}>
+									Ultimo sync: {lastSync.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+								</Typography>
+							)}
+							<Tooltip title="Sincronizza i task">
+								<span>
+									<Button
+										variant="outlined"
+										size="small"
+										startIcon={
+											<SyncIcon
+												sx={{
+													animation: syncing ? "spin 1s linear infinite" : "none",
+													"@keyframes spin": {
+														"0%": { transform: "rotate(0deg)" },
+														"100%": { transform: "rotate(360deg)" },
+													},
+												}}
+											/>
+										}
+										onClick={() => fetchTasksAndUser(true)}
+										disabled={syncing}
+										sx={{
+											borderRadius: 2,
+											textTransform: "none",
+											fontWeight: 600,
+											minWidth: "auto",
+											px: 2,
+										}}
+									>
+										Sync
+									</Button>
+								</span>
+							</Tooltip>
+						</Box>
 					</Box>
 
 					{/* My Requests Tab */}
