@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 780 1000" font-family="'Segoe UI', Arial, sans-serif">
+  <defs>
+    <linearGradient id="g-client" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#60C8F5"/>
+      <stop offset="100%" stop-color="#1E9CD7"/>
+    </linearGradient>
+    <linearGradient id="g-proxy" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#F472C8"/>
+      <stop offset="100%" stop-color="#D4188C"/>
+    </linearGradient>
+    <linearGradient id="g-auth" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#A87EF5"/>
+      <stop offset="100%" stop-color="#7C3AED"/>
+    </linearGradient>
+    <linearGradient id="g-backend" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#3ECF7E"/>
+      <stop offset="100%" stop-color="#1A8F4A"/>
+    </linearGradient>
+    <linearGradient id="g-module" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#2A7A44"/>
+      <stop offset="100%" stop-color="#1A5C32"/>
+    </linearGradient>
+    <linearGradient id="g-ai" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#8A9BB8"/>
+      <stop offset="100%" stop-color="#5A6E8A"/>
+    </linearGradient>
+    <linearGradient id="g-chat" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#9B7ED4"/>
+      <stop offset="100%" stop-color="#6B4CAF"/>
+    </linearGradient>
+    <linearGradient id="g-notif" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#C87A50"/>
+      <stop offset="100%" stop-color="#8B4A28"/>
+    </linearGradient>
+    <linearGradient id="g-broker" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#F5C842"/>
+      <stop offset="100%" stop-color="#C89A10"/>
+    </linearGradient>
+    <linearGradient id="g-dbnon" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#F5C842"/>
+      <stop offset="100%" stop-color="#C89A10"/>
+    </linearGradient>
+    <linearGradient id="g-dbrel" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#F05C5C"/>
+      <stop offset="100%" stop-color="#B91C1C"/>
+    </linearGradient>
+
+    <filter id="shadow">
+      <feDropShadow dx="0" dy="3" stdDeviation="5" flood-color="rgba(0,0,0,0.18)"/>
+    </filter>
+    <filter id="shadow-sm">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="rgba(0,0,0,0.15)"/>
+    </filter>
+
+    <marker id="arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#444"/>
+    </marker>
+    <marker id="arr-b" markerWidth="8" markerHeight="8" refX="2" refY="3" orient="auto">
+      <path d="M8,0 L8,6 L0,3 z" fill="#444"/>
+    </marker>
+  </defs>
+
+  <rect width="780" height="1000" fill="#F8FAFF"/>
+  <pattern id="dots" width="20" height="20" patternUnits="userSpaceOnUse">
+    <circle cx="10" cy="10" r="0.7" fill="rgba(0,0,0,0.05)"/>
+  </pattern>
+  <rect width="780" height="1000" fill="url(#dots)"/>
+
+  <text x="390" y="30" text-anchor="middle" font-size="17" font-weight="bold" fill="#1E3A5F" letter-spacing="1">Architettura SOLI — Solidarities Link</text>
+  <line x1="80" y1="38" x2="700" y2="38" stroke="#CBD5E1" stroke-width="1"/>
+
+  <rect x="160" y="50" width="155" height="52" rx="12" fill="url(#g-client)" filter="url(#shadow)"/>
+  <rect x="160" y="50" width="155" height="52" rx="12" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"/>
+  <text x="237" y="73" text-anchor="middle" font-size="13" font-weight="bold" fill="white">Client Mobile</text>
+  <text x="237" y="91" text-anchor="middle" font-size="10" fill="rgba(255,255,255,0.85)">client</text>
+
+  <rect x="465" y="50" width="155" height="52" rx="12" fill="url(#g-client)" filter="url(#shadow)"/>
+  <rect x="465" y="50" width="155" height="52" rx="12" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"/>
+  <text x="542" y="73" text-anchor="middle" font-size="13" font-weight="bold" fill="white">Client Web</text>
+  <text x="542" y="91" text-anchor="middle" font-size="10" fill="rgba(255,255,255,0.85)">client</text>
+
+  <line x1="237" y1="102" x2="237" y2="128" stroke="#444" stroke-width="1.5"/>
+  <line x1="542" y1="102" x2="542" y2="128" stroke="#444" stroke-width="1.5"/>
+  <line x1="237" y1="128" x2="542" y2="128" stroke="#444" stroke-width="1.5"/>
+  <line x1="390" y1="128" x2="390" y2="150" stroke="#444" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <rect x="315" y="152" width="150" height="52" rx="12" fill="url(#g-proxy)" filter="url(#shadow)"/>
+  <rect x="315" y="152" width="150" height="52" rx="12" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"/>
+  <text x="390" y="175" text-anchor="middle" font-size="13" font-weight="bold" fill="white">Proxy</text>
+  <text x="390" y="193" text-anchor="middle" font-size="10" fill="rgba(255,255,255,0.85)">reverse proxy</text>
+
+  <line x1="360" y1="204" x2="240" y2="254" stroke="#444" stroke-width="1.5" marker-end="url(#arr)"/>
+  <line x1="465" y1="178" x2="564" y2="244" stroke="#444" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <rect x="554" y="244" width="180" height="88" rx="12" fill="url(#g-auth)" filter="url(#shadow)"/>
+  <rect x="554" y="244" width="180" height="88" rx="12" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/>
+  <text x="644" y="268" text-anchor="middle" font-size="12" font-weight="bold" fill="white">AUTH Server</text>
+  <text x="644" y="286" text-anchor="middle" font-size="9" fill="rgba(255,255,255,0.85)">autenticazione · JWT</text>
+  <text x="644" y="302" text-anchor="middle" font-size="9" fill="rgba(255,255,255,0.85)">SPID/CIEid</text>
+  <text x="644" y="318" text-anchor="middle" font-size="8" fill="rgba(255,255,255,0.6)">server · infrastrutturale</text>
+
+  <line x1="514" y1="288" x2="548" y2="288" stroke="#444" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <rect x="14" y="256" width="500" height="200" rx="16" fill="url(#g-backend)" filter="url(#shadow)"/>
+  <rect x="14" y="256" width="500" height="200" rx="16" fill="none" stroke="rgba(255,255,255,0.35)" stroke-width="1.5"/>
+  <rect x="14" y="256" width="500" height="38" rx="16" fill="rgba(255,255,255,0.15)"/>
+  <rect x="14" y="278" width="500" height="16" fill="rgba(255,255,255,0.15)"/>
+  <text x="264" y="279" text-anchor="middle" font-size="14" font-weight="bold" fill="white">Backend</text>
+  <text x="264" y="296" text-anchor="middle" font-size="10" fill="rgba(255,255,255,0.75)">server</text>
+
+  <rect x="26" y="308" width="106" height="46" rx="9" fill="url(#g-module)" filter="url(#shadow-sm)"/>
+  <rect x="26" y="308" width="106" height="46" rx="9" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <text x="79" y="328" text-anchor="middle" font-size="10" font-weight="bold" fill="white">User and</text>
+  <text x="79" y="344" text-anchor="middle" font-size="10" font-weight="bold" fill="white">Auth</text>
+
+  <rect x="142" y="308" width="106" height="46" rx="9" fill="url(#g-module)" filter="url(#shadow-sm)"/>
+  <rect x="142" y="308" width="106" height="46" rx="9" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <text x="195" y="328" text-anchor="middle" font-size="10" font-weight="bold" fill="white">Task</text>
+  <text x="195" y="344" text-anchor="middle" font-size="10" font-weight="bold" fill="white">Manager</text>
+
+  <rect x="258" y="308" width="106" height="46" rx="9" fill="url(#g-module)" filter="url(#shadow-sm)"/>
+  <rect x="258" y="308" width="106" height="46" rx="9" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <text x="311" y="335" text-anchor="middle" font-size="10" font-weight="bold" fill="white">Matching</text>
+
+  <rect x="374" y="308" width="128" height="46" rx="9" fill="url(#g-module)" filter="url(#shadow-sm)"/>
+  <rect x="374" y="308" width="128" height="46" rx="9" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <text x="438" y="328" text-anchor="middle" font-size="10" font-weight="bold" fill="white">Reward and</text>
+  <text x="438" y="344" text-anchor="middle" font-size="10" font-weight="bold" fill="white">Audit</text>
+
+  <text x="264" y="376" text-anchor="middle" font-size="9" font-weight="bold" fill="white">espone API REST · OpenAPI 3.0</text>
+  <text x="264" y="392" text-anchor="middle" font-size="9" fill="rgba(255,255,255,0.8)">fruibili dagli altri gruppi della challenge</text>
+  <text x="264" y="408" text-anchor="middle" font-size="9" fill="rgba(255,255,255,0.7)">richiama Modulo AI · apre/chiude Chat</text>
+  <text x="264" y="424" text-anchor="middle" font-size="9" fill="rgba(255,255,255,0.7)">↔ Message Broker (geo + Pub/Sub) · ↔ DB Relazionale</text>
+  <text x="264" y="440" text-anchor="middle" font-size="9" fill="rgba(255,255,255,0.7)">→ DB Relazionale</text>
+
+  <line x1="60" y1="456" x2="60" y2="542" stroke="#444" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <line x1="175" y1="456" x2="200" y2="524" stroke="#444" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <line x1="300" y1="462" x2="310" y2="808" stroke="#444" stroke-width="1.8" marker-start="url(#arr-b)" marker-end="url(#arr)"/>
+  <text x="270" y="640" font-size="9" fill="#444">geo</text>
+
+  <line x1="330" y1="456" x2="340" y2="814" stroke="#444" stroke-width="1.5" stroke-dasharray="6,4" marker-end="url(#arr)"/>
+  <text x="344" y="640" font-size="9" fill="#444">pub/sub</text>
+
+  <path d="M 480 456 L 480 520 L 660 520 L 660 808" fill="none" stroke="#444" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <rect x="170" y="524" width="140" height="54" rx="12" fill="url(#g-ai)" filter="url(#shadow)"/>
+  <rect x="170" y="524" width="140" height="54" rx="12" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
+  <text x="240" y="548" text-anchor="middle" font-size="12" font-weight="bold" fill="white">Modulo AI</text>
+  <text x="240" y="566" text-anchor="middle" font-size="9" fill="rgba(255,255,255,0.8)">server interno</text>
+
+  <line x1="138" y1="560" x2="164" y2="560" stroke="#444" stroke-width="1.5" marker-start="url(#arr-b)" marker-end="url(#arr)"/>
+
+  <rect x="14" y="542" width="118" height="54" rx="12" fill="url(#g-chat)" filter="url(#shadow)"/>
+  <rect x="14" y="542" width="118" height="54" rx="12" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
+  <text x="73" y="566" text-anchor="middle" font-size="12" font-weight="bold" fill="white">Chat interna</text>
+  <text x="73" y="584" text-anchor="middle" font-size="9" fill="rgba(255,255,255,0.8)">server</text>
+
+  <line x1="60" y1="596" x2="60" y2="814" stroke="#444" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <rect x="430" y="562" width="170" height="60" rx="12" fill="url(#g-notif)" filter="url(#shadow)"/>
+  <rect x="430" y="562" width="170" height="60" rx="12" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
+  <text x="515" y="586" text-anchor="middle" font-size="12" font-weight="bold" fill="white">Notification</text>
+  <text x="515" y="602" text-anchor="middle" font-size="12" font-weight="bold" fill="white">Service</text>
+  <text x="515" y="616" text-anchor="middle" font-size="9" fill="rgba(255,255,255,0.7)">background worker</text>
+
+  <line x1="430" y1="592" x2="385" y2="592" stroke="#444" stroke-width="1.5" stroke-dasharray="6,4" marker-end="url(#arr)"/>
+  <text x="375" y="596" font-size="12" font-weight="bold" fill="#444" text-anchor="end">Client</text>
+
+  <line x1="380" y1="844" x2="480" y2="622" stroke="#444" stroke-width="1.5" stroke-dasharray="6,4" marker-end="url(#arr)"/>
+
+  <rect x="14" y="816" width="170" height="76" rx="12" fill="url(#g-dbnon)" filter="url(#shadow)"/>
+  <rect x="14" y="816" width="170" height="76" rx="12" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
+  <text x="99" y="844" text-anchor="middle" font-size="12" font-weight="bold" fill="white">DB non</text>
+  <text x="99" y="862" text-anchor="middle" font-size="12" font-weight="bold" fill="white">Relazionale</text>
+  <text x="99" y="880" text-anchor="middle" font-size="8" fill="rgba(255,255,255,0.7)">database documentale</text>
+
+  <rect x="224" y="816" width="190" height="76" rx="12" fill="url(#g-broker)" filter="url(#shadow)"/>
+  <rect x="224" y="816" width="190" height="76" rx="12" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
+  <text x="319" y="840" text-anchor="middle" font-size="12" font-weight="bold" fill="white">Message Broker</text>
+  <text x="319" y="858" text-anchor="middle" font-size="12" font-weight="bold" fill="white">&amp; Geo Store</text>
+  <text x="319" y="878" text-anchor="middle" font-size="8" fill="rgba(255,255,255,0.7)">broker + store geografico</text>
+
+  <rect x="556" y="816" width="170" height="76" rx="12" fill="url(#g-dbrel)" filter="url(#shadow)"/>
+  <rect x="556" y="816" width="170" height="76" rx="12" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
+  <text x="641" y="844" text-anchor="middle" font-size="12" font-weight="bold" fill="white">DB</text>
+  <text x="641" y="862" text-anchor="middle" font-size="12" font-weight="bold" fill="white">Relazionale</text>
+  <text x="641" y="880" text-anchor="middle" font-size="8" fill="rgba(255,255,255,0.7)">database relazionale</text>
+
+  <rect x="14" y="918" width="752" height="32" rx="8" fill="rgba(37,99,235,0.07)" stroke="#BFDBFE" stroke-width="1" stroke-dasharray="6,4"/>
+  <text x="390" y="939" text-anchor="middle" font-size="10" fill="#3B82F6">🐳  Tutti i componenti sviluppati sono containerizzati in Docker — avvio con docker-compose up</text>
+
+  <line x1="14" y1="962" x2="766" y2="962" stroke="#E2E8F0" stroke-width="1"/>
+  <text x="20" y="978" font-size="9" font-weight="bold" fill="#64748B">LEGENDA:</text>
+  <line x1="82" y1="974" x2="118" y2="974" stroke="#444" stroke-width="1.8" marker-end="url(#arr)"/>
+  <text x="124" y="978" font-size="9" fill="#64748B">sincrono</text>
+  <line x1="240" y1="974" x2="276" y2="974" stroke="#444" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arr)"/>
+  <text x="282" y="978" font-size="9" fill="#64748B">asincrono</text>
+  
+
+</svg>
