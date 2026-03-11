@@ -31,6 +31,7 @@ import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import CategoryIcon from "@mui/icons-material/Category";
 import QrCodeIcon from "@mui/icons-material/QrCode";
+import PersonIcon from "@mui/icons-material/Person";
 import { useAuth } from "react-oidc-context";
 import api from "../api";
 import type { Task } from "../types/models/Task";
@@ -41,6 +42,12 @@ interface ChatMessage {
 	content: string;
 	senderId: string;
 	createdAt: string;
+}
+
+interface BasicUser {
+	id: string;
+	firstName: string;
+	lastName: string;
 }
 
 export default function TaskDetailPage() {
@@ -60,6 +67,8 @@ export default function TaskDetailPage() {
 	});
 
 	const [dbUser, setDbUser] = useState<User | null>(null);
+	const [creator, setCreator] = useState<BasicUser | null>(null);
+	const [volunteer, setVolunteer] = useState<BasicUser | null>(null);
 
 	// Chat states
 	const [chatOpen, setChatOpen] = useState(false);
@@ -141,8 +150,22 @@ export default function TaskDetailPage() {
 	const fetchTaskAndUser = async () => {
 		try {
 			const [taskRes, userRes] = await Promise.all([api.get(`/api/tasks/${id}`), api.get("/api/users/me")]);
-			setTask(taskRes.data);
+			const fetchedTask = taskRes.data;
+			setTask(fetchedTask);
 			setDbUser(userRes.data);
+
+			try {
+				if (fetchedTask.creatorId) {
+					const creatorRes = await api.get(`/api/users/${fetchedTask.creatorId}/basic`);
+					setCreator(creatorRes.data);
+				}
+				if (fetchedTask.volunteerId) {
+					const volRes = await api.get(`/api/users/${fetchedTask.volunteerId}/basic`);
+					setVolunteer(volRes.data);
+				}
+			} catch (err) {
+				console.error("Failed to fetch creator/volunteer basic details", err);
+			}
 		} catch (err) {
 			console.error("Error fetching task details or user:", err);
 			setError("Impossibile recuperare i dettagli della richiesta.");
@@ -410,6 +433,34 @@ export default function TaskDetailPage() {
 										</Typography>
 									</Box>
 								</Box>
+
+								{creator && (
+									<Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+										<PersonIcon color="action" />
+										<Box>
+											<Typography variant="caption" color="text.secondary" display="block">
+												Richiedente
+											</Typography>
+											<Typography variant="body1" fontWeight={500}>
+												{creator.firstName} {creator.lastName}
+											</Typography>
+										</Box>
+									</Box>
+								)}
+
+								{(task.status === "ACCEPTED" || task.status === "IN_PROGRESS" || task.status === "COMPLETED") && volunteer && (
+									<Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+										<PersonIcon color="action" />
+										<Box>
+											<Typography variant="caption" color="text.secondary" display="block">
+												Volontario
+											</Typography>
+											<Typography variant="body1" fontWeight={500}>
+												{volunteer.firstName} {volunteer.lastName}
+											</Typography>
+										</Box>
+									</Box>
+								)}
 							</Stack>
 						</CardContent>
 					</Card>
