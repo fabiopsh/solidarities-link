@@ -52,7 +52,10 @@ export default function DashboardLayout() {
 	const theme = useTheme();
 	const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 	const [mobileOpen, setMobileOpen] = useState(false);
-	const [drawerCollapsed, setDrawerCollapsed] = useState(false);
+	const [drawerCollapsed, setDrawerCollapsed] = useState(() => {
+		const saved = localStorage.getItem("drawerCollapsed");
+		return saved === "true";
+	});
 	const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 	const auth = useAuth();
 	const navigate = useNavigate();
@@ -69,7 +72,9 @@ export default function DashboardLayout() {
 		if (isMobile) {
 			setMobileOpen(!mobileOpen);
 		} else {
-			setDrawerCollapsed(!drawerCollapsed);
+			const newCollapsed = !drawerCollapsed;
+			setDrawerCollapsed(newCollapsed);
+			localStorage.setItem("drawerCollapsed", String(newCollapsed));
 		}
 	};
 	const handleMenuOpen = (e: React.MouseEvent<HTMLElement>) => setAnchorEl(e.currentTarget);
