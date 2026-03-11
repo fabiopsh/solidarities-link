@@ -22,6 +22,9 @@ export interface Task {
 	checkInToken?: string;
 	checkOutToken?: string;
 	rewardCredits: number;
+	acceptedAt?: string;
+	creatorConfirmed?: boolean;
+	volunteerConfirmed?: boolean;
 	createdAt: string;
 	updatedAt: string;
 }

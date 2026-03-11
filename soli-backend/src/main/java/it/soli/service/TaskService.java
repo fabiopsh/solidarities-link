@@ -10,6 +10,9 @@ import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.UUID;
 
 import io.quarkus.runtime.StartupEvent;
@@ -35,6 +38,8 @@ public class TaskService {
     WalletService walletService;
 
     private static final SecureRandom secureRandom = new SecureRandom();
+    private static final int DAILY_TASK_LIMIT = 5;
+    private static final int CANCEL_WINDOW_MINUTES = 10;
 
     private String generateToken() {
         byte[] tokenBytes = new byte[8]; // 64 bits
@@ -76,6 +81,7 @@ public class TaskService {
         TaskStatus oldStatus = task.status;
         task.volunteerId = volunteerId;
         task.status = TaskStatus.ACCEPTED;
+        task.acceptedAt = LocalDateTime.now();
         task.checkInToken = generateToken(); // Generate token for check-in
 
         // Create a ChatSession for real-time messaging between creator and volunteer
@@ -157,8 +163,23 @@ public class TaskService {
         return task;
     }
 
+    public long countTasksCreatedToday(UUID creatorId) {
+        LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
+        LocalDateTime endOfDay = LocalDate.now().atTime(LocalTime.MAX);
+        return Task.count("creatorId = ?1 AND createdAt >= ?2 AND createdAt <= ?3",
+                creatorId, startOfDay, endOfDay);
+    }
+
     @Transactional
     public Task createTask(Task task) {
+        // FR-04: Enforce daily task limit
+        long todayCount = countTasksCreatedToday(task.creatorId);
+        if (todayCount >= DAILY_TASK_LIMIT) {
+            throw new IllegalTaskStateException(
+                    "Hai raggiunto il limite massimo di " + DAILY_TASK_LIMIT +
+                    " richieste giornaliere. Riprova domani.");
+        }
+
         task.persist();
         
         // Trigger matching asynchronously to avoid blocking the client per NFR-04
@@ -176,19 +197,82 @@ public class TaskService {
             throw new IllegalArgumentException("Task not found");
         }
 
-        if (task.status == TaskStatus.IN_PROGRESS || task.status == TaskStatus.COMPLETED ||
-            task.status == TaskStatus.RELEASED || task.status == TaskStatus.CANCELLED) {
-            throw new IllegalTaskStateException("Cannot cancel task. Current status is " + task.status + ".");
-        }
-
         if (!task.creatorId.equals(requesterId)) {
             throw new IllegalArgumentException("Only the creator is allowed to cancel the task.");
+        }
+
+        // FR-19: Differentiated cancellation rules
+        if (task.status == TaskStatus.OPEN || task.status == TaskStatus.NOTIFIED) {
+            // Free cancellation if not yet accepted
+        } else if (task.status == TaskStatus.ACCEPTED) {
+            // Allow cancellation only within 10-minute window
+            if (task.acceptedAt == null) {
+                throw new IllegalTaskStateException("Cannot cancel: acceptance timestamp missing.");
+            }
+            LocalDateTime deadline = task.acceptedAt.plusMinutes(CANCEL_WINDOW_MINUTES);
+            if (LocalDateTime.now().isAfter(deadline)) {
+                throw new IllegalTaskStateException(
+                        "Non è più possibile annullare: il tempo limite di " +
+                        CANCEL_WINDOW_MINUTES + " minuti è scaduto.");
+            }
+        } else {
+            throw new IllegalTaskStateException(
+                    "Cannot cancel task. Current status is " + task.status + ".");
         }
 
         TaskStatus oldStatus = task.status;
         task.status = TaskStatus.CANCELLED;
 
         logStateChange(task, oldStatus, task.status, requesterId != null ? requesterId : getCurrentUserId());
+        return task;
+    }
+
+    @Transactional
+    public Task confirmCompletion(UUID taskId, UUID userId) {
+        Task task = Task.findById(taskId);
+        if (task == null) {
+            throw new IllegalArgumentException("Task not found");
+        }
+
+        if (task.status != TaskStatus.ACCEPTED && task.status != TaskStatus.IN_PROGRESS) {
+            throw new IllegalTaskStateException(
+                    "Cannot confirm completion. Current status is " + task.status + ".");
+        }
+
+        boolean isCreator = task.creatorId != null && task.creatorId.equals(userId);
+        boolean isVolunteer = task.volunteerId != null && task.volunteerId.equals(userId);
+
+        if (!isCreator && !isVolunteer) {
+            throw new IllegalArgumentException(
+                    "Only the creator or the assigned volunteer can confirm completion.");
+        }
+
+        if (isCreator) {
+            if (Boolean.TRUE.equals(task.creatorConfirmed)) {
+                throw new IllegalTaskStateException("Hai già confermato il completamento.");
+            }
+            task.creatorConfirmed = true;
+        }
+
+        if (isVolunteer) {
+            if (Boolean.TRUE.equals(task.volunteerConfirmed)) {
+                throw new IllegalTaskStateException("Hai già confermato il completamento.");
+            }
+            task.volunteerConfirmed = true;
+        }
+
+        // If both confirmed, transition to COMPLETED
+        if (Boolean.TRUE.equals(task.creatorConfirmed) && Boolean.TRUE.equals(task.volunteerConfirmed)) {
+            TaskStatus oldStatus = task.status;
+            task.status = TaskStatus.COMPLETED;
+            logStateChange(task, oldStatus, task.status, userId);
+
+            // Asynchronously assign credits
+            managedExecutor.execute(() -> {
+                walletService.assignCreditsForTask(task);
+            });
+        }
+
         return task;
     }
 }

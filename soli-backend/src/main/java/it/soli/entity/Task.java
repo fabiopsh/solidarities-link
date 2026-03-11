@@ -64,6 +64,15 @@ public class Task extends PanacheEntityBase {
     @Column(name = "reward_credits")
     public Integer rewardCredits = 0;
 
+    @Column(name = "accepted_at")
+    public LocalDateTime acceptedAt;
+
+    @Column(name = "creator_confirmed")
+    public Boolean creatorConfirmed = false;
+
+    @Column(name = "volunteer_confirmed")
+    public Boolean volunteerConfirmed = false;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     public LocalDateTime createdAt;
 

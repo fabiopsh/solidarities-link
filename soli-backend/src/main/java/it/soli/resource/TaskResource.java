@@ -41,6 +41,26 @@ public class TaskResource {
     }
 
     @GET
+    @Path("/daily-count")
+    public Response getDailyCount() {
+        User currentUser = getAuthenticatedUser();
+        if (currentUser == null) {
+            return Response.status(Response.Status.UNAUTHORIZED).build();
+        }
+        long count = taskService.countTasksCreatedToday(currentUser.id);
+        return Response.ok(new DailyCountDto(count, 5)).build();
+    }
+
+    public static class DailyCountDto {
+        public long count;
+        public int limit;
+        public DailyCountDto(long count, int limit) {
+            this.count = count;
+            this.limit = limit;
+        }
+    }
+
+    @GET
     public PaginatedResponse<Task> listAll(
             @QueryParam("page") @DefaultValue("0") int page,
             @QueryParam("size") @DefaultValue("20") int size) {
@@ -215,6 +235,21 @@ public class TaskResource {
 
         try {
             Task task = taskService.checkOutTask(id, currentUser.id, payload.token);
+            return Response.ok(task).build();
+        } catch (IllegalArgumentException e) {
+            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
+        }
+    }
+
+    @POST
+    @Path("/{id}/confirm-completion")
+    @Transactional
+    public Response confirmCompletion(@PathParam("id") UUID id) {
+        User currentUser = getAuthenticatedUser();
+        if (currentUser == null) return Response.status(Response.Status.UNAUTHORIZED).build();
+
+        try {
+            Task task = taskService.confirmCompletion(id, currentUser.id);
             return Response.ok(task).build();
         } catch (IllegalArgumentException e) {
             return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
