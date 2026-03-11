@@ -72,6 +72,11 @@ export default function TaskWizardPage() {
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 
+	// Daily limit state
+	const [dailyCount, setDailyCount] = useState<number>(0);
+	const [dailyLimit, setDailyLimit] = useState<number>(5);
+	const [limitReached, setLimitReached] = useState(false);
+
 	// Form State
 	const [title, setTitle] = useState("");
 	const [description, setDescription] = useState("");
@@ -84,6 +89,23 @@ export default function TaskWizardPage() {
 
 	const handleNext = () => setActiveStep((prev) => prev + 1);
 	const handleBack = () => setActiveStep((prev) => prev - 1);
+
+	// Fetch daily task count on mount
+	useEffect(() => {
+		const fetchDailyCount = async () => {
+			try {
+				const res = await api.get("/api/tasks/daily-count");
+				if (res.data) {
+					setDailyCount(res.data.count);
+					setDailyLimit(res.data.limit);
+					setLimitReached(res.data.count >= res.data.limit);
+				}
+			} catch (err) {
+				console.error("Error fetching daily count:", err);
+			}
+		};
+		fetchDailyCount();
+	}, []);
 
 	const handleExtractIntent = async () => {
 		if (!aiInput.trim()) return;
@@ -373,7 +395,7 @@ export default function TaskWizardPage() {
 								color="primary"
 								size="large"
 								onClick={handleSubmit}
-								disabled={isSubmitting}
+								disabled={isSubmitting || limitReached}
 								startIcon={isSubmitting && <CircularProgress size={20} color="inherit" />}
 								sx={{ px: 4, py: 1.5, fontSize: "1.1rem", fontWeight: "bold" }}
 							>
@@ -396,6 +418,16 @@ export default function TaskWizardPage() {
 			{error && (
 				<Alert severity="error" sx={{ mb: 3 }}>
 					{error}
+				</Alert>
+			)}
+
+			{limitReached ? (
+				<Alert severity="error" sx={{ mb: 3 }}>
+					Hai raggiunto il limite massimo di {dailyLimit} richieste giornaliere. Riprova domani.
+				</Alert>
+			) : (
+				<Alert severity="info" sx={{ mb: 3 }}>
+					Richieste utilizzate oggi: {dailyCount}/{dailyLimit}
 				</Alert>
 			)}
 

@@ -30,7 +30,10 @@ import ForumIcon from "@mui/icons-material/Forum";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import CategoryIcon from "@mui/icons-material/Category";
+import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
+import TimerIcon from "@mui/icons-material/Timer";
 import QrCodeIcon from "@mui/icons-material/QrCode";
+import LinearProgress from "@mui/material/LinearProgress";
 import { useAuth } from "react-oidc-context";
 import api from "../api";
 import type { Task } from "../types/models/Task";
@@ -60,6 +63,10 @@ export default function TaskDetailPage() {
 	});
 
 	const [dbUser, setDbUser] = useState<User | null>(null);
+
+	// Cancellation timer state (10 minutes)
+	const [cancelTimeLeft, setCancelTimeLeft] = useState<number | null>(null);
+	const [confirming, setConfirming] = useState(false);
 
 	// Chat states
 	const [chatOpen, setChatOpen] = useState(false);
@@ -154,6 +161,52 @@ export default function TaskDetailPage() {
 	useEffect(() => {
 		fetchTaskAndUser();
 	}, [id]);
+
+	// Cancellation timer: countdown from acceptedAt + 10 minutes
+	useEffect(() => {
+		if (!task || task.status !== "ACCEPTED" || !task.acceptedAt) {
+			setCancelTimeLeft(null);
+			return;
+		}
+
+		const calculateTimeLeft = () => {
+			const acceptedTime = new Date(task.acceptedAt!).getTime();
+			const deadline = acceptedTime + 10 * 60 * 1000; // 10 minutes
+			const remaining = Math.max(0, deadline - Date.now());
+			return Math.floor(remaining / 1000);
+		};
+
+		setCancelTimeLeft(calculateTimeLeft());
+
+		const interval = setInterval(() => {
+			const remaining = calculateTimeLeft();
+			setCancelTimeLeft(remaining);
+			if (remaining <= 0) {
+				clearInterval(interval);
+			}
+		}, 1000);
+
+		return () => clearInterval(interval);
+	}, [task?.status, task?.acceptedAt]);
+
+	const handleConfirmCompletion = async () => {
+		if (!id) return;
+		setConfirming(true);
+		try {
+			await api.post(`/api/tasks/${id}/confirm-completion`);
+			setSnackbar({
+				open: true,
+				message: "Completamento confermato con successo!",
+				severity: "success",
+			});
+			await fetchTaskAndUser();
+		} catch (err: any) {
+			const errorMsg = err?.response?.data?.error || "Errore durante la conferma del completamento.";
+			setSnackbar({ open: true, message: errorMsg, severity: "error" });
+		} finally {
+			setConfirming(false);
+		}
+	};
 
 	const handleAcceptTask = async () => {
 		if (!id) return;
@@ -272,6 +325,17 @@ export default function TaskDetailPage() {
 
 	const isCreator = dbUser?.id === task.creatorId;
 	const isVolunteer = dbUser?.id === task.volunteerId;
+	const canCancel = isCreator && (
+		task.status === "OPEN" ||
+		(task.status === "ACCEPTED" && cancelTimeLeft !== null && cancelTimeLeft > 0)
+	);
+
+	// Format timer MM:SS
+	const formatTimer = (seconds: number) => {
+		const m = Math.floor(seconds / 60).toString().padStart(2, "0");
+		const s = (seconds % 60).toString().padStart(2, "0");
+		return `${m}:${s}`;
+	};
 
 	const isTokenVisible = task.status === "ACCEPTED" || task.status === "IN_PROGRESS";
 	const activeToken = task.status === "ACCEPTED" ? task.checkInToken : task.checkOutToken;
@@ -353,7 +417,7 @@ export default function TaskDetailPage() {
 												</Button>
 											)}
 
-											{isCreator && task.status === "OPEN" && (
+											{canCancel && (
 												<Button
 													variant="outlined"
 													color="error"
@@ -476,6 +540,99 @@ export default function TaskDetailPage() {
 									{activeToken}
 								</Box>
 							</Paper>
+						)}
+
+						{/* Cancellation Timer */}
+						{task.status === "ACCEPTED" && isCreator && cancelTimeLeft !== null && (
+							<Paper
+								elevation={3}
+								sx={{
+									p: 3,
+									borderRadius: 3,
+									background: cancelTimeLeft > 0
+										? "linear-gradient(135deg, #FF6F00 0%, #FFA040 100%)"
+										: "linear-gradient(135deg, #D32F2F 0%, #EF5350 100%)",
+									color: "white",
+									textAlign: "center",
+								}}
+							>
+								<TimerIcon sx={{ fontSize: 40, mb: 1, opacity: 0.9 }} />
+								<Typography variant="subtitle2" sx={{ opacity: 0.9, mb: 1 }}>
+									{cancelTimeLeft > 0 ? "Tempo rimasto per annullare" : "Finestra di annullamento scaduta"}
+								</Typography>
+								<Typography variant="h3" fontWeight={900} sx={{ fontFamily: "'Courier New', monospace", letterSpacing: 4 }}>
+									{formatTimer(cancelTimeLeft)}
+								</Typography>
+								<LinearProgress
+									variant="determinate"
+									value={Math.max(0, (cancelTimeLeft / 600) * 100)}
+									sx={{
+										mt: 2,
+										height: 8,
+										borderRadius: 4,
+										bgcolor: "rgba(255,255,255,0.3)",
+										"& .MuiLinearProgress-bar": {
+											bgcolor: "white",
+											borderRadius: 4,
+										},
+									}}
+								/>
+							</Paper>
+						)}
+
+						{/* Dual Confirmation Completion */}
+						{(task.status === "ACCEPTED" || task.status === "IN_PROGRESS") && (isCreator || isVolunteer) && (
+							<Card sx={{ borderRadius: 3, border: "2px solid", borderColor: "success.main" }}>
+								<CardContent sx={{ textAlign: "center" }}>
+									<CheckCircleOutlineIcon sx={{ fontSize: 40, color: "success.main", mb: 1 }} />
+									<Typography variant="h6" fontWeight={700} gutterBottom>
+										Conferma Completamento
+									</Typography>
+
+									{/* Status messages */}
+									{task.creatorConfirmed && !task.volunteerConfirmed && (
+										<Alert severity="info" sx={{ mb: 2, textAlign: "left" }}>
+											Il richiedente ha confermato il completamento. In attesa della conferma del volontario.
+										</Alert>
+									)}
+									{!task.creatorConfirmed && task.volunteerConfirmed && (
+										<Alert severity="info" sx={{ mb: 2, textAlign: "left" }}>
+											Il volontario ha confermato il completamento. In attesa della conferma del richiedente.
+										</Alert>
+									)}
+									{!task.creatorConfirmed && !task.volunteerConfirmed && (
+										<Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+											Entrambi (richiedente e volontario) devono confermare il completamento del task.
+										</Typography>
+									)}
+
+									<Button
+										variant="contained"
+										color="success"
+										fullWidth
+										size="large"
+										startIcon={confirming ? <CircularProgress size={20} color="inherit" /> : <CheckCircleOutlineIcon />}
+										onClick={handleConfirmCompletion}
+										disabled={
+											confirming ||
+											(isCreator && Boolean(task.creatorConfirmed)) ||
+											(isVolunteer && Boolean(task.volunteerConfirmed))
+										}
+										sx={{
+											py: 1.5,
+											fontWeight: 700,
+											fontSize: "1rem",
+											borderRadius: 2,
+										}}
+									>
+										{confirming
+											? "Conferma in corso..."
+											: (isCreator && task.creatorConfirmed) || (isVolunteer && task.volunteerConfirmed)
+												? "✓ Già confermato"
+												: "Conferma Completamento"}
+									</Button>
+								</CardContent>
+							</Card>
 						)}
 
 						<Card sx={{ borderRadius: 3 }}>

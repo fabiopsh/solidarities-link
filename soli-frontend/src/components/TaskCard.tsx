@@ -158,7 +158,7 @@ export default function TaskCard({ task, currentUserId, onDetailsClick, onCancel
                         Dettagli
                     </Button>
 
-                    {task.status === "OPEN" && isCreator && onCancelClick && (
+                    {(task.status === "OPEN") && isCreator && onCancelClick && (
                         <Button
                             size="medium"
                             variant="outlined"
