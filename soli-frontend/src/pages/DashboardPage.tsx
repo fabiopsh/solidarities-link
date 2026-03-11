@@ -109,13 +109,15 @@ export default function DashboardPage() {
 	const currentUserId = dbUser?.id;
 
 	// Filter tasks for the tabs
-	// "My Tasks": Created by me, or assigned to me
-	const myTasks = tasks.filter((t) => t.creatorId === currentUserId || t.volunteerId === currentUserId);
+	// "My Requests": Created by me
+	const myRequests = tasks.filter((t) => t.creatorId === currentUserId);
+	// "Accepted Tasks": Assigned to me as a volunteer
+	const acceptedTasks = tasks.filter((t) => t.volunteerId === currentUserId);
 	// "Available Tasks": OPEN status, AND not created by me (so I can accept them)
 	const availableTasks = tasks.filter((t) => t.status === "OPEN" && t.creatorId !== currentUserId);
 
-	// On dashboard overview, show up to 4 recent tasks from myTasks
-	const recentMyTasks = myTasks.slice(0, 4);
+	// On dashboard overview, show up to 4 recent tasks from my activity
+	const recentMyTasks = [...myRequests, ...acceptedTasks].slice(0, 4);
 
 	if (loading) {
 		return (
@@ -276,12 +278,13 @@ export default function DashboardPage() {
 						<Tabs value={tabValue} onChange={(_, newValue) => setTabValue(newValue)} aria-label="task tabs">
 							<Tab label="Le Mie Richieste" sx={{ fontWeight: "bold" }} />
 							<Tab label="Task Disponibili" sx={{ fontWeight: "bold" }} />
+							<Tab label="Task Accettati" sx={{ fontWeight: "bold" }} />
 						</Tabs>
 					</Box>
 
 					{/* My Requests Tab */}
 					<Box role="tabpanel" hidden={tabValue !== 0}>
-						{tabValue === 0 && renderTaskCards(myTasks)}
+						{tabValue === 0 && renderTaskCards(myRequests)}
 					</Box>
 
 					{/* Available Tasks Tab */}
@@ -314,6 +317,11 @@ export default function DashboardPage() {
 								)}
 							</>
 						)}
+					</Box>
+
+					{/* Accepted Tasks Tab */}
+					<Box role="tabpanel" hidden={tabValue !== 2}>
+						{tabValue === 2 && renderTaskCards(acceptedTasks)}
 					</Box>
 				</>
 			) : (
