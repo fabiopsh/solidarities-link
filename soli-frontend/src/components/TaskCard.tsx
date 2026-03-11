@@ -1,8 +1,11 @@
+import { useState, useEffect } from "react";
 import { Box, Card, CardContent, Typography, Chip, Stack, Button } from "@mui/material";
 import CategoryIcon from "@mui/icons-material/Category";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import EventIcon from "@mui/icons-material/Event";
+import PersonIcon from "@mui/icons-material/Person";
 import type { Task } from "../types/models/Task";
+import api from "../api";
 
 interface TaskCardProps {
     task: Task;
@@ -47,6 +50,34 @@ export default function TaskCard({ task, currentUserId, onDetailsClick, onCancel
     };
 
     const isCreator = task.creatorId === currentUserId;
+
+    const [creator, setCreator] = useState<{ firstName: string; lastName: string } | null>(null);
+    const [volunteer, setVolunteer] = useState<{ firstName: string; lastName: string } | null>(null);
+
+    useEffect(() => {
+        let isMounted = true;
+
+        const fetchNames = async () => {
+            try {
+                if (task.creatorId) {
+                    const res = await api.get(`/api/users/${task.creatorId}/basic`);
+                    if (isMounted) setCreator(res.data);
+                }
+                if (task.volunteerId) {
+                    const res = await api.get(`/api/users/${task.volunteerId}/basic`);
+                    if (isMounted) setVolunteer(res.data);
+                }
+            } catch (err) {
+                console.error("Failed to fetch user names in TaskCard", err);
+            }
+        };
+
+        fetchNames();
+
+        return () => {
+            isMounted = false;
+        };
+    }, [task.creatorId, task.volunteerId]);
 
     return (
         <Card
@@ -139,6 +170,24 @@ export default function TaskCard({ task, currentUserId, onDetailsClick, onCancel
                                     hour: "2-digit",
                                     minute: "2-digit",
                                 })}
+                            </Typography>
+                        </Box>
+                    )}
+
+                    {creator && (
+                        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                            <PersonIcon fontSize="small" sx={{ color: "text.secondary" }} />
+                            <Typography variant="body2" color="text.secondary" fontWeight={500}>
+                                Richiedente: {creator.firstName} {creator.lastName}
+                            </Typography>
+                        </Box>
+                    )}
+
+                    {(task.status === "ACCEPTED" || task.status === "IN_PROGRESS" || task.status === "COMPLETED") && volunteer && (
+                        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                            <PersonIcon fontSize="small" sx={{ color: "text.secondary" }} />
+                            <Typography variant="body2" color="text.secondary" fontWeight={500}>
+                                Volontario: {volunteer.firstName} {volunteer.lastName}
                             </Typography>
                         </Box>
                     )}

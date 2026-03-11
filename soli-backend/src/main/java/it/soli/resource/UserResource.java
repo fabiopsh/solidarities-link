@@ -31,6 +31,18 @@ public class UserResource {
         public Double longitude;
     }
 
+    public static class BasicUserDto {
+        public UUID id;
+        public String firstName;
+        public String lastName;
+
+        public BasicUserDto(UUID id, String firstName, String lastName) {
+            this.id = id;
+            this.firstName = firstName;
+            this.lastName = lastName;
+        }
+    }
+
     /**
      * PUT /api/users/me/location - Update user's geolocation silently
      */
@@ -104,6 +116,22 @@ public class UserResource {
         }
         
         return Response.ok(user).build();
+    }
+
+    /**
+     * GET /api/users/{id}/basic - Get basic user info (name) for other users.
+     */
+    @GET
+    @Path("/{id}/basic")
+    public Response getBasicById(@PathParam("id") UUID id) {
+        if (jwt.getSubject() == null) {
+            return Response.status(Response.Status.UNAUTHORIZED).build();
+        }
+        User user = User.findById(id);
+        if (user == null) {
+            return Response.status(Response.Status.NOT_FOUND).build();
+        }
+        return Response.ok(new BasicUserDto(user.id, user.firstName, user.lastName)).build();
     }
 
     /**
