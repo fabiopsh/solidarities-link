@@ -111,6 +111,9 @@ public class VolunteerProfileResource {
         profile.serviceCategories = updatedProfile.serviceCategories;
         profile.constraints = updatedProfile.constraints;
         profile.maxTaskDistanceMeters = updatedProfile.maxTaskDistanceMeters;
+        profile.targetLocation = updatedProfile.targetLocation;
+        profile.latitude = updatedProfile.latitude;
+        profile.longitude = updatedProfile.longitude;
 
         return Response.ok(profile).build();
     }

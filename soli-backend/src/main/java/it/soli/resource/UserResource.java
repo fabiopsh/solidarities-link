@@ -61,8 +61,8 @@ public class UserResource {
 
         VolunteerProfile profile = VolunteerProfile.findByUserId(user.id);
         if (profile != null) {
-            profile.lastLatitude = location.latitude;
-            profile.lastLongitude = location.longitude;
+            profile.latitude = location.latitude;
+            profile.longitude = location.longitude;
             return Response.ok().build();
         }
 
