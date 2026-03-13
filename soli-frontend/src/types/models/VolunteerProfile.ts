@@ -7,4 +7,7 @@ export interface VolunteerProfile {
 	serviceCategories: ServiceCategory[];
 	constraints?: string; // JSON string or array of strings
 	maxTaskDistanceMeters: number;
+	targetLocation?: string;
+	latitude?: number;
+	longitude?: number;
 }

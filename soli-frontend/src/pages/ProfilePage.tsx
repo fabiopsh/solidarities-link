@@ -1,4 +1,9 @@
 import { useState, useEffect } from "react";
+import { useMap, MapContainer, TileLayer, Marker, Circle } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
+import L from "leaflet";
+import icon from "leaflet/dist/images/marker-icon.png";
+import iconShadow from "leaflet/dist/images/marker-shadow.png";
 import {
 	Box,
 	Typography,
@@ -34,6 +39,35 @@ const SERVICE_CATEGORIES: { value: ServiceCategory; label: string; emoji: string
 	{ value: "DIGITAL", label: "Assistenza Digitale", emoji: "💻" },
 ];
 
+const DefaultIcon = L.icon({
+	iconUrl: icon,
+	shadowUrl: iconShadow,
+	iconSize: [25, 41],
+	iconAnchor: [12, 41],
+});
+L.Marker.prototype.options.icon = DefaultIcon;
+
+// Helper to recenter map when address is searched or loaded
+function LocationMarker({ position, setPosition }: { position: [number, number]; setPosition: (p: L.LatLng) => void }) {
+	const map = useMap();
+	useEffect(() => {
+		map.flyTo(position, map.getZoom());
+	}, [position, map]);
+
+	return (
+		<Marker
+			position={position}
+			draggable={true}
+			eventHandlers={{
+				dragend: (e) => {
+					const marker = e.target;
+					setPosition(marker.getLatLng());
+				},
+			}}
+		/>
+	);
+}
+
 export default function ProfilePage() {
 	const [user, setUser] = useState<User | null>(null);
 	const [profile, setProfile] = useState<VolunteerProfile | null>(null);
@@ -49,6 +83,10 @@ export default function ProfilePage() {
 	const [selectedCategories, setSelectedCategories] = useState<ServiceCategory[]>([]);
 	const [constraints, setConstraints] = useState("");
 	const [maxDistance, setMaxDistance] = useState(5000);
+	const [targetAddress, setTargetAddress] = useState("");
+	const [latitude, setLatitude] = useState<number>(45.4642); // Default Milan
+	const [longitude, setLongitude] = useState<number>(9.1900);
+	const [isSearchingAddress, setIsSearchingAddress] = useState(false);
 
 	useEffect(() => {
 		const fetchData = async () => {
@@ -69,6 +107,11 @@ export default function ProfilePage() {
 							setConstraints(myProfile.constraints || "");
 						}
 						setMaxDistance(myProfile.maxTaskDistanceMeters || 5000);
+						setTargetAddress(myProfile.targetLocation || "");
+						if (myProfile.latitude && myProfile.longitude) {
+							setLatitude(myProfile.latitude);
+							setLongitude(myProfile.longitude);
+						}
 					}
 				} catch (err: any) {
 					// 404 No profile yet, that's fine
@@ -86,6 +129,27 @@ export default function ProfilePage() {
 		setSelectedCategories((prev) => (prev.includes(cat) ? prev.filter((c) => c !== cat) : [...prev, cat]));
 	};
 
+	const handleSearchAddress = async () => {
+		if (!targetAddress.trim()) return;
+		setIsSearchingAddress(true);
+		try {
+			const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(targetAddress)}`);
+			const data = await res.json();
+			if (data && data.length > 0) {
+				const lat = parseFloat(data[0].lat);
+				const lon = parseFloat(data[0].lon);
+				if (!isNaN(lat) && !isNaN(lon)) {
+					setLatitude(lat);
+					setLongitude(lon);
+				}
+			}
+		} catch (error) {
+			console.error("Error fetching address:", error);
+		} finally {
+			setIsSearchingAddress(false);
+		}
+	};
+
 	const handleSave = async () => {
 		if (!user) return;
 		setSaving(true);
@@ -95,6 +159,9 @@ export default function ProfilePage() {
 				serviceCategories: selectedCategories,
 				constraints: constraints.trim() ? JSON.stringify(constraints.trim()) : null,
 				maxTaskDistanceMeters: maxDistance,
+				targetLocation: targetAddress.trim() || undefined,
+				latitude: latitude,
+				longitude: longitude,
 			};
 
 			if (profile) {
@@ -300,10 +367,51 @@ export default function ProfilePage() {
 								placeholder="Es: allergie, limitazioni fisiche, disponibilità solo in orari specifici..."
 								value={constraints}
 								onChange={(e) => setConstraints(e.target.value)}
-								sx={{ mb: 3 }}
+								sx={{ mb: 4 }}
 								variant="outlined"
 								size="small"
 							/>
+
+							{/* Location Map */}
+							<Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1 }}>
+								Centro di Intervento Operativo
+							</Typography>
+							<Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+								Inserisci la città o l'indirizzo da cui partirai per le attività di volontariato.
+							</Typography>
+							<Box sx={{ display: "flex", gap: 2, mb: 2 }}>
+								<TextField
+									label="Indirizzo / Luogo"
+									placeholder="Es: Via Roma 1, Milano"
+									fullWidth
+									variant="outlined"
+									value={targetAddress}
+									onChange={(e) => setTargetAddress(e.target.value)}
+									size="small"
+								/>
+								<Button
+									variant="outlined"
+									onClick={handleSearchAddress}
+									disabled={isSearchingAddress || !targetAddress.trim()}
+									sx={{ minWidth: "100px" }}
+								>
+									{isSearchingAddress ? <CircularProgress size={24} /> : "Cerca"}
+								</Button>
+							</Box>
+							<Box sx={{ height: 300, width: "100%", borderRadius: 2, overflow: "hidden", border: "1px solid", borderColor: "divider", position: "relative", zIndex: 0, mb: 4 }}>
+								<MapContainer center={[latitude, longitude]} zoom={12} style={{ height: "100%", width: "100%" }}>
+									<TileLayer
+										attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+										url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+									/>
+									<LocationMarker position={[latitude, longitude]} setPosition={(p) => { setLatitude(p.lat); setLongitude(p.lng); }} />
+									<Circle
+										center={[latitude, longitude]}
+										radius={maxDistance}
+										pathOptions={{ fillColor: '#00796B', color: '#004D40', fillOpacity: 0.2 }}
+									/>
+								</MapContainer>
+							</Box>
 
 							{/* Max Distance */}
 							<Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1 }}>

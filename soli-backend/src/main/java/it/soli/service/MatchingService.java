@@ -34,12 +34,12 @@ public class MatchingService {
                 // 1. Filter by competency
                 .filter(profile -> profile.serviceCategories != null && profile.serviceCategories.contains(task.category))
                 // Must have location
-                .filter(profile -> profile.lastLatitude != null && profile.lastLongitude != null)
+                .filter(profile -> profile.latitude != null && profile.longitude != null)
                 // Filter by constraints (e.g. physical compatibility could go here if implemented as logic)
                 .map(profile -> {
                     double distance = calculateHaversineDistance(
                             task.latitude, task.longitude,
-                            profile.lastLatitude, profile.lastLongitude);
+                            profile.latitude, profile.longitude);
                     return new MatchedVolunteer(profile, distance);
                 })
                 // 2. Filter by proximity (in max radius)
