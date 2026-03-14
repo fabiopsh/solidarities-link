@@ -24,6 +24,7 @@ import {
 	Avatar,
 	Stack,
 	Paper,
+	Autocomplete,
 } from "@mui/material";
 import SaveIcon from "@mui/icons-material/Save";
 import VerifiedUserIcon from "@mui/icons-material/VerifiedUser";
@@ -48,7 +49,7 @@ const DefaultIcon = L.icon({
 L.Marker.prototype.options.icon = DefaultIcon;
 
 // Helper to recenter map when address is searched or loaded
-function LocationMarker({ position, setPosition }: { position: [number, number]; setPosition: (p: L.LatLng) => void }) {
+function LocationMarker({ position, setPosition, onDragEnd }: { position: [number, number]; setPosition: (p: L.LatLng) => void; onDragEnd?: (p: L.LatLng) => void }) {
 	const map = useMap();
 	useEffect(() => {
 		map.flyTo(position, map.getZoom());
@@ -61,7 +62,9 @@ function LocationMarker({ position, setPosition }: { position: [number, number];
 			eventHandlers={{
 				dragend: (e) => {
 					const marker = e.target;
-					setPosition(marker.getLatLng());
+					const newPos = marker.getLatLng();
+					setPosition(newPos);
+					if (onDragEnd) onDragEnd(newPos);
 				},
 			}}
 		/>
@@ -86,7 +89,86 @@ export default function ProfilePage() {
 	const [targetAddress, setTargetAddress] = useState("");
 	const [latitude, setLatitude] = useState<number>(45.4642); // Default Milan
 	const [longitude, setLongitude] = useState<number>(9.1900);
-	const [isSearchingAddress, setIsSearchingAddress] = useState(false);
+	const [options, setOptions] = useState<any[]>([]);
+	const [inputValue, setInputValue] = useState("");
+
+	// Get current position if no location is set
+	useEffect(() => {
+		if (navigator.geolocation && !targetAddress) {
+			navigator.geolocation.getCurrentPosition(
+				(position) => {
+					setLatitude(position.coords.latitude);
+					setLongitude(position.coords.longitude);
+				},
+				(error) => {
+					console.error("Error getting default location:", error);
+				}
+			);
+		}
+	}, [targetAddress]);
+
+	// Autocomplete search logic
+	useEffect(() => {
+		let active = true;
+
+		if (inputValue === "") {
+			setOptions([{ display_name: "La mia posizione", type: "my_location" }]);
+			return undefined;
+		}
+
+		const fetchSuggestions = async () => {
+			try {
+				const response = await fetch(
+					`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(inputValue)}&countrycodes=it&limit=5`
+				);
+				const data = await response.json();
+
+				if (active) {
+					setOptions([{ display_name: "La mia posizione", type: "my_location" }, ...(data || [])]);
+				}
+			} catch (error) {
+				console.error("Error fetching suggestions:", error);
+			}
+		};
+
+		const debounceTimer = setTimeout(() => {
+			fetchSuggestions();
+		}, 500);
+
+		return () => {
+			active = false;
+			clearTimeout(debounceTimer);
+		};
+	}, [inputValue]);
+
+	const handleReverseGeocode = async (lat: number, lon: number) => {
+		try {
+			const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
+			const data = await res.json();
+			if (data && data.display_name) {
+				setTargetAddress(data.display_name);
+			}
+		} catch (error) {
+			console.error("Error reverse geocoding:", error);
+		}
+	};
+
+	const handleMyLocationSelect = () => {
+		if (navigator.geolocation) {
+			navigator.geolocation.getCurrentPosition(
+				(position) => {
+					const lat = position.coords.latitude;
+					const lon = position.coords.longitude;
+					setLatitude(lat);
+					setLongitude(lon);
+					handleReverseGeocode(lat, lon);
+				},
+				(error) => {
+					console.error("Error getting current location:", error);
+				}
+			);
+		}
+	};
 
 	useEffect(() => {
 		const fetchData = async () => {
@@ -129,26 +211,6 @@ export default function ProfilePage() {
 		setSelectedCategories((prev) => (prev.includes(cat) ? prev.filter((c) => c !== cat) : [...prev, cat]));
 	};
 
-	const handleSearchAddress = async () => {
-		if (!targetAddress.trim()) return;
-		setIsSearchingAddress(true);
-		try {
-			const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(targetAddress)}`);
-			const data = await res.json();
-			if (data && data.length > 0) {
-				const lat = parseFloat(data[0].lat);
-				const lon = parseFloat(data[0].lon);
-				if (!isNaN(lat) && !isNaN(lon)) {
-					setLatitude(lat);
-					setLongitude(lon);
-				}
-			}
-		} catch (error) {
-			console.error("Error fetching address:", error);
-		} finally {
-			setIsSearchingAddress(false);
-		}
-	};
 
 	const handleSave = async () => {
 		if (!user) return;
@@ -380,23 +442,55 @@ export default function ProfilePage() {
 								Inserisci la città o l'indirizzo da cui partirai per le attività di volontariato.
 							</Typography>
 							<Box sx={{ display: "flex", gap: 2, mb: 2 }}>
-								<TextField
-									label="Indirizzo / Luogo"
-									placeholder="Es: Via Roma 1, Milano"
+								<Autocomplete
 									fullWidth
-									variant="outlined"
+									options={options}
+									getOptionLabel={(option) => (typeof option === "string" ? option : option.display_name)}
+									filterOptions={(x) => x}
+									autoComplete
+									includeInputInList
+									filterSelectedOptions
 									value={targetAddress}
-									onChange={(e) => setTargetAddress(e.target.value)}
-									size="small"
+									noOptionsText="Nessun luogo trovato"
+									onChange={(_event, newValue: any) => {
+										if (newValue) {
+											if (newValue.type === "my_location") {
+												handleMyLocationSelect();
+											} else {
+												setTargetAddress(newValue.display_name);
+												const lat = parseFloat(newValue.lat);
+												const lon = parseFloat(newValue.lon);
+												if (!isNaN(lat) && !isNaN(lon)) {
+													setLatitude(lat);
+													setLongitude(lon);
+												}
+											}
+										} else {
+											setTargetAddress("");
+										}
+									}}
+									onInputChange={(_event, newInputValue) => {
+										setInputValue(newInputValue);
+									}}
+									renderInput={(params) => (
+										<TextField
+											{...params}
+											label="Indirizzo / Luogo"
+											placeholder="Es: Via Roma 1, Milano"
+											variant="outlined"
+											size="small"
+											InputProps={{
+												...params.InputProps,
+												endAdornment: (
+													<>
+														{inputValue.length > 0 && options.length === 0 ? <CircularProgress color="inherit" size={20} /> : null}
+														{params.InputProps.endAdornment}
+													</>
+												),
+											}}
+										/>
+									)}
 								/>
-								<Button
-									variant="outlined"
-									onClick={handleSearchAddress}
-									disabled={isSearchingAddress || !targetAddress.trim()}
-									sx={{ minWidth: "100px" }}
-								>
-									{isSearchingAddress ? <CircularProgress size={24} /> : "Cerca"}
-								</Button>
 							</Box>
 							<Box sx={{ height: 300, width: "100%", borderRadius: 2, overflow: "hidden", border: "1px solid", borderColor: "divider", position: "relative", zIndex: 0, mb: 4 }}>
 								<MapContainer center={[latitude, longitude]} zoom={12} style={{ height: "100%", width: "100%" }}>
@@ -404,7 +498,11 @@ export default function ProfilePage() {
 										attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
 										url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
 									/>
-									<LocationMarker position={[latitude, longitude]} setPosition={(p) => { setLatitude(p.lat); setLongitude(p.lng); }} />
+									<LocationMarker 
+										position={[latitude, longitude]} 
+										setPosition={(p) => { setLatitude(p.lat); setLongitude(p.lng); }} 
+										onDragEnd={(p) => handleReverseGeocode(p.lat, p.lng)}
+									/>
 									<Circle
 										center={[latitude, longitude]}
 										radius={maxDistance}
