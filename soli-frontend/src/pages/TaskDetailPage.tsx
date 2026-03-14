@@ -34,7 +34,16 @@ import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import TimerIcon from "@mui/icons-material/Timer";
 import QrCodeIcon from "@mui/icons-material/QrCode";
 import LinearProgress from "@mui/material/LinearProgress";
-import PersonIcon from "@mui/icons-material/Person";
+import Avatar from "@mui/material/Avatar";
+import DirectionsCarIcon from "@mui/icons-material/DirectionsCar";
+import BackpackIcon from "@mui/icons-material/Backpack";
+import GroupsIcon from "@mui/icons-material/Groups";
+import PetsIcon from "@mui/icons-material/Pets";
+import ComputerIcon from "@mui/icons-material/Computer";
+import WarningIcon from "@mui/icons-material/Warning";
+import ReportIcon from "@mui/icons-material/Report";
+import ScheduleIcon from "@mui/icons-material/Schedule";
+import EventIcon from "@mui/icons-material/Event";
 import { useAuth } from "react-oidc-context";
 import api, { USER_BASIC_CACHE_TTL } from "../api";
 import type { Task } from "../types/models/Task";
@@ -52,6 +61,35 @@ interface BasicUser {
 	firstName: string;
 	lastName: string;
 }
+
+import type { ServiceCategory } from "../types/models/VolunteerProfile";
+import type { UrgencyLevel } from "../types/models/Task";
+
+const CATEGORY_CONFIG: Record<ServiceCategory | string, { label: string; icon: any; color: string }> = {
+	MOBILITY: { label: "Mobilità", icon: DirectionsCarIcon, color: "#2196f3" },
+	PHYSICAL_SUPPORT: { label: "Supporto Fisico", icon: BackpackIcon, color: "#4caf50" },
+	SOCIAL: { label: "Socialità", icon: GroupsIcon, color: "#9c27b0" },
+	PET_SUPPORT: { label: "Animali", icon: PetsIcon, color: "#ff9800" },
+	DIGITAL: { label: "Digitale", icon: ComputerIcon, color: "#607d8b" },
+	SHOPPING: { label: "Spesa", icon: BackpackIcon, color: "#4caf50" },
+	DELIVERY: { label: "Consegna", icon: DirectionsCarIcon, color: "#2196f3" },
+	TRANSPORT: { label: "Trasporto", icon: DirectionsCarIcon, color: "#2196f3" },
+};
+
+const URGENCY_CONFIG: Record<UrgencyLevel | string, { label: string; color: "success" | "warning" | "error" | "default"; icon: any }> = {
+	LOW: { label: "Bassa", color: "success", icon: EventIcon },
+	MEDIUM: { label: "Media", color: "warning", icon: AccessTimeIcon },
+	HIGH: { label: "Alta", color: "error", icon: WarningIcon },
+	CRITICAL: { label: "Critica", color: "error", icon: ReportIcon },
+};
+
+const STATUS_CONFIG: Record<string, { label: string; color: "success" | "info" | "warning" | "primary" | "error" | "default" }> = {
+	OPEN: { label: "Aperto", color: "success" },
+	ACCEPTED: { label: "Accettato", color: "info" },
+	IN_PROGRESS: { label: "In Corso", color: "warning" },
+	COMPLETED: { label: "Completato", color: "primary" },
+	CANCELLED: { label: "Annullato", color: "error" },
+};
 
 export default function TaskDetailPage() {
 	const { id } = useParams<{ id: string }>();
@@ -306,45 +344,9 @@ export default function TaskDetailPage() {
 		);
 	}
 
-	const getStatusColor = (status: string) => {
-		switch (status) {
-			case "OPEN":
-				return "success";
-			case "ACCEPTED":
-				return "info";
-			case "IN_PROGRESS":
-				return "warning";
-			case "COMPLETED":
-				return "primary";
-			case "CANCELLED":
-				return "error";
-			default:
-				return "default";
-		}
-	};
-
-	// Helper functions for labels (assuming these will be defined elsewhere or added by user)
-	const getStatusLabel = (status: string) => {
-		switch (status) {
-			case "OPEN":
-				return "Aperto";
-			case "ACCEPTED":
-				return "Accettato";
-			case "IN_PROGRESS":
-				return "In Corso";
-			case "COMPLETED":
-				return "Completato";
-			case "CANCELLED":
-				return "Annullato";
-			default:
-				return status;
-		}
-	};
-
-	const getCategoryLabel = (category: string) => {
-		// Placeholder for actual category mapping
-		return category;
-	};
+	const getStatusConfig = (status: string) => STATUS_CONFIG[status] || { label: status, color: "default" };
+	const getUrgencyConfig = (urgency: string) => URGENCY_CONFIG[urgency] || { label: urgency, color: "default", icon: WarningIcon };
+	const getCategoryConfig = (cat: string) => CATEGORY_CONFIG[cat] || { label: cat, icon: CategoryIcon, color: "#9e9e9e" };
 
 	const isCreator = dbUser?.id === task.creatorId;
 	const isVolunteer = dbUser?.id === task.volunteerId;
@@ -382,23 +384,23 @@ export default function TaskDetailPage() {
 							<Grid container alignItems="flex-start" justifyContent="space-between" spacing={3} sx={{ mb: 4 }}>
 								<Grid size={{ xs: 12, md: "grow" }}>
 									<Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 1, flexWrap: "wrap" }}>
-										<Typography variant="h4" fontWeight={800} sx={{ color: "primary.dark", wordBreak: "break-word" }}>
+										<Typography variant="h3" fontWeight={900} sx={{ color: "text.primary", wordBreak: "break-word", lineHeight: 1.1 }}>
 											{task.title}
 										</Typography>
-										<Chip
-											label={getStatusLabel(task.status)}
-											color={getStatusColor(task.status) as any}
-											sx={{ fontWeight: "bold" }}
-										/>
+										<Stack direction="row" spacing={1}>
+											<Chip
+												label={getStatusConfig(task.status).label.toUpperCase()}
+												color={getStatusConfig(task.status).color as any}
+												sx={{ fontWeight: 800, borderRadius: 1.5, fontSize: "0.75rem" }}
+											/>
+										</Stack>
 									</Box>
-									<Typography
-										variant="subtitle1"
-										color="text.secondary"
-										sx={{ display: "flex", alignItems: "center", gap: 1 }}
-									>
-										<CategoryIcon fontSize="small" />
-										{getCategoryLabel(task.category)}
-									</Typography>
+									<Box sx={{ display: "flex", alignItems: "center", gap: 1, color: getCategoryConfig(task.category).color }}>
+										{(() => { const Icon = getCategoryConfig(task.category).icon; return <Icon fontSize="small" />; })()}
+										<Typography variant="subtitle1" fontWeight={700}>
+											{getCategoryConfig(task.category).label}
+										</Typography>
+									</Box>
 								</Grid>
 								{(task.status === "OPEN" || task.status === "ACCEPTED" || task.status === "IN_PROGRESS") && (
 									<Grid size={{ xs: 12, md: "auto" }}>
@@ -453,79 +455,138 @@ export default function TaskDetailPage() {
 										</Box>
 									</Grid>
 								)}
-							</Grid>
-
-							<Typography variant="body1" color="text.secondary" sx={{ mb: 4, whiteSpace: "pre-wrap" }}>
+							</Grid>							<Typography variant="body1" color="text.secondary" sx={{ mb: 4, whiteSpace: "pre-wrap", fontSize: "1.1rem", lineHeight: 1.6 }}>
 								{task.description || "Nessuna descrizione fornita."}
 							</Typography>
 
-							<Divider sx={{ my: 3 }} />
+							<Divider sx={{ my: 4, borderStyle: "dashed" }} />
 
-							<Stack spacing={2}>
-								<Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-									<CategoryIcon color="action" />
-									<Box>
-										<Typography variant="caption" color="text.secondary" display="block">
-											Categoria
-										</Typography>
-										<Typography variant="body1" fontWeight={500}>
-											{task.category}
-										</Typography>
-									</Box>
-								</Box>
-
-								<Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-									<AccessTimeIcon color="action" />
-									<Box>
-										<Typography variant="caption" color="text.secondary" display="block">
-											Urgenza
-										</Typography>
-										<Typography variant="body1" fontWeight={500}>
-											{task.urgencyLevel}
-										</Typography>
-									</Box>
-								</Box>
-
-								<Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-									<LocationOnIcon color="action" />
-									<Box>
-										<Typography variant="caption" color="text.secondary" display="block">
-											Indirizzo / Luogo
-										</Typography>
-										<Typography variant="body1" fontWeight={500}>
-											{task.targetAddress || "Non specificato"}
-										</Typography>
-									</Box>
-								</Box>
-
-								{creator && (
-									<Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-										<PersonIcon color="action" />
-										<Box>
-											<Typography variant="caption" color="text.secondary" display="block">
-												Richiedente
-											</Typography>
-											<Typography variant="body1" fontWeight={500}>
-												{creator.firstName} {creator.lastName}
-											</Typography>
+							<Grid container spacing={4}>
+								<Grid size={{ xs: 12, sm: 6 }}>
+									<Stack spacing={2.5}>
+										<Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+											<Box sx={{ p: 1, borderRadius: 1.5, bgcolor: `${getCategoryConfig(task.category).color}15`, display: "flex" }}>
+												{(() => { const Icon = getCategoryConfig(task.category).icon; return <Icon sx={{ color: getCategoryConfig(task.category).color }} />; })()}
+											</Box>
+											<Box>
+												<Typography variant="caption" color="text.secondary" display="block" fontWeight={600}>
+													CATEGORIA
+												</Typography>
+												<Typography variant="body1" fontWeight={700}>
+													{getCategoryConfig(task.category).label}
+												</Typography>
+											</Box>
 										</Box>
-									</Box>
-								)}
 
-								{(task.status === "ACCEPTED" || task.status === "IN_PROGRESS" || task.status === "COMPLETED") && volunteer && (
-									<Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-										<PersonIcon color="action" />
-										<Box>
-											<Typography variant="caption" color="text.secondary" display="block">
-												Volontario
-											</Typography>
-											<Typography variant="body1" fontWeight={500}>
-												{volunteer.firstName} {volunteer.lastName}
-											</Typography>
+										<Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+											<Box
+												sx={{
+													p: 1,
+													borderRadius: 1.5,
+													bgcolor: (theme: any) => {
+														const color = getUrgencyConfig(task.urgencyLevel).color;
+														if (color === "default") return "grey.100";
+														return `${theme.palette[color].main}20`; // Hex alpha approach
+													},
+													display: "flex"
+												}}
+											>
+												{(() => {
+													const config = getUrgencyConfig(task.urgencyLevel);
+													const Icon = config.icon;
+													return <Icon sx={{ color: config.color === "default" ? "text.secondary" : `${config.color}.main` }} />;
+												})()}
+											</Box>
+											<Box>
+												<Typography variant="caption" color="text.secondary" display="block" fontWeight={600}>
+													URGENZA
+												</Typography>
+												<Typography variant="body1" fontWeight={700} sx={{
+													color: () => {
+														const color = getUrgencyConfig(task.urgencyLevel).color;
+														return color === "default" ? "text.primary" : `${color}.main`;
+													}
+												}}>
+													{getUrgencyConfig(task.urgencyLevel).label}
+												</Typography>
+											</Box>
 										</Box>
-									</Box>
-								)}
-							</Stack>
+
+										<Box sx={{ display: "flex", alignItems: "flex-start", gap: 2 }}>
+											<Box sx={{ p: 1, borderRadius: 1.5, bgcolor: "grey.100", display: "flex" }}>
+												<LocationOnIcon color="action" />
+											</Box>
+											<Box>
+												<Typography variant="caption" color="text.secondary" display="block" fontWeight={600}>
+													INDIRIZZO / LUOGO
+												</Typography>
+												<Typography variant="body1" fontWeight={500}>
+													{task.targetAddress || "Non specificato"}
+												</Typography>
+											</Box>
+										</Box>
+
+										{task.scheduledAt && (
+											<Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+												<Box sx={{ p: 1, borderRadius: 1.5, bgcolor: "grey.100", display: "flex" }}>
+													<ScheduleIcon color="action" />
+												</Box>
+												<Box>
+													<Typography variant="caption" color="text.secondary" display="block" fontWeight={600}>
+														DATA E ORA PREVISTA
+													</Typography>
+													<Typography variant="body1" fontWeight={700}>
+														{new Date(task.scheduledAt).toLocaleString("it-IT", {
+															weekday: "long",
+															year: "numeric",
+															month: "long",
+															day: "numeric",
+															hour: "2-digit",
+															minute: "2-digit",
+														})}
+													</Typography>
+												</Box>
+											</Box>
+										)}
+									</Stack>
+								</Grid>
+
+								<Grid size={{ xs: 12, sm: 6 }}>
+									<Stack spacing={2.5}>
+										{creator && (
+											<Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+												<Avatar sx={{ width: 44, height: 44, bgcolor: "primary.main", fontWeight: "bold" }}>
+													{creator.firstName.charAt(0)}
+												</Avatar>
+												<Box>
+													<Typography variant="caption" color="text.secondary" display="block" fontWeight={600}>
+														RICHIEDENTE
+													</Typography>
+													<Typography variant="body1" fontWeight={700}>
+														{creator.firstName} {creator.lastName}
+													</Typography>
+												</Box>
+											</Box>
+										)}
+
+										{(task.status === "ACCEPTED" || task.status === "IN_PROGRESS" || task.status === "COMPLETED") && volunteer && (
+											<Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+												<Avatar sx={{ width: 44, height: 44, bgcolor: "secondary.main", fontWeight: "bold" }}>
+													{volunteer.firstName.charAt(0)}
+												</Avatar>
+												<Box>
+													<Typography variant="caption" color="text.secondary" display="block" fontWeight={600}>
+														VOLONTARIO
+													</Typography>
+													<Typography variant="body1" fontWeight={700}>
+														{volunteer.firstName} {volunteer.lastName}
+													</Typography>
+												</Box>
+											</Box>
+										)}
+									</Stack>
+								</Grid>
+							</Grid>
 						</CardContent>
 					</Card>
 				</Grid>

@@ -1,11 +1,47 @@
 import { useState, useEffect } from "react";
-import { Box, Card, CardContent, Typography, Chip, Stack, Button } from "@mui/material";
-import CategoryIcon from "@mui/icons-material/Category";
+import { Box, Card, CardContent, Typography, Chip, Stack, Button, Avatar, Divider, useTheme, useMediaQuery } from "@mui/material";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import EventIcon from "@mui/icons-material/Event";
-import PersonIcon from "@mui/icons-material/Person";
-import type { Task } from "../types/models/Task";
+import ScheduleIcon from "@mui/icons-material/Schedule";
+import DirectionsCarIcon from "@mui/icons-material/DirectionsCar";
+import BackpackIcon from "@mui/icons-material/Backpack";
+import GroupsIcon from "@mui/icons-material/Groups";
+import PetsIcon from "@mui/icons-material/Pets";
+import ComputerIcon from "@mui/icons-material/Computer";
+import AccessTimeIcon from "@mui/icons-material/AccessTime";
+import WarningIcon from "@mui/icons-material/Warning";
+import ReportIcon from "@mui/icons-material/Report";
+import CategoryIcon from "@mui/icons-material/Category";
+import type { Task, UrgencyLevel } from "../types/models/Task";
+import type { ServiceCategory } from "../types/models/VolunteerProfile";
 import api, { USER_BASIC_CACHE_TTL } from "../api";
+
+const CATEGORY_CONFIG: Record<ServiceCategory | string, { label: string; icon: any; color: string }> = {
+    MOBILITY: { label: "Mobilità", icon: DirectionsCarIcon, color: "#2196f3" },
+    PHYSICAL_SUPPORT: { label: "Supporto Fisico", icon: BackpackIcon, color: "#4caf50" },
+    SOCIAL: { label: "Socialità", icon: GroupsIcon, color: "#9c27b0" },
+    PET_SUPPORT: { label: "Animali", icon: PetsIcon, color: "#ff9800" },
+    DIGITAL: { label: "Digitale", icon: ComputerIcon, color: "#607d8b" },
+    // Fallbacks for older data if any
+    SHOPPING: { label: "Spesa", icon: BackpackIcon, color: "#4caf50" },
+    DELIVERY: { label: "Consegna", icon: DirectionsCarIcon, color: "#2196f3" },
+    TRANSPORT: { label: "Trasporto", icon: DirectionsCarIcon, color: "#2196f3" },
+};
+
+const URGENCY_CONFIG: Record<UrgencyLevel | string, { label: string; color: "success" | "warning" | "error" | "default"; icon: any }> = {
+    LOW: { label: "Bassa", color: "success", icon: EventIcon },
+    MEDIUM: { label: "Media", color: "warning", icon: AccessTimeIcon },
+    HIGH: { label: "Alta", color: "error", icon: WarningIcon },
+    CRITICAL: { label: "Critica", color: "error", icon: ReportIcon },
+};
+
+const STATUS_CONFIG: Record<string, { label: string; color: "success" | "info" | "warning" | "primary" | "error" | "default" }> = {
+    OPEN: { label: "Aperto", color: "success" },
+    ACCEPTED: { label: "Accettato", color: "info" },
+    IN_PROGRESS: { label: "In Corso", color: "warning" },
+    COMPLETED: { label: "Completato", color: "primary" },
+    CANCELLED: { label: "Annullato", color: "error" },
+};
 
 interface TaskCardProps {
     task: Task;
@@ -15,39 +51,12 @@ interface TaskCardProps {
 }
 
 export default function TaskCard({ task, currentUserId, onDetailsClick, onCancelClick }: TaskCardProps) {
-    const getStatusColor = (status: string) => {
-        switch (status) {
-            case "OPEN": return "success";
-            case "ACCEPTED": return "info";
-            case "IN_PROGRESS": return "warning";
-            case "COMPLETED": return "primary";
-            case "CANCELLED": return "error";
-            default: return "default";
-        }
-    };
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
-    const getStatusLabel = (status: string) => {
-        switch (status) {
-            case "OPEN": return "Aperto";
-            case "ACCEPTED": return "Accettato";
-            case "IN_PROGRESS": return "In Corso";
-            case "COMPLETED": return "Completato";
-            case "CANCELLED": return "Annullato";
-            default: return status;
-        }
-    };
-
-    const getCategoryLabel = (category: string) => {
-        switch (category) {
-            case "SHOPPING": return "Spesa";
-            case "DELIVERY": return "Consegna";
-            case "HOUSEHOLD": return "Faccende Domestiche";
-            case "TRANSPORT": return "Trasporto";
-            case "COMPANY": return "Compagnia";
-            case "OTHER": return "Altro";
-            default: return category;
-        }
-    };
+    const getStatusConfig = (status: string) => STATUS_CONFIG[status] || { label: status, color: "default" };
+    const getUrgencyConfig = (urgency: string) => URGENCY_CONFIG[urgency] || { label: urgency, color: "default", icon: WarningIcon };
+    const getCategoryConfig = (cat: string) => CATEGORY_CONFIG[cat] || { label: cat, icon: CategoryIcon, color: "#grey" };
 
     const isCreator = task.creatorId === currentUserId;
 
@@ -85,47 +94,45 @@ export default function TaskCard({ task, currentUserId, onDetailsClick, onCancel
                 height: "100%",
                 display: "flex",
                 flexDirection: "column",
-                borderRadius: 3,
-                boxShadow: "0 4px 24px rgba(0,0,0,0.06)",
+                borderRadius: 4,
+                boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
                 transition: "all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)",
                 border: "1px solid",
                 borderColor: "divider",
                 position: "relative",
                 overflow: "hidden",
+                bgcolor: "background.paper",
                 "&:hover": {
-                    transform: "translateY(-4px)",
-                    boxShadow: "0 12px 32px rgba(0,0,0,0.12)",
-                    borderColor: "primary.main",
+                    transform: "translateY(-6px)",
+                    boxShadow: "0 12px 36px rgba(0,0,0,0.12)",
+                    borderColor: getCategoryConfig(task.category).color,
                 },
             }}
         >
-            <CardContent sx={{ flexGrow: 1, p: { xs: 2, sm: 3 } }}>
-                <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", mb: 2, gap: 1, flexWrap: "wrap" }}>
-                    <Chip
-                        label={getStatusLabel(task.status)}
-                        color={getStatusColor(task.status) as any}
-                        size="small"
-                        sx={{ fontWeight: 700, borderRadius: 1.5, px: 1 }}
-                    />
-                    <Chip
-                        label={`Urgenza ${task.urgencyLevel}`}
-                        size="small"
-                        variant="outlined"
-                        color={task.urgencyLevel === "CRITICAL" ? "error" : task.urgencyLevel === "HIGH" ? "warning" : "default"}
-                        sx={{ fontWeight: 600, borderRadius: 1.5 }}
-                    />
+            <CardContent sx={{ flexGrow: 1, p: { xs: 2.5, sm: 3 } }}>
+                <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2.5, gap: 1, flexWrap: "wrap" }}>
+                    <Stack direction="row" spacing={1}>
+                        <Chip
+                            label={getStatusConfig(task.status).label}
+                            color={getStatusConfig(task.status).color as any}
+                            size="small"
+                            sx={{ fontWeight: 800, borderRadius: 1.5, textTransform: "uppercase", fontSize: "0.65rem" }}
+                        />
+                    </Stack>
                 </Box>
 
                 <Typography
-                    variant="h6"
-                    fontWeight={800}
+                    variant="h5"
+                    fontWeight={900}
                     gutterBottom
                     sx={{
-                        lineHeight: 1.3,
+                        lineHeight: 1.2,
                         display: "-webkit-box",
                         WebkitLineClamp: 2,
                         WebkitBoxOrient: "vertical",
                         overflow: "hidden",
+                        color: "text.primary",
+                        mb: 1.5
                     }}
                     title={task.title}
                 >
@@ -141,30 +148,60 @@ export default function TaskCard({ task, currentUserId, onDetailsClick, onCancel
                         WebkitLineClamp: 3,
                         WebkitBoxOrient: "vertical",
                         overflow: "hidden",
-                        minHeight: 60,
+                        minHeight: 54,
+                        lineHeight: 1.5
                     }}
                 >
                     {task.description || "Nessuna descrizione disponibile per questa richiesta."}
                 </Typography>
 
-                <Stack spacing={1.5} sx={{ mt: "auto", bgcolor: "grey.50", p: 1.5, borderRadius: 2 }}>
+                <Stack spacing={1.5} sx={{ mb: 2 }}>
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                        <CategoryIcon fontSize="small" sx={{ color: "text.secondary" }} />
-                        <Typography variant="subtitle2" color="text.primary" fontWeight={600}>
-                            {getCategoryLabel(task.category)}
+                        <Box sx={{ p: 0.8, borderRadius: 1.5, bgcolor: `${getCategoryConfig(task.category).color}15`, display: "flex" }}>
+                            {(() => { const Icon = getCategoryConfig(task.category).icon; return <Icon sx={{ fontSize: 18, color: getCategoryConfig(task.category).color }} />; })()}
+                        </Box>
+                        <Typography variant="body2" color="text.primary" fontWeight={700}>
+                            {getCategoryConfig(task.category).label}
                         </Typography>
                     </Box>
                     <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1.5 }}>
-                        <LocationOnIcon fontSize="small" sx={{ color: "text.secondary", mt: 0.3 }} />
-                        <Typography variant="body2" color="text.secondary" sx={{ flex: 1, wordBreak: "break-word" }}>
+                        <Box sx={{ p: 0.8, borderRadius: 1.5, bgcolor: "grey.100", display: "flex" }}>
+                            <LocationOnIcon sx={{ fontSize: 18, color: "text.secondary" }} />
+                        </Box>
+                        <Typography variant="body2" color="text.secondary" sx={{ flex: 1, pt: 0.5, fontSize: "0.85rem" }}>
                             {task.targetAddress || "Indirizzo non specificato"}
+                        </Typography>
+                    </Box>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                        <Box
+                            sx={{
+                                p: 0.8,
+                                borderRadius: 1.5,
+                                bgcolor: (theme) => {
+                                    const color = getUrgencyConfig(task.urgencyLevel).color;
+                                    return color === "default" ? "grey.100" : `${theme.palette[color].main}15`;
+                                },
+                                display: "flex"
+                            }}
+                        >
+                            {(() => {
+                                const config = getUrgencyConfig(task.urgencyLevel);
+                                const Icon = config.icon;
+                                return <Icon sx={{ fontSize: 18, color: config.color === "default" ? "text.secondary" : `${config.color}.main` }} />;
+                            })()}
+                        </Box>
+                        <Typography variant="body2" color={getUrgencyConfig(task.urgencyLevel).color === "default" ? "text.primary" : `${getUrgencyConfig(task.urgencyLevel).color}.main` as any} fontWeight={700}>
+                            Urgenza: {getUrgencyConfig(task.urgencyLevel).label}
                         </Typography>
                     </Box>
                     {task.scheduledAt && (
                         <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                            <EventIcon fontSize="small" sx={{ color: "text.secondary" }} />
-                            <Typography variant="body2" color="text.secondary" fontWeight={500}>
-                                {new Date(task.scheduledAt).toLocaleDateString([], {
+                            <Box sx={{ p: 0.8, borderRadius: 1.5, bgcolor: "grey.100", display: "flex" }}>
+                                <ScheduleIcon sx={{ fontSize: 18, color: "text.secondary" }} />
+                            </Box>
+                            <Typography variant="body2" color="text.secondary" fontWeight={600} sx={{ fontSize: "0.85rem" }}>
+                                {new Date(task.scheduledAt).toLocaleDateString("it-IT", {
+                                    weekday: "short",
                                     month: "short",
                                     day: "numeric",
                                     hour: "2-digit",
@@ -173,11 +210,17 @@ export default function TaskCard({ task, currentUserId, onDetailsClick, onCancel
                             </Typography>
                         </Box>
                     )}
+                </Stack>
 
+                <Divider sx={{ my: 2, borderStyle: "dashed" }} />
+
+                <Stack spacing={1}>
                     {creator && (
                         <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                            <PersonIcon fontSize="small" sx={{ color: "text.secondary" }} />
-                            <Typography variant="body2" color="text.secondary" fontWeight={500}>
+                            <Avatar sx={{ width: 24, height: 24, fontSize: "0.75rem", bgcolor: "primary.main" }}>
+                                {creator.firstName.charAt(0)}
+                            </Avatar>
+                            <Typography variant="caption" color="text.primary" fontWeight={600}>
                                 Richiedente: {creator.firstName} {creator.lastName}
                             </Typography>
                         </Box>
@@ -185,8 +228,10 @@ export default function TaskCard({ task, currentUserId, onDetailsClick, onCancel
 
                     {(task.status === "ACCEPTED" || task.status === "IN_PROGRESS" || task.status === "COMPLETED") && volunteer && (
                         <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                            <PersonIcon fontSize="small" sx={{ color: "text.secondary" }} />
-                            <Typography variant="body2" color="text.secondary" fontWeight={500}>
+                            <Avatar sx={{ width: 24, height: 24, fontSize: "0.75rem", bgcolor: "secondary.main" }}>
+                                {volunteer.firstName.charAt(0)}
+                            </Avatar>
+                            <Typography variant="caption" color="text.primary" fontWeight={600}>
                                 Volontario: {volunteer.firstName} {volunteer.lastName}
                             </Typography>
                         </Box>
@@ -194,14 +239,23 @@ export default function TaskCard({ task, currentUserId, onDetailsClick, onCancel
                 </Stack>
             </CardContent>
 
-            <Box sx={{ p: { xs: 2, sm: 3 }, pt: 0, borderTop: "1px solid", borderColor: "divider", bgcolor: "background.paper", borderBottomLeftRadius: 12, borderBottomRightRadius: 12 }}>
-                <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mt: 2, gap: 1, flexWrap: "wrap" }}>
+            <Box sx={{ p: 2.5, pt: 0, bgcolor: "background.paper" }}>
+                <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
                     <Button
-                        size="medium"
+                        size="large"
                         variant="contained"
                         color="primary"
+                        fullWidth={isMobile}
                         onClick={() => onDetailsClick && onDetailsClick(task.id!)}
-                        sx={{ borderRadius: 2, textTransform: "none", fontWeight: 700, px: 3, flex: { xs: 1, sm: "none" } }}
+                        sx={{
+                            borderRadius: 2.5,
+                            textTransform: "none",
+                            fontWeight: 800,
+                            px: 4,
+                            py: 1.2,
+                            boxShadow: "0 4px 12px rgba(0, 121, 107, 0.2)",
+                            flex: 1
+                        }}
                         disableElevation
                     >
                         Dettagli
@@ -209,11 +263,11 @@ export default function TaskCard({ task, currentUserId, onDetailsClick, onCancel
 
                     {(task.status === "OPEN") && isCreator && onCancelClick && (
                         <Button
-                            size="medium"
+                            size="large"
                             variant="outlined"
                             color="error"
                             onClick={() => onCancelClick(task)}
-                            sx={{ borderRadius: 2, textTransform: "none", fontWeight: 700, flex: { xs: 1, sm: "none" } }}
+                            sx={{ borderRadius: 2.5, textTransform: "none", fontWeight: 700, flex: 1 }}
                         >
                             Annulla
                         </Button>
