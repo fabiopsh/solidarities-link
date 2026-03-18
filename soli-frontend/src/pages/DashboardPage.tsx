@@ -51,7 +51,7 @@ export default function DashboardPage() {
 	const [error, setError] = useState<string | null>(null);
 
 	// Tab state for requests page
-	const [tabValue, setTabValue] = useState(0);
+	const [tabValue, setTabValue] = useState<string>("my_requests");
 	const [viewMode, setViewMode] = useState<"LIST" | "MAP">("LIST");
 
 	const [dbUser, setDbUser] = useState<User | null>(null);
@@ -88,6 +88,12 @@ export default function DashboardPage() {
 	useEffect(() => {
 		fetchTasksAndUser();
 	}, [location.pathname]);
+
+	useEffect(() => {
+		if (isRequestsPage) {
+			setTabValue(role === "requester" ? "my_requests" : "available");
+		}
+	}, [role, isRequestsPage]);
 
 	const handleCancelTask = async () => {
 		if (!taskToCancel) return;
@@ -162,7 +168,7 @@ export default function DashboardPage() {
 					<Typography variant="h6" color="text.secondary">
 						Nessun task trovato in questa sezione.
 					</Typography>
-					{isRequestsPage && tabValue === 0 && (
+					{isRequestsPage && tabValue === "my_requests" && role === "requester" && (
 						<Button variant="outlined" sx={{ mt: 2 }} onClick={() => navigate("/dashboard/requests/new")}>
 							Crea una nuova richiesta
 						</Button>
@@ -269,9 +275,9 @@ export default function DashboardPage() {
 				<>
 					<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: 1, borderColor: "divider", mb: 4 }}>
 						<Tabs value={tabValue} onChange={(_, newValue) => setTabValue(newValue)} aria-label="task tabs">
-							<Tab label="Le Mie Richieste" sx={{ fontWeight: "bold" }} />
-							<Tab label="Task Disponibili" sx={{ fontWeight: "bold" }} />
-							<Tab label="Task Accettati" sx={{ fontWeight: "bold" }} />
+							{role === "requester" && <Tab label="Le Mie Richieste" value="my_requests" sx={{ fontWeight: "bold" }} />}
+							{role === "volunteer" && <Tab label="Task Disponibili" value="available" sx={{ fontWeight: "bold" }} />}
+							{role === "volunteer" && <Tab label="Task Accettati" value="accepted" sx={{ fontWeight: "bold" }} />}
 						</Tabs>
 						<Box sx={{ display: "flex", alignItems: "center", gap: 1, pb: 0.5 }}>
 							{lastSync && (
@@ -313,13 +319,16 @@ export default function DashboardPage() {
 					</Box>
 
 					{/* My Requests Tab */}
-					<Box role="tabpanel" hidden={tabValue !== 0}>
-						{tabValue === 0 && renderTaskCards(myRequests)}
-					</Box>
+					{role === "requester" && (
+						<Box role="tabpanel" hidden={tabValue !== "my_requests"}>
+							{tabValue === "my_requests" && renderTaskCards(myRequests)}
+						</Box>
+					)}
 
 					{/* Available Tasks Tab */}
-					<Box role="tabpanel" hidden={tabValue !== 1}>
-						{tabValue === 1 && (
+					{role === "volunteer" && (
+						<Box role="tabpanel" hidden={tabValue !== "available"}>
+							{tabValue === "available" && (
 							<>
 								<Box sx={{ display: "flex", justifyContent: "flex-end", mb: 2 }}>
 									<ToggleButtonGroup
@@ -346,13 +355,16 @@ export default function DashboardPage() {
 									<TaskMapView tasks={availableTasks} />
 								)}
 							</>
-						)}
-					</Box>
+							)}
+						</Box>
+					)}
 
 					{/* Accepted Tasks Tab */}
-					<Box role="tabpanel" hidden={tabValue !== 2}>
-						{tabValue === 2 && renderTaskCards(acceptedTasks)}
-					</Box>
+					{role === "volunteer" && (
+						<Box role="tabpanel" hidden={tabValue !== "accepted"}>
+							{tabValue === "accepted" && renderTaskCards(acceptedTasks)}
+						</Box>
+					)}
 				</>
 			) : (
 				<>
