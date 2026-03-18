@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "react-oidc-context";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import {
@@ -74,6 +74,18 @@ export default function DashboardLayout() {
 		}
 	};
 
+	// Fallback generico per ruoli che non possono vedere determinate pagine
+	useEffect(() => {
+		// Se il richiedente prova ad accedere al wallet
+		if (role === "requester" && location.pathname.startsWith("/dashboard/wallet")) {
+			navigate("/dashboard", { replace: true });
+		}
+		// Se il volontario prova a creare una nuova richiesta
+		if (role === "volunteer" && location.pathname === "/dashboard/requests/new") {
+			navigate("/dashboard", { replace: true });
+		}
+	}, [role, location.pathname, navigate]);
+
 	// Check if user has admin role
 	const isAdmin = (auth.user?.profile?.realm_access as any)?.roles?.includes("admin") || false;
 
@@ -141,7 +153,9 @@ export default function DashboardLayout() {
 
 			{/* Main Nav Items */}
 			<List sx={{ flexGrow: 1, px: 1, py: 2 }}>
-				{navItems.map((item) => (
+				{navItems
+					.filter((item) => !(role === "requester" && item.label === "Wallet"))
+					.map((item) => (
 					<ListItemButton
 						key={item.label}
 						onClick={() => handleNav(item.path)}
