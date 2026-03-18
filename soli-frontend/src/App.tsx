@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "react-oidc-context";
 import { oidcConfig } from "./config/auth";
+import { RoleProvider } from "./context/RoleContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import DashboardLayout from "./components/DashboardLayout";
 import LoginPage from "./pages/LoginPage";
@@ -15,35 +16,37 @@ import AdminDashboardPage from "./pages/AdminDashboardPage";
 export default function App() {
 	return (
 		<AuthProvider {...oidcConfig}>
-			<BrowserRouter>
-				<Routes>
-					{/* Public routes */}
-					<Route path="/login" element={<LoginPage />} />
+			<RoleProvider>
+				<BrowserRouter>
+					<Routes>
+						{/* Public routes */}
+						<Route path="/login" element={<LoginPage />} />
 
-					{/* OIDC callback handler */}
-					<Route path="/callback" element={<CallbackPage />} />
+						{/* OIDC callback handler */}
+						<Route path="/callback" element={<CallbackPage />} />
 
-					<Route
-						path="/dashboard"
-						element={
-							<ProtectedRoute>
-								<DashboardLayout />
-							</ProtectedRoute>
-						}
-					>
-						<Route index element={<DashboardPage />} />
-						<Route path="requests" element={<DashboardPage />} />
-						<Route path="requests/new" element={<TaskWizardPage />} />
-						<Route path="requests/:id" element={<TaskDetailPage />} />
-						<Route path="wallet" element={<WalletPage />} />
-						<Route path="profile" element={<ProfilePage />} />
-						<Route path="admin" element={<AdminDashboardPage />} />
-					</Route>
+						<Route
+							path="/dashboard"
+							element={
+								<ProtectedRoute>
+									<DashboardLayout />
+								</ProtectedRoute>
+							}
+						>
+							<Route index element={<DashboardPage />} />
+							<Route path="requests" element={<DashboardPage />} />
+							<Route path="requests/new" element={<TaskWizardPage />} />
+							<Route path="requests/:id" element={<TaskDetailPage />} />
+							<Route path="wallet" element={<WalletPage />} />
+							<Route path="profile" element={<ProfilePage />} />
+							<Route path="admin" element={<AdminDashboardPage />} />
+						</Route>
 
-					{/* Default: redirect to dashboard (ProtectedRoute handles unauth) */}
-					<Route path="*" element={<Navigate to="/dashboard" replace />} />
-				</Routes>
-			</BrowserRouter>
+						{/* Default: redirect to dashboard (ProtectedRoute handles unauth) */}
+						<Route path="*" element={<Navigate to="/dashboard" replace />} />
+					</Routes>
+				</BrowserRouter>
+			</RoleProvider>
 		</AuthProvider>
 	);
 }
