@@ -331,17 +331,6 @@ export default function ProfilePage() {
 						</Box>
 						<CardContent sx={{ p: 3 }}>
 							<Stack spacing={2}>
-								<Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 2, flexWrap: "wrap" }}>
-									<Typography variant="body2" color="text.secondary">
-										Ruolo
-									</Typography>
-									<Chip
-										label={getRoleLabel(user?.role || "")}
-										color="primary"
-										size="small"
-										sx={{ fontWeight: 600 }}
-									/>
-								</Box>
 								<Divider />
 								<Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 2, flexWrap: "wrap" }}>
 									<Typography variant="body2" color="text.secondary">
@@ -501,9 +490,9 @@ export default function ProfilePage() {
 										attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
 										url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
 									/>
-									<LocationMarker 
-										position={[latitude, longitude]} 
-										setPosition={(p) => { setLatitude(p.lat); setLongitude(p.lng); }} 
+									<LocationMarker
+										position={[latitude, longitude]}
+										setPosition={(p) => { setLatitude(p.lat); setLongitude(p.lng); }}
 										onDragEnd={(p) => handleReverseGeocode(p.lat, p.lng)}
 									/>
 									<Circle

@@ -4,5 +4,6 @@ public enum UserRole {
     VOLUNTEER,
     REQUESTER,
     CAREGIVER,
-    ADMIN
+    ADMIN,
+    USER
 }
