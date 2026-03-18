@@ -35,6 +35,7 @@ import PhotoCameraIcon from "@mui/icons-material/PhotoCamera";
 import api from "../api";
 import type { User } from "../types/models/User";
 import type { VolunteerProfile, ServiceCategory } from "../types/models/VolunteerProfile";
+import { useRole } from "../context/RoleContext";
 
 const SERVICE_CATEGORIES: { value: ServiceCategory; label: string; emoji: string }[] = [
 	{ value: "MOBILITY", label: "Mobilità e Trasporti", emoji: "🚗" },
@@ -76,6 +77,7 @@ function LocationMarker({ position, setPosition, onDragEnd }: { position: [numbe
 }
 
 export default function ProfilePage() {
+	const { role } = useRole();
 	const [user, setUser] = useState<User | null>(null);
 	const [profile, setProfile] = useState<VolunteerProfile | null>(null);
 	const [loading, setLoading] = useState(true);
@@ -332,9 +334,9 @@ export default function ProfilePage() {
 				Gestisci le tue informazioni personali e le preferenze operative.
 			</Typography>
 
-			<Grid container spacing={3}>
+			<Grid container spacing={3} justifyContent={role === "requester" ? "center" : "flex-start"}>
 				{/* User Info Card */}
-				<Grid size={{ xs: 12, md: 5 }}>
+				<Grid size={{ xs: 12, md: role === "requester" ? 8 : 5 }}>
 					<Card sx={{ borderRadius: 3, boxShadow: "0 4px 20px rgba(0,0,0,0.05)", overflow: "visible" }}>
 						<Box
 							sx={{
@@ -392,17 +394,6 @@ export default function ProfilePage() {
 						</Box>
 						<CardContent sx={{ p: 3 }}>
 							<Stack spacing={2}>
-								<Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 2, flexWrap: "wrap" }}>
-									<Typography variant="body2" color="text.secondary">
-										Ruolo
-									</Typography>
-									<Chip
-										label={getRoleLabel(user?.role || "")}
-										color="primary"
-										size="small"
-										sx={{ fontWeight: 600 }}
-									/>
-								</Box>
 								<Divider />
 								<Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 2, flexWrap: "wrap" }}>
 									<Typography variant="body2" color="text.secondary">
@@ -445,6 +436,7 @@ export default function ProfilePage() {
 				</Grid>
 
 				{/* Volunteer Profile Form */}
+				{role === "volunteer" && (
 				<Grid size={{ xs: 12, md: 7 }}>
 					<Card sx={{ borderRadius: 3, boxShadow: "0 4px 20px rgba(0,0,0,0.05)" }}>
 						<CardContent sx={{ p: 4 }}>
@@ -561,9 +553,9 @@ export default function ProfilePage() {
 										attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
 										url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
 									/>
-									<LocationMarker 
-										position={[latitude, longitude]} 
-										setPosition={(p) => { setLatitude(p.lat); setLongitude(p.lng); }} 
+									<LocationMarker
+										position={[latitude, longitude]}
+										setPosition={(p) => { setLatitude(p.lat); setLongitude(p.lng); }}
 										onDragEnd={(p) => handleReverseGeocode(p.lat, p.lng)}
 									/>
 									<Circle
@@ -618,6 +610,7 @@ export default function ProfilePage() {
 						</CardContent>
 					</Card>
 				</Grid>
+				)}
 			</Grid>
 
 			<Snackbar
