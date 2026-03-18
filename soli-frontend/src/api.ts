@@ -8,6 +8,7 @@ const oidcStorageKey = `oidc.user:${keycloakAuthority}:${clientId}`;
 // Cache TTL for user basic info lookups (the only thing we want to cache).
 // This avoids re-fetching the same user name for every TaskCard render.
 export const USER_BASIC_CACHE_TTL = 1000 * 60 * 5; // 5 minutes
+export const IMAGE_CACHE_TTL = 1000 * 60 * 60; // 1 hour
 
 const api = setupCache(
 	axios.create({

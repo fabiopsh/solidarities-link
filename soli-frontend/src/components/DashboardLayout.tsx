@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "react-oidc-context";
+import api from "../api";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import {
 	AppBar,
@@ -63,7 +64,25 @@ export default function DashboardLayout() {
 	const auth = useAuth();
 	const navigate = useNavigate();
 	const location = useLocation();
+	const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 	const { role, setRole } = useRole();
+  
+	useEffect(() => {
+		let isMounted = true;
+		if (auth.isAuthenticated) {
+			api.get("/api/users/me/profile-picture", { responseType: "blob" })
+				.then((res) => {
+					if (isMounted && res.status === 200 && res.data && res.data.size > 0) {
+						setAvatarUrl(URL.createObjectURL(res.data));
+					}
+				})
+				.catch(() => {
+					// User has no custom profile picture
+				});
+		}
+		return () => { isMounted = false; };
+	}, [auth.isAuthenticated]);
+
 
 	const handleRoleChange = (
 		_event: React.MouseEvent<HTMLElement>,
@@ -281,7 +300,7 @@ export default function DashboardLayout() {
 				<>
 					<Divider />
 					<Box sx={{ p: 2, display: "flex", alignItems: "center", gap: 1.5 }}>
-						<Avatar sx={{ bgcolor: "primary.main", width: 36, height: 36, fontSize: "0.9rem" }}>
+						<Avatar src={avatarUrl || undefined} sx={{ bgcolor: "primary.main", width: 36, height: 36, fontSize: "0.9rem" }}>
 							{userInitials}
 						</Avatar>
 						<Box sx={{ overflow: "hidden" }}>
@@ -346,7 +365,7 @@ export default function DashboardLayout() {
 					</ToggleButtonGroup>
 
 					<IconButton onClick={handleMenuOpen} size="small">
-						<Avatar sx={{ bgcolor: "primary.main", width: 36, height: 36, fontSize: "0.875rem" }}>
+						<Avatar src={avatarUrl || undefined} sx={{ bgcolor: "primary.main", width: 36, height: 36, fontSize: "0.875rem" }}>
 							{userInitials}
 						</Avatar>
 					</IconButton>

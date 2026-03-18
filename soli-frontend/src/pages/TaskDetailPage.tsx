@@ -34,7 +34,7 @@ import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import TimerIcon from "@mui/icons-material/Timer";
 import QrCodeIcon from "@mui/icons-material/QrCode";
 import LinearProgress from "@mui/material/LinearProgress";
-import Avatar from "@mui/material/Avatar";
+import UserAvatar from "../components/UserAvatar";
 import DirectionsCarIcon from "@mui/icons-material/DirectionsCar";
 import BackpackIcon from "@mui/icons-material/Backpack";
 import GroupsIcon from "@mui/icons-material/Groups";
@@ -555,9 +555,7 @@ export default function TaskDetailPage() {
 									<Stack spacing={2.5}>
 										{creator && (
 											<Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-												<Avatar sx={{ width: 44, height: 44, bgcolor: "primary.main", fontWeight: "bold" }}>
-													{creator.firstName.charAt(0)}
-												</Avatar>
+												<UserAvatar userId={task.creatorId} firstName={creator.firstName} lastName={creator.lastName} sx={{ width: 44, height: 44, bgcolor: "primary.main", fontWeight: "bold" }} />
 												<Box>
 													<Typography variant="caption" color="text.secondary" display="block" fontWeight={600}>
 														RICHIEDENTE
@@ -571,9 +569,7 @@ export default function TaskDetailPage() {
 
 										{(task.status === "ACCEPTED" || task.status === "IN_PROGRESS" || task.status === "COMPLETED") && volunteer && (
 											<Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-												<Avatar sx={{ width: 44, height: 44, bgcolor: "secondary.main", fontWeight: "bold" }}>
-													{volunteer.firstName.charAt(0)}
-												</Avatar>
+												<UserAvatar userId={task.volunteerId} firstName={volunteer.firstName} lastName={volunteer.lastName} sx={{ width: 44, height: 44, bgcolor: "secondary.main", fontWeight: "bold" }} />
 												<Box>
 													<Typography variant="caption" color="text.secondary" display="block" fontWeight={600}>
 														VOLONTARIO

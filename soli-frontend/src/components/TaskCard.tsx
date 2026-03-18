@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Box, Card, CardContent, Typography, Chip, Stack, Button, Avatar, Divider, useTheme, useMediaQuery } from "@mui/material";
+import { Box, Card, CardContent, Typography, Chip, Stack, Button, Divider, useTheme, useMediaQuery } from "@mui/material";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import EventIcon from "@mui/icons-material/Event";
 import ScheduleIcon from "@mui/icons-material/Schedule";
@@ -15,6 +15,7 @@ import CategoryIcon from "@mui/icons-material/Category";
 import type { Task, UrgencyLevel } from "../types/models/Task";
 import type { ServiceCategory } from "../types/models/VolunteerProfile";
 import api, { USER_BASIC_CACHE_TTL } from "../api";
+import UserAvatar from "./UserAvatar";
 
 const CATEGORY_CONFIG: Record<ServiceCategory | string, { label: string; icon: any; color: string }> = {
     MOBILITY: { label: "Mobilità", icon: DirectionsCarIcon, color: "#2196f3" },
@@ -217,9 +218,7 @@ export default function TaskCard({ task, currentUserId, onDetailsClick, onCancel
                 <Stack spacing={1}>
                     {creator && (
                         <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                            <Avatar sx={{ width: 24, height: 24, fontSize: "0.75rem", bgcolor: "primary.main" }}>
-                                {creator.firstName.charAt(0)}
-                            </Avatar>
+                            <UserAvatar userId={task.creatorId} firstName={creator.firstName} lastName={creator.lastName} sx={{ width: 24, height: 24, fontSize: "0.75rem", bgcolor: "primary.main" }} />
                             <Typography variant="caption" color="text.primary" fontWeight={600}>
                                 Richiedente: {creator.firstName} {creator.lastName}
                             </Typography>
@@ -228,9 +227,7 @@ export default function TaskCard({ task, currentUserId, onDetailsClick, onCancel
 
                     {(task.status === "ACCEPTED" || task.status === "IN_PROGRESS" || task.status === "COMPLETED") && volunteer && (
                         <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                            <Avatar sx={{ width: 24, height: 24, fontSize: "0.75rem", bgcolor: "secondary.main" }}>
-                                {volunteer.firstName.charAt(0)}
-                            </Avatar>
+                            <UserAvatar userId={task.volunteerId} firstName={volunteer.firstName} lastName={volunteer.lastName} sx={{ width: 24, height: 24, fontSize: "0.75rem", bgcolor: "secondary.main" }} />
                             <Typography variant="caption" color="text.primary" fontWeight={600}>
                                 Volontario: {volunteer.firstName} {volunteer.lastName}
                             </Typography>

@@ -4,6 +4,7 @@ import io.quarkus.security.identity.SecurityIdentity;
 import it.soli.entity.User;
 import it.soli.entity.UserRole;
 import it.soli.entity.VolunteerProfile;
+import it.soli.entity.ProfileImage;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
@@ -196,5 +197,89 @@ public class UserResource {
         
         user.delete();
         return Response.noContent().build();
+    }
+
+    /**
+     * PUT /api/users/me/profile-picture - Upload profile picture
+     */
+    @PUT
+    @Path("/me/profile-picture")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Transactional
+    public Response uploadProfilePicture(
+            @org.jboss.resteasy.reactive.RestForm("image") org.jboss.resteasy.reactive.multipart.FileUpload fileUpload) {
+        
+        if (jwt.getSubject() == null) {
+            return Response.status(Response.Status.UNAUTHORIZED).build();
+        }
+
+        User user = User.findByKeycloakId(jwt.getSubject());
+        if (user == null) {
+            return Response.status(Response.Status.NOT_FOUND).build();
+        }
+
+        if (fileUpload == null) {
+            return Response.status(Response.Status.BAD_REQUEST).entity("No image provided").build();
+        }
+
+        try {
+            byte[] fileBytes = java.nio.file.Files.readAllBytes(fileUpload.uploadedFile());
+            String contentType = fileUpload.contentType();
+            if (contentType == null) {
+                contentType = "application/octet-stream";
+            }
+
+            ProfileImage image = ProfileImage.findByUserId(user.id);
+            if (image == null) {
+                image = new ProfileImage();
+                image.id = UUID.randomUUID();
+                image.userId = user.id;
+            }
+            image.data = fileBytes;
+            image.contentType = contentType;
+            image.persist();
+
+            return Response.ok().build();
+        } catch (java.io.IOException e) {
+            return Response.serverError().build();
+        }
+    }
+
+    /**
+     * GET /api/users/me/profile-picture - Get current user's profile picture
+     */
+    @GET
+    @Path("/me/profile-picture")
+    public Response getMyProfilePicture() {
+        if (jwt.getSubject() == null) {
+            return Response.status(Response.Status.UNAUTHORIZED).build();
+        }
+        User user = User.findByKeycloakId(jwt.getSubject());
+        if (user == null) {
+            return Response.status(Response.Status.NOT_FOUND).build();
+        }
+        ProfileImage image = ProfileImage.findByUserId(user.id);
+        if (image == null || image.data == null) {
+            return Response.noContent().build();
+        }
+        return Response.ok(image.data).type(image.contentType).build();
+    }
+
+    /**
+     * GET /api/users/{id}/profile-picture - Get profile picture
+     */
+    @GET
+    @Path("/{id}/profile-picture")
+    public Response getProfilePicture(@PathParam("id") UUID id) {
+        if (jwt.getSubject() == null) {
+            return Response.status(Response.Status.UNAUTHORIZED).build();
+        }
+
+        ProfileImage image = ProfileImage.findByUserId(id);
+        if (image == null || image.data == null) {
+            return Response.noContent().build();
+        }
+
+        return Response.ok(image.data).type(image.contentType).build();
     }
 }

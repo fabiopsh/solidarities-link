@@ -25,9 +25,13 @@ import {
 	Stack,
 	Paper,
 	Autocomplete,
+	Tooltip,
+	IconButton,
+	Badge,
 } from "@mui/material";
 import SaveIcon from "@mui/icons-material/Save";
 import VerifiedUserIcon from "@mui/icons-material/VerifiedUser";
+import PhotoCameraIcon from "@mui/icons-material/PhotoCamera";
 import api from "../api";
 import type { User } from "../types/models/User";
 import type { VolunteerProfile, ServiceCategory } from "../types/models/VolunteerProfile";
@@ -78,6 +82,8 @@ export default function ProfilePage() {
 	const [profile, setProfile] = useState<VolunteerProfile | null>(null);
 	const [loading, setLoading] = useState(true);
 	const [saving, setSaving] = useState(false);
+	const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+	const [uploadingAvatar, setUploadingAvatar] = useState(false);
 	const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: "success" | "error" }>({
 		open: false,
 		message: "",
@@ -207,6 +213,14 @@ export default function ProfilePage() {
 			}
 		};
 		fetchData();
+		
+		api.get("/api/users/me/profile-picture", { responseType: "blob" })
+			.then((res) => {
+				if (res.status === 200 && res.data && res.data.size > 0) {
+					setAvatarUrl(URL.createObjectURL(res.data));
+				}
+			})
+			.catch(() => {});
 	}, []);
 
 	const handleCategoryToggle = (cat: ServiceCategory) => {
@@ -240,6 +254,33 @@ export default function ProfilePage() {
 			setSnackbar({ open: true, message: "Errore nel salvataggio del profilo.", severity: "error" });
 		} finally {
 			setSaving(false);
+		}
+	};
+
+	const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+		if (!e.target.files || e.target.files.length === 0) return;
+		const file = e.target.files[0];
+		
+		const formData = new FormData();
+		// Match the parameter name in the @RestForm annotation on the backend
+		formData.append("image", file);
+		
+		setUploadingAvatar(true);
+		try {
+			await api.put("/api/users/me/profile-picture", formData, {
+				headers: { "Content-Type": "multipart/form-data" }
+			});
+			// Re-fetch avatar
+			const res = await api.get("/api/users/me/profile-picture", { responseType: "blob" });
+			if (res.status === 200 && res.data && res.data.size > 0) {
+				setAvatarUrl(URL.createObjectURL(res.data));
+			}
+			setSnackbar({ open: true, message: "Foto profilo aggiornata con successo!", severity: "success" });
+		} catch (error) {
+			console.error("Error uploading profile picture:", error);
+			setSnackbar({ open: true, message: "Errore durante l'aggiornamento della foto profilo.", severity: "error" });
+		} finally {
+			setUploadingAvatar(false);
 		}
 	};
 
@@ -307,21 +348,43 @@ export default function ProfilePage() {
 								position: "relative",
 							}}
 						>
-							<Avatar
-								sx={{
-									width: 80,
-									height: 80,
-									fontSize: "1.8rem",
-									fontWeight: 700,
-									bgcolor: "white",
-									color: "primary.main",
-									mx: "auto",
-									mb: 2,
-									boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-								}}
+							<Badge
+								overlap="circular"
+								anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+								badgeContent={
+									uploadingAvatar ? (
+										<CircularProgress size={24} sx={{ color: "white", bgcolor: "primary.dark", borderRadius: "50%", p: 0.5 }} />
+									) : (
+										<Tooltip title="Cambia foto profilo">
+											<IconButton 
+												component="label" 
+												sx={{ bgcolor: "white", boxShadow: 2, "&:hover": { bgcolor: "grey.100" } }}
+												size="small"
+											>
+												<input hidden accept="image/*" type="file" onChange={handleImageUpload} />
+												<PhotoCameraIcon fontSize="small" color="primary" />
+											</IconButton>
+										</Tooltip>
+									)
+								}
+								sx={{ mb: 2 }}
 							>
-								{userInitials}
-							</Avatar>
+								<Avatar
+									src={avatarUrl || undefined}
+									sx={{
+										width: 80,
+										height: 80,
+										fontSize: "1.8rem",
+										fontWeight: 700,
+										bgcolor: "white",
+										color: "primary.main",
+										mx: "auto",
+										boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+									}}
+								>
+									{userInitials}
+								</Avatar>
+							</Badge>
 							<Typography variant="h5" fontWeight={700} color="white">
 								{userName}
 							</Typography>
