@@ -20,7 +20,6 @@ import {
 	ToggleButton,
 	ToggleButtonGroup,
 } from "@mui/material";
-import VolunteerActivismIcon from "@mui/icons-material/VolunteerActivism";
 import ViewListIcon from "@mui/icons-material/ViewList";
 import MapIcon from "@mui/icons-material/Map";
 import AssignmentIcon from "@mui/icons-material/Assignment";
@@ -34,11 +33,13 @@ import type { Task } from "../types/models/Task";
 import type { User } from "../types/models/User";
 import TaskMapView from "../components/TaskMapView";
 import TaskCard from "../components/TaskCard";
+import { useRole } from "../context/RoleContext";
 
 export default function DashboardPage() {
 	const auth = useAuth();
 	const navigate = useNavigate();
 	const location = useLocation();
+	const { role } = useRole();
 	const userName = auth.user?.profile?.given_name || auth.user?.profile?.name || "Utente";
 	const isRequestsPage = location.pathname.includes("/requests");
 
@@ -203,27 +204,29 @@ export default function DashboardPage() {
 							: "Panoramica della tua attività su SoLi — Solidarities Link."}
 					</Typography>
 				</Box>
-				<Button
-					variant="contained"
-					startIcon={<AddIcon />}
-					size="large"
-					onClick={() => navigate("/dashboard/requests/new")}
-					sx={{
-						px: 3,
-						py: 1.5,
-						fontWeight: "bold",
-						borderRadius: 2,
-						boxShadow: "0 4px 12px rgba(0, 121, 107, 0.3)",
-					}}
-				>
-					Nuova Richiesta
-				</Button>
+				{role === "requester" && (
+					<Button
+						variant="contained"
+						startIcon={<AddIcon />}
+						size="large"
+						onClick={() => navigate("/dashboard/requests/new")}
+						sx={{
+							px: 3,
+							py: 1.5,
+							fontWeight: "bold",
+							borderRadius: 2,
+							boxShadow: "0 4px 12px rgba(0, 121, 107, 0.3)",
+						}}
+					>
+						Nuova Richiesta
+					</Button>
+				)}
 			</Box>
 
-			{/* Stat Cards — solo nella Dashboard */}
-			{!isRequestsPage && (
+			{/* Stat Cards — solo nella Dashboard e solo per VOLONTARI */}
+			{!isRequestsPage && role === "volunteer" && (
 				<Grid container spacing={3} sx={{ mb: 6 }}>
-					<Grid size={{ xs: 12, sm: 6, md: 4 }}>
+					<Grid size={{ xs: 12, sm: 6, md: 6 }}>
 						<Card sx={{ background: "linear-gradient(135deg, #00796B 0%, #48A999 100%)", color: "white" }}>
 							<CardContent sx={{ p: 3 }}>
 								<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -241,7 +244,7 @@ export default function DashboardPage() {
 						</Card>
 					</Grid>
 
-					<Grid size={{ xs: 12, sm: 6, md: 4 }}>
+					<Grid size={{ xs: 12, sm: 6, md: 6 }}>
 						<Card sx={{ background: "linear-gradient(135deg, #FF6F00 0%, #FFA040 100%)", color: "white" }}>
 							<CardContent sx={{ p: 3 }}>
 								<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -254,24 +257,6 @@ export default function DashboardPage() {
 										</Typography>
 									</Box>
 									<EmojiEventsIcon sx={{ fontSize: 48, opacity: 0.3 }} />
-								</Box>
-							</CardContent>
-						</Card>
-					</Grid>
-
-					<Grid size={{ xs: 12, sm: 6, md: 4 }}>
-						<Card sx={{ background: "linear-gradient(135deg, #2E7D32 0%, #66BB6A 100%)", color: "white" }}>
-							<CardContent sx={{ p: 3 }}>
-								<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-									<Box>
-										<Typography variant="h3" fontWeight={700}>
-											-
-										</Typography>
-										<Typography variant="body2" sx={{ opacity: 0.85, mt: 0.5 }}>
-											Volontari Attivi
-										</Typography>
-									</Box>
-									<VolunteerActivismIcon sx={{ fontSize: 48, opacity: 0.3 }} />
 								</Box>
 							</CardContent>
 						</Card>
