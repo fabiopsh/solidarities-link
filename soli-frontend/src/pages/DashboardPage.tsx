@@ -20,7 +20,6 @@ import {
 	ToggleButton,
 	ToggleButtonGroup,
 } from "@mui/material";
-import VolunteerActivismIcon from "@mui/icons-material/VolunteerActivism";
 import ViewListIcon from "@mui/icons-material/ViewList";
 import MapIcon from "@mui/icons-material/Map";
 import AssignmentIcon from "@mui/icons-material/Assignment";
@@ -34,11 +33,13 @@ import type { Task } from "../types/models/Task";
 import type { User } from "../types/models/User";
 import TaskMapView from "../components/TaskMapView";
 import TaskCard from "../components/TaskCard";
+import { useRole } from "../context/RoleContext";
 
 export default function DashboardPage() {
 	const auth = useAuth();
 	const navigate = useNavigate();
 	const location = useLocation();
+	const { role } = useRole();
 	const userName = auth.user?.profile?.given_name || auth.user?.profile?.name || "Utente";
 	const isRequestsPage = location.pathname.includes("/requests");
 
@@ -50,7 +51,7 @@ export default function DashboardPage() {
 	const [error, setError] = useState<string | null>(null);
 
 	// Tab state for requests page
-	const [tabValue, setTabValue] = useState(0);
+	const [tabValue, setTabValue] = useState<string>("my_requests");
 	const [viewMode, setViewMode] = useState<"LIST" | "MAP">("LIST");
 
 	const [dbUser, setDbUser] = useState<User | null>(null);
@@ -87,6 +88,12 @@ export default function DashboardPage() {
 	useEffect(() => {
 		fetchTasksAndUser();
 	}, [location.pathname]);
+
+	useEffect(() => {
+		if (isRequestsPage) {
+			setTabValue(role === "requester" ? "my_requests" : "available");
+		}
+	}, [role, isRequestsPage]);
 
 	const handleCancelTask = async () => {
 		if (!taskToCancel) return;
@@ -161,7 +168,7 @@ export default function DashboardPage() {
 					<Typography variant="h6" color="text.secondary">
 						Nessun task trovato in questa sezione.
 					</Typography>
-					{isRequestsPage && tabValue === 0 && (
+					{isRequestsPage && tabValue === "my_requests" && role === "requester" && (
 						<Button variant="outlined" sx={{ mt: 2 }} onClick={() => navigate("/dashboard/requests/new")}>
 							Crea una nuova richiesta
 						</Button>
@@ -203,27 +210,29 @@ export default function DashboardPage() {
 							: "Panoramica della tua attività su SoLi — Solidarities Link."}
 					</Typography>
 				</Box>
-				<Button
-					variant="contained"
-					startIcon={<AddIcon />}
-					size="large"
-					onClick={() => navigate("/dashboard/requests/new")}
-					sx={{
-						px: 3,
-						py: 1.5,
-						fontWeight: "bold",
-						borderRadius: 2,
-						boxShadow: "0 4px 12px rgba(0, 121, 107, 0.3)",
-					}}
-				>
-					Nuova Richiesta
-				</Button>
+				{role === "requester" && (
+					<Button
+						variant="contained"
+						startIcon={<AddIcon />}
+						size="large"
+						onClick={() => navigate("/dashboard/requests/new")}
+						sx={{
+							px: 3,
+							py: 1.5,
+							fontWeight: "bold",
+							borderRadius: 2,
+							boxShadow: "0 4px 12px rgba(0, 121, 107, 0.3)",
+						}}
+					>
+						Nuova Richiesta
+					</Button>
+				)}
 			</Box>
 
-			{/* Stat Cards — solo nella Dashboard */}
-			{!isRequestsPage && (
+			{/* Stat Cards — solo nella Dashboard e solo per VOLONTARI */}
+			{!isRequestsPage && role === "volunteer" && (
 				<Grid container spacing={3} sx={{ mb: 6 }}>
-					<Grid size={{ xs: 12, sm: 6, md: 4 }}>
+					<Grid size={{ xs: 12, sm: 6, md: 6 }}>
 						<Card sx={{ background: "linear-gradient(135deg, #00796B 0%, #48A999 100%)", color: "white" }}>
 							<CardContent sx={{ p: 3 }}>
 								<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -241,7 +250,7 @@ export default function DashboardPage() {
 						</Card>
 					</Grid>
 
-					<Grid size={{ xs: 12, sm: 6, md: 4 }}>
+					<Grid size={{ xs: 12, sm: 6, md: 6 }}>
 						<Card sx={{ background: "linear-gradient(135deg, #FF6F00 0%, #FFA040 100%)", color: "white" }}>
 							<CardContent sx={{ p: 3 }}>
 								<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -258,24 +267,6 @@ export default function DashboardPage() {
 							</CardContent>
 						</Card>
 					</Grid>
-
-					<Grid size={{ xs: 12, sm: 6, md: 4 }}>
-						<Card sx={{ background: "linear-gradient(135deg, #2E7D32 0%, #66BB6A 100%)", color: "white" }}>
-							<CardContent sx={{ p: 3 }}>
-								<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-									<Box>
-										<Typography variant="h3" fontWeight={700}>
-											-
-										</Typography>
-										<Typography variant="body2" sx={{ opacity: 0.85, mt: 0.5 }}>
-											Volontari Attivi
-										</Typography>
-									</Box>
-									<VolunteerActivismIcon sx={{ fontSize: 48, opacity: 0.3 }} />
-								</Box>
-							</CardContent>
-						</Card>
-					</Grid>
 				</Grid>
 			)}
 
@@ -284,9 +275,9 @@ export default function DashboardPage() {
 				<>
 					<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: 1, borderColor: "divider", mb: 4 }}>
 						<Tabs value={tabValue} onChange={(_, newValue) => setTabValue(newValue)} aria-label="task tabs">
-							<Tab label="Le Mie Richieste" sx={{ fontWeight: "bold" }} />
-							<Tab label="Task Disponibili" sx={{ fontWeight: "bold" }} />
-							<Tab label="Task Accettati" sx={{ fontWeight: "bold" }} />
+							{role === "requester" && <Tab label="Le Mie Richieste" value="my_requests" sx={{ fontWeight: "bold" }} />}
+							{role === "volunteer" && <Tab label="Task Disponibili" value="available" sx={{ fontWeight: "bold" }} />}
+							{role === "volunteer" && <Tab label="Task Accettati" value="accepted" sx={{ fontWeight: "bold" }} />}
 						</Tabs>
 						<Box sx={{ display: "flex", alignItems: "center", gap: 1, pb: 0.5 }}>
 							{lastSync && (
@@ -328,13 +319,16 @@ export default function DashboardPage() {
 					</Box>
 
 					{/* My Requests Tab */}
-					<Box role="tabpanel" hidden={tabValue !== 0}>
-						{tabValue === 0 && renderTaskCards(myRequests)}
-					</Box>
+					{role === "requester" && (
+						<Box role="tabpanel" hidden={tabValue !== "my_requests"}>
+							{tabValue === "my_requests" && renderTaskCards(myRequests)}
+						</Box>
+					)}
 
 					{/* Available Tasks Tab */}
-					<Box role="tabpanel" hidden={tabValue !== 1}>
-						{tabValue === 1 && (
+					{role === "volunteer" && (
+						<Box role="tabpanel" hidden={tabValue !== "available"}>
+							{tabValue === "available" && (
 							<>
 								<Box sx={{ display: "flex", justifyContent: "flex-end", mb: 2 }}>
 									<ToggleButtonGroup
@@ -361,13 +355,16 @@ export default function DashboardPage() {
 									<TaskMapView tasks={availableTasks} />
 								)}
 							</>
-						)}
-					</Box>
+							)}
+						</Box>
+					)}
 
 					{/* Accepted Tasks Tab */}
-					<Box role="tabpanel" hidden={tabValue !== 2}>
-						{tabValue === 2 && renderTaskCards(acceptedTasks)}
-					</Box>
+					{role === "volunteer" && (
+						<Box role="tabpanel" hidden={tabValue !== "accepted"}>
+							{tabValue === "accepted" && renderTaskCards(acceptedTasks)}
+						</Box>
+					)}
 				</>
 			) : (
 				<>

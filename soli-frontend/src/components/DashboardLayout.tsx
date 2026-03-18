@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "react-oidc-context";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import {
@@ -19,6 +19,8 @@ import {
 	MenuItem,
 	useMediaQuery,
 	useTheme,
+	ToggleButton,
+	ToggleButtonGroup,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
@@ -28,6 +30,7 @@ import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 import LogoutIcon from "@mui/icons-material/Logout";
 import PersonIcon from "@mui/icons-material/Person";
 import HandshakeIcon from "@mui/icons-material/Handshake";
+import { useRole, type UserRole } from "../context/RoleContext";
 
 const DRAWER_WIDTH = 280;
 const DRAWER_WIDTH_COLLAPSED = 72;
@@ -60,6 +63,28 @@ export default function DashboardLayout() {
 	const auth = useAuth();
 	const navigate = useNavigate();
 	const location = useLocation();
+	const { role, setRole } = useRole();
+
+	const handleRoleChange = (
+		_event: React.MouseEvent<HTMLElement>,
+		newRole: UserRole | null,
+	) => {
+		if (newRole !== null) {
+			setRole(newRole);
+		}
+	};
+
+	// Fallback generico per ruoli che non possono vedere determinate pagine
+	useEffect(() => {
+		// Se il richiedente prova ad accedere al wallet
+		if (role === "requester" && location.pathname.startsWith("/dashboard/wallet")) {
+			navigate("/dashboard", { replace: true });
+		}
+		// Se il volontario prova a creare una nuova richiesta
+		if (role === "volunteer" && location.pathname === "/dashboard/requests/new") {
+			navigate("/dashboard", { replace: true });
+		}
+	}, [role, location.pathname, navigate]);
 
 	// Check if user has admin role
 	const isAdmin = (auth.user?.profile?.realm_access as any)?.roles?.includes("admin") || false;
@@ -128,7 +153,9 @@ export default function DashboardLayout() {
 
 			{/* Main Nav Items */}
 			<List sx={{ flexGrow: 1, px: 1, py: 2 }}>
-				{navItems.map((item) => (
+				{navItems
+					.filter((item) => !(role === "requester" && item.label === "Wallet"))
+					.map((item) => (
 					<ListItemButton
 						key={item.label}
 						onClick={() => handleNav(item.path)}
@@ -301,6 +328,22 @@ export default function DashboardLayout() {
 					</IconButton>
 
 					<Box sx={{ flexGrow: 1 }} />
+
+					<ToggleButtonGroup
+						value={role}
+						exclusive
+						onChange={handleRoleChange}
+						aria-label="role switch"
+						size="small"
+						sx={{ mr: 2, display: { xs: "none", sm: "flex" } }}
+					>
+						<ToggleButton value="volunteer" aria-label="Volunteer Role" sx={{ px: 2, textTransform: "none", fontWeight: 600 }}>
+							Volontario
+						</ToggleButton>
+						<ToggleButton value="requester" aria-label="Requester Role" sx={{ px: 2, textTransform: "none", fontWeight: 600 }}>
+							Richiedente
+						</ToggleButton>
+					</ToggleButtonGroup>
 
 					<IconButton onClick={handleMenuOpen} size="small">
 						<Avatar sx={{ bgcolor: "primary.main", width: 36, height: 36, fontSize: "0.875rem" }}>
