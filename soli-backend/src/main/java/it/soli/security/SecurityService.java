@@ -40,7 +40,7 @@ public class SecurityService {
                 user.email = keycloakId + "@error.soli.it";
             }
             
-            user.role = UserRole.REQUESTER;
+            user.role = UserRole.USER;
             user.persist();
             LOG.infof("Created new user: %s (ID: %s) with role: %s", user.email, user.id, user.role);
         }
