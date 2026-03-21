@@ -32,12 +32,14 @@ import {
 import SaveIcon from "@mui/icons-material/Save";
 import VerifiedUserIcon from "@mui/icons-material/VerifiedUser";
 import PhotoCameraIcon from "@mui/icons-material/PhotoCamera";
+import { useNavigate } from "react-router-dom";
 import api from "../api";
 import type { User } from "../types/models/User";
 import type { VolunteerProfile, ServiceCategory } from "../types/models/VolunteerProfile";
 import type { MyAssociation, AssociationRole } from "../types/models/Association";
 import { useRole } from "../context/RoleContext";
 import GroupsIcon from "@mui/icons-material/Groups";
+import AssociationAvatar from "../components/AssociationAvatar";
 
 const SERVICE_CATEGORIES: { value: ServiceCategory; label: string; emoji: string }[] = [
 	{ value: "MOBILITY", label: "Mobilità e Trasporti", emoji: "🚗" },
@@ -80,6 +82,7 @@ function LocationMarker({ position, setPosition, onDragEnd }: { position: [numbe
 
 export default function ProfilePage() {
 	const { role } = useRole();
+	const navigate = useNavigate();
 	const [user, setUser] = useState<User | null>(null);
 	const [profile, setProfile] = useState<VolunteerProfile | null>(null);
 	const [loading, setLoading] = useState(true);
@@ -450,7 +453,7 @@ export default function ProfilePage() {
 								</Typography>
 								<Divider />
 								<Box>
-									<Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
+									<Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1.5 }}>
 										<GroupsIcon fontSize="small" color="primary" />
 										<Typography variant="body2" fontWeight={600}>
 											Associazioni
@@ -463,27 +466,50 @@ export default function ProfilePage() {
 									) : (
 										<Stack spacing={1}>
 											{myAssociations.map(({ association, membership }) => (
-												<Box
+												<Paper
 													key={association.id}
-													sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 0.5 }}
+													elevation={0}
+													onClick={() => navigate(`/dashboard/associations/${association.id}`)}
+													sx={{
+														display: "flex",
+														alignItems: "center",
+														justifyContent: "space-between",
+														gap: 1,
+														p: 1,
+														borderRadius: 2,
+														bgcolor: "background.default",
+														cursor: "pointer",
+														"&:hover": { bgcolor: "action.hover" },
+													}}
 												>
-													<Typography variant="body2" noWrap sx={{ maxWidth: 150 }}>
-														{association.name}
-													</Typography>
-													<Stack direction="row" spacing={0.5}>
+													<Box sx={{ display: "flex", alignItems: "center", gap: 1, minWidth: 0 }}>
+														<AssociationAvatar
+															associationId={association.id}
+															accentColor={association.accentColor ?? undefined}
+															size={28}
+														/>
+														<Typography variant="body2" fontWeight={500} noWrap>
+															{association.name}
+														</Typography>
+													</Box>
+													<Stack direction="row" spacing={0.5} flexShrink={0}>
 														<Chip
 															label={ASSOC_ROLE_LABELS[membership.role]}
 															color={ASSOC_ROLE_COLORS[membership.role]}
 															size="small"
+															sx={{ height: 20, fontSize: "0.7rem" }}
 														/>
-														<Chip
-															label={membership.status === "APPROVED" ? "Approvato" : "In attesa"}
-															color={membership.status === "APPROVED" ? "success" : "warning"}
-															variant="outlined"
-															size="small"
-														/>
+														{membership.status === "PENDING" && (
+															<Chip
+																label="In attesa"
+																color="warning"
+																variant="outlined"
+																size="small"
+																sx={{ height: 20, fontSize: "0.7rem" }}
+															/>
+														)}
 													</Stack>
-												</Box>
+												</Paper>
 											))}
 										</Stack>
 									)}

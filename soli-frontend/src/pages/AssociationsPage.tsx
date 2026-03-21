@@ -28,6 +28,7 @@ import AddIcon from "@mui/icons-material/Add";
 import type { Association, MyAssociation, AssociationRole } from "../types/models/Association";
 import type { PaginatedResponse } from "../types/models/PaginatedResponse";
 import { useRole } from "../context/RoleContext";
+import AssociationAvatar from "../components/AssociationAvatar";
 
 const ROLE_LABELS: Record<AssociationRole, string> = {
 	ADMIN: "Admin",
@@ -222,7 +223,7 @@ export default function AssociationsPage() {
 
 			<Grid container spacing={3} alignItems="flex-start">
 				{/* LEFT — Global list */}
-				<Grid item xs={12} md={7}>
+				<Grid item xs={12} md={6}>
 					<Card sx={{ borderRadius: 3, boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
 						<CardContent sx={{ p: 3 }}>
 							<Typography variant="h6" fontWeight={700} mb={2.5}>
@@ -309,20 +310,11 @@ export default function AssociationsPage() {
 												}}
 											>
 												<Box sx={{ display: "flex", alignItems: "center", gap: 1.5, minWidth: 0 }}>
-													<Box
-														sx={{
-															width: 36,
-															height: 36,
-															borderRadius: 2,
-															bgcolor: "primary.main",
-															display: "flex",
-															alignItems: "center",
-															justifyContent: "center",
-															flexShrink: 0,
-														}}
-													>
-														<GroupsIcon sx={{ fontSize: 18, color: "white" }} />
-													</Box>
+													<AssociationAvatar
+														associationId={assoc.id}
+														accentColor={assoc.accentColor ?? undefined}
+														size={36}
+													/>
 													<Box sx={{ minWidth: 0 }}>
 														<Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
 															<Typography
@@ -405,7 +397,7 @@ export default function AssociationsPage() {
 				</Grid>
 
 				{/* RIGHT — My associations */}
-				<Grid item xs={12} md={5}>
+				<Grid item xs={12} md={6}>
 					<Card sx={{ borderRadius: 3, boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
 						<CardContent sx={{ p: 3 }}>
 							<Typography variant="h6" fontWeight={700} mb={2.5}>
@@ -446,6 +438,12 @@ export default function AssociationsPage() {
 											}}
 										>
 											<Box sx={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 1 }}>
+												<Box sx={{ display: "flex", alignItems: "center", gap: 1.5, minWidth: 0 }}>
+												<AssociationAvatar
+													associationId={association.id}
+													accentColor={association.accentColor ?? undefined}
+													size={36}
+												/>
 												<Box sx={{ minWidth: 0 }}>
 													<Typography
 														variant="body2"
@@ -471,7 +469,8 @@ export default function AssociationsPage() {
 														</Typography>
 													)}
 												</Box>
-												<Stack direction="row" spacing={0.5} flexShrink={0}>
+											</Box>
+											<Stack direction="row" spacing={0.5} flexShrink={0}>
 													<Chip
 														label={ROLE_LABELS[membership.role]}
 														color={ROLE_COLORS[membership.role]}

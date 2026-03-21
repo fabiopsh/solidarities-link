@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api, { USER_BASIC_CACHE_TTL } from "../api";
 import {
@@ -22,6 +22,7 @@ import {
 	Avatar,
 	IconButton,
 	Tooltip,
+	Badge,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import EditIcon from "@mui/icons-material/Edit";
@@ -33,7 +34,9 @@ import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import GroupsIcon from "@mui/icons-material/Groups";
 import PendingIcon from "@mui/icons-material/HourglassEmpty";
+import PhotoCameraIcon from "@mui/icons-material/PhotoCamera";
 import type { Association, AssociationMembership, AssociationRole } from "../types/models/Association";
+import UserAvatar from "../components/UserAvatar";
 
 interface BasicUser {
 	id: string;
@@ -58,9 +61,12 @@ const ROLE_COLORS: Record<AssociationRole, "success" | "primary" | "default"> = 
 	MEMBER: "default",
 };
 
-function getInitials(firstName: string, lastName: string) {
-	return `${firstName?.charAt(0) ?? ""}${lastName?.charAt(0) ?? ""}`.toUpperCase();
-}
+const COLOR_PALETTE = [
+	"#00796B", "#00838F", "#1565C0", "#4527A0", "#6A1B9A",
+	"#AD1457", "#C62828", "#E65100", "#F57F17", "#2E7D32",
+	"#37474F", "#5D4037",
+];
+
 
 export default function AssociationDetailPage() {
 	const { id } = useParams<{ id: string }>();
@@ -72,10 +78,16 @@ export default function AssociationDetailPage() {
 	const [currentDbUserId, setCurrentDbUserId] = useState<string | null>(null);
 	const [loading, setLoading] = useState(true);
 
+	// Image
+	const [imageUrl, setImageUrl] = useState<string | null>(null);
+	const [uploadingImage, setUploadingImage] = useState(false);
+	const imageInputRef = useRef<HTMLInputElement>(null);
+
 	// Edit state
 	const [editMode, setEditMode] = useState(false);
 	const [editName, setEditName] = useState("");
 	const [editDescription, setEditDescription] = useState("");
+	const [editColor, setEditColor] = useState<string | null>(null);
 	const [saving, setSaving] = useState(false);
 
 	// Delete dialog
@@ -91,6 +103,19 @@ export default function AssociationDetailPage() {
 	const showSnackbar = (message: string, severity: "success" | "error") =>
 		setSnackbar({ open: true, message, severity });
 
+	const loadImage = useCallback(async (associationId: string) => {
+		try {
+			const res = await api.get(`/api/associations/${associationId}/image`, { responseType: "blob" });
+			if (res.status === 200 && res.data && res.data.size > 0) {
+				setImageUrl(URL.createObjectURL(res.data));
+			} else {
+				setImageUrl(null);
+			}
+		} catch {
+			setImageUrl(null);
+		}
+	}, []);
+
 	const fetchData = useCallback(async () => {
 		if (!id) return;
 		try {
@@ -102,7 +127,8 @@ export default function AssociationDetailPage() {
 			setMembers(assocRes.data.members);
 			setCurrentDbUserId(userRes.data.id);
 
-			// Batch-fetch member names
+			await loadImage(id);
+
 			const uniqueUserIds = [...new Set(assocRes.data.members.map((m) => m.userId))];
 			const nameEntries = await Promise.all(
 				uniqueUserIds.map((uid) =>
@@ -118,7 +144,7 @@ export default function AssociationDetailPage() {
 		} finally {
 			setLoading(false);
 		}
-	}, [id]);
+	}, [id, loadImage]);
 
 	useEffect(() => {
 		fetchData();
@@ -133,7 +159,30 @@ export default function AssociationDetailPage() {
 	const pendingMembers = members.filter((m) => m.status === "PENDING");
 	const approvedMembers = members.filter((m) => m.status === "APPROVED");
 
+	const accentColor = association?.accentColor ?? "#00796B";
+	const headerBg = `linear-gradient(135deg, ${accentColor}dd 0%, ${accentColor} 100%)`;
+
 	// --- Actions ---
+	const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+		const file = e.target.files?.[0];
+		if (!file || !id) return;
+		setUploadingImage(true);
+		try {
+			const formData = new FormData();
+			formData.append("image", file);
+			await api.put(`/api/associations/${id}/image`, formData, {
+				headers: { "Content-Type": "multipart/form-data" },
+			});
+			await loadImage(id);
+			showSnackbar("Immagine aggiornata", "success");
+		} catch {
+			showSnackbar("Errore durante il caricamento", "error");
+		} finally {
+			setUploadingImage(false);
+			if (imageInputRef.current) imageInputRef.current.value = "";
+		}
+	};
+
 	const handleSaveEdit = async () => {
 		if (!id || !editName.trim()) return;
 		setSaving(true);
@@ -141,6 +190,7 @@ export default function AssociationDetailPage() {
 			const res = await api.put<Association>(`/api/associations/${id}`, {
 				name: editName.trim(),
 				description: editDescription.trim() || null,
+				accentColor: editColor,
 			});
 			setAssociation(res.data);
 			setEditMode(false);
@@ -194,9 +244,7 @@ export default function AssociationDetailPage() {
 			await fetchData();
 		} catch (err: any) {
 			showSnackbar(
-				err?.response?.status === 409
-					? "Impossibile rimuovere l'unico admin"
-					: "Errore durante la rimozione",
+				err?.response?.status === 409 ? "Impossibile rimuovere l'unico admin" : "Errore durante la rimozione",
 				"error"
 			);
 		}
@@ -213,15 +261,12 @@ export default function AssociationDetailPage() {
 			await fetchData();
 		} catch (err: any) {
 			showSnackbar(
-				err?.response?.status === 409
-					? "Impossibile modificare il ruolo"
-					: "Errore durante la modifica del ruolo",
+				err?.response?.status === 409 ? "Impossibile modificare il ruolo" : "Errore durante la modifica",
 				"error"
 			);
 		}
 	};
 
-	// --- Render helpers ---
 	const getUserName = (userId: string) => {
 		const u = userNames[userId];
 		return u ? `${u.firstName} ${u.lastName}`.trim() : "…";
@@ -259,87 +304,122 @@ export default function AssociationDetailPage() {
 
 			{/* ── Header card ── */}
 			<Card sx={{ borderRadius: 3, boxShadow: "0 4px 20px rgba(0,0,0,0.05)", mb: 3, overflow: "visible" }}>
-				{/* Gradient band */}
+				{/* Gradient header */}
 				<Box
 					sx={{
-						background: "linear-gradient(135deg, #00796B 0%, #48A999 100%)",
-						p: 4,
+						background: headerBg,
+						p: { xs: 3, md: 4 },
 						borderRadius: "12px 12px 0 0",
-						display: "flex",
-						alignItems: "flex-start",
-						justifyContent: "space-between",
-						gap: 2,
 					}}
 				>
-					<Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-						<Box
-							sx={{
-								width: 56,
-								height: 56,
-								borderRadius: 2,
-								bgcolor: "rgba(255,255,255,0.2)",
-								display: "flex",
-								alignItems: "center",
-								justifyContent: "center",
-								flexShrink: 0,
-							}}
-						>
-							<GroupsIcon sx={{ fontSize: 28, color: "white" }} />
-						</Box>
-						<Box>
-							<Typography variant="h5" fontWeight={700} color="white">
-								{association.name}
-							</Typography>
-							<Typography variant="body2" sx={{ color: "rgba(255,255,255,0.8)", mt: 0.5 }}>
-								Creata il {new Date(association.createdAt).toLocaleDateString("it-IT", { year: "numeric", month: "long", day: "numeric" })}
-							</Typography>
-						</Box>
-					</Box>
+					<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 2, flexWrap: "wrap" }}>
+						{/* Avatar + title */}
+						<Box sx={{ display: "flex", alignItems: "center", gap: 2.5 }}>
+							<Badge
+								overlap="circular"
+								anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+								badgeContent={
+									isAdmin ? (
+										uploadingImage ? (
+											<CircularProgress size={22} sx={{ color: "white", bgcolor: "rgba(0,0,0,0.3)", borderRadius: "50%", p: 0.4 }} />
+										) : (
+											<Tooltip title="Cambia immagine">
+												<IconButton
+													component="label"
+													size="small"
+													sx={{ bgcolor: "white", boxShadow: 2, width: 28, height: 28, "&:hover": { bgcolor: "grey.100" } }}
+												>
+													<input hidden accept="image/*" type="file" ref={imageInputRef} onChange={handleImageUpload} />
+													<PhotoCameraIcon sx={{ fontSize: 14, color: accentColor }} />
+												</IconButton>
+											</Tooltip>
+										)
+									) : null
+								}
+							>
+								{imageUrl ? (
+									<Avatar
+										src={imageUrl}
+										sx={{ width: 64, height: 64, borderRadius: 2, boxShadow: "0 2px 8px rgba(0,0,0,0.25)" }}
+									/>
+								) : (
+									<Box
+										sx={{
+											width: 64,
+											height: 64,
+											borderRadius: 2,
+											bgcolor: "rgba(255,255,255,0.2)",
+											display: "flex",
+											alignItems: "center",
+											justifyContent: "center",
+											boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+										}}
+									>
+										<GroupsIcon sx={{ fontSize: 32, color: "white" }} />
+									</Box>
+								)}
+							</Badge>
 
-					{/* Admin actions */}
-					{isAdmin && !editMode && (
-						<Stack direction="row" spacing={1} flexShrink={0}>
-							<Button
-								variant="outlined"
-								startIcon={<EditIcon />}
-								size="small"
-								onClick={() => {
-									setEditName(association.name);
-									setEditDescription(association.description ?? "");
-									setEditMode(true);
-								}}
-								sx={{
-									textTransform: "none",
-									fontWeight: 600,
-									borderColor: "rgba(255,255,255,0.6)",
-									color: "white",
-									"&:hover": { borderColor: "white", bgcolor: "rgba(255,255,255,0.1)" },
-								}}
-							>
-								Modifica
-							</Button>
-							<Button
-								variant="outlined"
-								startIcon={<DeleteOutlineIcon />}
-								size="small"
-								onClick={() => setDeleteDialogOpen(true)}
-								sx={{
-									textTransform: "none",
-									fontWeight: 600,
-									borderColor: "rgba(255,100,100,0.6)",
-									color: "rgba(255,180,180,1)",
-									"&:hover": { borderColor: "rgba(255,100,100,0.9)", bgcolor: "rgba(255,0,0,0.08)" },
-								}}
-							>
-								Elimina
-							</Button>
-						</Stack>
-					)}
+							<Box>
+								<Typography variant="h5" fontWeight={700} color="white">
+									{association.name}
+								</Typography>
+								<Typography variant="body2" sx={{ color: "rgba(255,255,255,0.75)", mt: 0.25 }}>
+									Creata il {new Date(association.createdAt).toLocaleDateString("it-IT", { year: "numeric", month: "long", day: "numeric" })}
+								</Typography>
+							</Box>
+						</Box>
+
+						{/* Admin action buttons — white filled for visibility */}
+						{isAdmin && !editMode && (
+							<Stack direction="row" spacing={1} flexShrink={0}>
+								<Button
+									variant="contained"
+									startIcon={<EditIcon />}
+									size="small"
+									onClick={() => {
+										setEditName(association.name);
+										setEditDescription(association.description ?? "");
+										setEditColor(association.accentColor ?? null);
+										setEditMode(true);
+									}}
+									sx={{
+										textTransform: "none",
+										fontWeight: 600,
+										bgcolor: "rgba(255,255,255,0.95)",
+										color: accentColor,
+										boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
+										"&:hover": { bgcolor: "white", boxShadow: "0 4px 12px rgba(0,0,0,0.25)" },
+									}}
+								>
+									Modifica
+								</Button>
+								<Button
+									variant="contained"
+									startIcon={<DeleteOutlineIcon />}
+									size="small"
+									onClick={() => setDeleteDialogOpen(true)}
+									sx={{
+										textTransform: "none",
+										fontWeight: 600,
+										bgcolor: "rgba(255,255,255,0.15)",
+										color: "white",
+										border: "1px solid rgba(255,255,255,0.4)",
+										boxShadow: "none",
+										"&:hover": { bgcolor: "rgba(220,50,50,0.6)", border: "1px solid rgba(255,150,150,0.5)" },
+									}}
+								>
+									Elimina
+								</Button>
+							</Stack>
+						)}
+					</Box>
 				</Box>
 
+				{/* Card body */}
 				<CardContent sx={{ p: 3 }}>
 					{editMode ? (
-						<Stack spacing={2}>
+						<Stack spacing={2.5}>
 							<TextField
 								label="Nome"
 								fullWidth
@@ -356,6 +436,55 @@ export default function AssociationDetailPage() {
 								onChange={(e) => setEditDescription(e.target.value)}
 								size="small"
 							/>
+
+							{/* Color picker */}
+							<Box>
+								<Typography variant="body2" fontWeight={600} mb={1} color="text.secondary">
+									Colore di sfondo
+								</Typography>
+								<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+									{/* Reset option */}
+									<Tooltip title="Predefinito (teal)">
+										<Box
+											onClick={() => setEditColor(null)}
+											sx={{
+												width: 32,
+												height: 32,
+												borderRadius: "50%",
+												bgcolor: "#00796B",
+												cursor: "pointer",
+												border: editColor === null ? "3px solid" : "2px solid transparent",
+												borderColor: editColor === null ? "text.primary" : "transparent",
+												outline: editColor === null ? "2px solid rgba(0,0,0,0.15)" : "none",
+												outlineOffset: "2px",
+												transition: "transform 0.1s",
+												"&:hover": { transform: "scale(1.15)" },
+											}}
+										/>
+									</Tooltip>
+									{COLOR_PALETTE.slice(1).map((color) => (
+										<Tooltip key={color} title={color}>
+											<Box
+												onClick={() => setEditColor(color)}
+												sx={{
+													width: 32,
+													height: 32,
+													borderRadius: "50%",
+													bgcolor: color,
+													cursor: "pointer",
+													border: editColor === color ? "3px solid" : "2px solid transparent",
+													borderColor: editColor === color ? "text.primary" : "transparent",
+													outline: editColor === color ? "2px solid rgba(0,0,0,0.15)" : "none",
+													outlineOffset: "2px",
+													transition: "transform 0.1s",
+													"&:hover": { transform: "scale(1.15)" },
+												}}
+											/>
+										</Tooltip>
+									))}
+								</Stack>
+							</Box>
+
 							<Stack direction="row" spacing={1.5}>
 								<Button
 									variant="contained"
@@ -411,7 +540,7 @@ export default function AssociationDetailPage() {
 				</CardContent>
 			</Card>
 
-			{/* ── Pending requests (Admin/Moderator only) ── */}
+			{/* ── Pending requests ── */}
 			{canManage && pendingMembers.length > 0 && (
 				<Card sx={{ borderRadius: 3, boxShadow: "0 2px 8px rgba(0,0,0,0.08)", mb: 3 }}>
 					<CardContent sx={{ p: 3 }}>
@@ -431,9 +560,12 @@ export default function AssociationDetailPage() {
 									sx={{ p: 2, borderRadius: 2, bgcolor: "background.default", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 2 }}
 								>
 									<Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-										<Avatar sx={{ bgcolor: "warning.light", color: "warning.dark", width: 36, height: 36, fontSize: "0.85rem", fontWeight: 700 }}>
-											{getInitials(userNames[m.userId]?.firstName ?? "", userNames[m.userId]?.lastName ?? "")}
-										</Avatar>
+										<UserAvatar
+											userId={m.userId}
+											firstName={userNames[m.userId]?.firstName}
+											lastName={userNames[m.userId]?.lastName}
+											sx={{ bgcolor: "warning.light", color: "warning.dark", width: 36, height: 36, fontSize: "0.85rem", fontWeight: 700 }}
+										/>
 										<Box>
 											<Typography variant="body2" fontWeight={600}>{getUserName(m.userId)}</Typography>
 											<Typography variant="caption" color="text.secondary">
@@ -443,22 +575,12 @@ export default function AssociationDetailPage() {
 									</Box>
 									<Stack direction="row" spacing={1}>
 										<Tooltip title="Approva">
-											<IconButton
-												size="small"
-												color="success"
-												onClick={() => handleApprove(m.userId)}
-												sx={{ bgcolor: "success.50", "&:hover": { bgcolor: "success.100" } }}
-											>
+											<IconButton size="small" color="success" onClick={() => handleApprove(m.userId)}>
 												<CheckIcon fontSize="small" />
 											</IconButton>
 										</Tooltip>
 										<Tooltip title="Rifiuta">
-											<IconButton
-												size="small"
-												color="error"
-												onClick={() => handleReject(m.userId)}
-												sx={{ bgcolor: "error.50", "&:hover": { bgcolor: "error.100" } }}
-											>
+											<IconButton size="small" color="error" onClick={() => handleReject(m.userId)}>
 												<CloseIcon fontSize="small" />
 											</IconButton>
 										</Tooltip>
@@ -493,20 +615,30 @@ export default function AssociationDetailPage() {
 									<Paper
 										key={m.id}
 										elevation={0}
-										sx={{ p: 2, borderRadius: 2, bgcolor: isSelf ? "rgba(0,121,107,0.04)" : "background.default", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 2 }}
+										sx={{
+											p: 2,
+											borderRadius: 2,
+											bgcolor: isSelf ? `${accentColor}08` : "background.default",
+											border: isSelf ? `1px solid ${accentColor}30` : "none",
+											display: "flex",
+											alignItems: "center",
+											justifyContent: "space-between",
+											gap: 2,
+										}}
 									>
 										<Box sx={{ display: "flex", alignItems: "center", gap: 1.5, minWidth: 0 }}>
-											<Avatar sx={{ bgcolor: "primary.main", width: 36, height: 36, fontSize: "0.85rem", fontWeight: 700 }}>
-												{getInitials(userNames[m.userId]?.firstName ?? "", userNames[m.userId]?.lastName ?? "")}
-											</Avatar>
+											<UserAvatar
+												userId={m.userId}
+												firstName={userNames[m.userId]?.firstName}
+												lastName={userNames[m.userId]?.lastName}
+												sx={{ bgcolor: isSelf ? accentColor : "grey.400", width: 36, height: 36, fontSize: "0.85rem", fontWeight: 700 }}
+											/>
 											<Box sx={{ minWidth: 0 }}>
 												<Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
 													<Typography variant="body2" fontWeight={600} noWrap>
 														{getUserName(m.userId)}
 													</Typography>
-													{isSelf && (
-														<Typography variant="caption" color="text.secondary">(tu)</Typography>
-													)}
+													{isSelf && <Typography variant="caption" color="text.secondary">(tu)</Typography>}
 												</Box>
 												<Typography variant="caption" color="text.secondary">
 													Iscritto dal {new Date(m.joinedAt).toLocaleDateString("it-IT")}
@@ -515,14 +647,8 @@ export default function AssociationDetailPage() {
 										</Box>
 
 										<Box sx={{ display: "flex", alignItems: "center", gap: 1.5, flexShrink: 0 }}>
-											<Chip
-												label={ROLE_LABELS[m.role]}
-												color={ROLE_COLORS[m.role]}
-												size="small"
-												sx={{ fontWeight: 600 }}
-											/>
+											<Chip label={ROLE_LABELS[m.role]} color={ROLE_COLORS[m.role]} size="small" sx={{ fontWeight: 600 }} />
 
-											{/* Admin actions */}
 											{canAdminManageThis && (
 												<Stack direction="row" spacing={0.5}>
 													{m.role === "MEMBER" && (
@@ -534,7 +660,7 @@ export default function AssociationDetailPage() {
 													)}
 													{m.role === "MODERATOR" && (
 														<Tooltip title="Rimuovi promozione (torna Membro)">
-															<IconButton size="small" color="default" onClick={() => handleChangeRole(m.userId, "MEMBER")}>
+															<IconButton size="small" onClick={() => handleChangeRole(m.userId, "MEMBER")}>
 																<ArrowDownwardIcon fontSize="small" />
 															</IconButton>
 														</Tooltip>
@@ -547,7 +673,6 @@ export default function AssociationDetailPage() {
 												</Stack>
 											)}
 
-											{/* Moderator actions — only for base members */}
 											{canModeratorManageThis && (
 												<Tooltip title="Rimuovi dall'associazione">
 													<IconButton size="small" color="error" onClick={() => handleRemoveMember(m.userId)}>
@@ -562,7 +687,6 @@ export default function AssociationDetailPage() {
 						</Stack>
 					)}
 
-					{/* Non-member notice */}
 					{!currentMembership && (
 						<>
 							<Divider sx={{ my: 2 }} />
@@ -582,7 +706,7 @@ export default function AssociationDetailPage() {
 				</CardContent>
 			</Card>
 
-			{/* ── Delete confirmation dialog ── */}
+			{/* ── Delete dialog ── */}
 			<Dialog
 				open={deleteDialogOpen}
 				onClose={() => !deleting && setDeleteDialogOpen(false)}
@@ -597,15 +721,11 @@ export default function AssociationDetailPage() {
 						<Typography component="span" fontWeight={700} color="text.primary">
 							{association.name}
 						</Typography>
-						. Questa operazione è irreversibile e rimuoverà tutti i membri associati.
+						. Questa operazione è irreversibile e rimuoverà tutti i membri e i dati associati.
 					</Typography>
 				</DialogContent>
 				<DialogActions sx={{ px: 3, pb: 3, gap: 1 }}>
-					<Button
-						onClick={() => setDeleteDialogOpen(false)}
-						disabled={deleting}
-						sx={{ textTransform: "none", borderRadius: 2 }}
-					>
+					<Button onClick={() => setDeleteDialogOpen(false)} disabled={deleting} sx={{ textTransform: "none", borderRadius: 2 }}>
 						Annulla
 					</Button>
 					<Button

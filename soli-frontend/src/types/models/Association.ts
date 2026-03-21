@@ -5,6 +5,7 @@ export interface Association {
   id: string;
   name: string;
   description?: string;
+  accentColor?: string;
   creatorId: string;
   createdAt: string;
   updatedAt: string;

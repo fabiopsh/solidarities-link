@@ -116,6 +116,10 @@ export default function DashboardLayout() {
 		if (role === "volunteer" && location.pathname === "/dashboard/requests/new") {
 			navigate("/dashboard", { replace: true });
 		}
+		// Le associazioni sono solo per la vista volontario
+		if (role === "requester" && location.pathname.startsWith("/dashboard/associations")) {
+			navigate("/dashboard", { replace: true });
+		}
 	}, [role, location.pathname, navigate]);
 
 	// Check if user has admin role

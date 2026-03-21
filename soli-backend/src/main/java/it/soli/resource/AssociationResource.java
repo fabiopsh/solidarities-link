@@ -10,6 +10,8 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.List;
 import java.util.UUID;
 
@@ -180,13 +182,74 @@ public class AssociationResource {
 
         if (updatedAssociation.name != null) association.name = updatedAssociation.name;
         if (updatedAssociation.description != null) association.description = updatedAssociation.description;
+        // accentColor can be set to null to reset; always overwrite
+        association.accentColor = updatedAssociation.accentColor;
 
         return Response.ok(association).build();
     }
 
     /**
+     * PUT /api/associations/{id}/image — Upload association profile image (Admin only).
+     */
+    @PUT
+    @Path("/{id}/image")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Transactional
+    public Response uploadImage(
+            @PathParam("id") UUID id,
+            @org.jboss.resteasy.reactive.RestForm("image") org.jboss.resteasy.reactive.multipart.FileUpload fileUpload) {
+
+        User currentUser = getAuthenticatedUser();
+        if (currentUser == null) return Response.status(Response.Status.UNAUTHORIZED).build();
+
+        Association association = Association.findById(id);
+        if (association == null) return Response.status(Response.Status.NOT_FOUND).build();
+
+        if (getAssociationAdminMembership(id, currentUser.id) == null
+                && !securityIdentity.hasRole(UserRole.ADMIN.name())) {
+            return Response.status(Response.Status.FORBIDDEN).build();
+        }
+
+        try {
+            byte[] fileBytes = Files.readAllBytes(fileUpload.uploadedFile());
+            String contentType = fileUpload.contentType();
+            if (contentType == null) contentType = "application/octet-stream";
+
+            AssociationImage image = AssociationImage.findByAssociationId(id);
+            if (image == null) {
+                image = new AssociationImage();
+                image.id = UUID.randomUUID();
+                image.associationId = id;
+            }
+            image.data = fileBytes;
+            image.contentType = contentType;
+            image.persist();
+
+            return Response.ok().build();
+        } catch (IOException e) {
+            return Response.serverError().entity("Failed to read uploaded file").build();
+        }
+    }
+
+    /**
+     * GET /api/associations/{id}/image — Get association profile image.
+     */
+    @GET
+    @Path("/{id}/image")
+    public Response getImage(@PathParam("id") UUID id) {
+        User currentUser = getAuthenticatedUser();
+        if (currentUser == null) return Response.status(Response.Status.UNAUTHORIZED).build();
+
+        AssociationImage image = AssociationImage.findByAssociationId(id);
+        if (image == null || image.data == null) {
+            return Response.noContent().build();
+        }
+        return Response.ok(image.data).type(image.contentType).build();
+    }
+
+    /**
      * DELETE /api/associations/{id} — Delete association (creator or system admin).
-     * Cascades delete of all memberships.
+     * Cascades delete of all memberships and the profile image.
      */
     @DELETE
     @Path("/{id}")
@@ -206,6 +269,7 @@ public class AssociationResource {
         }
 
         AssociationMembership.delete("associationId", id);
+        AssociationImage.delete("associationId", id);
         association.delete();
 
         return Response.noContent().build();
