@@ -33,7 +33,6 @@ import PersonIcon from "@mui/icons-material/Person";
 import HandshakeIcon from "@mui/icons-material/Handshake";
 import GroupsIcon from "@mui/icons-material/Groups";
 import { useRole, type UserRole } from "../context/RoleContext";
-import type { MyAssociation } from "../types/models/Association";
 
 const DRAWER_WIDTH = 280;
 const DRAWER_WIDTH_COLLAPSED = 72;
@@ -54,8 +53,6 @@ const adminNavItems: NavItem[] = [{ label: "Gestione Admin", icon: <DashboardIco
 
 const volunteerNavItems: NavItem[] = [{ label: "Associazioni", icon: <GroupsIcon />, path: "/dashboard/associations" }];
 
-const bottomNavItems: NavItem[] = [{ label: "Profilo", icon: <PersonIcon />, path: "/dashboard/profile" }];
-
 export default function DashboardLayout() {
 	const theme = useTheme();
 	const isMobile = useMediaQuery(theme.breakpoints.down("md"));
@@ -69,38 +66,24 @@ export default function DashboardLayout() {
 	const navigate = useNavigate();
 	const location = useLocation();
 	const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-	const [myAssociations, setMyAssociations] = useState<MyAssociation[]>([]);
 	const { role, setRole } = useRole();
-  
+
 	useEffect(() => {
-		let isMounted = true;
 		let urlToRevoke: string | null = null;
 		if (auth.isAuthenticated) {
 			api.get("/api/users/me/profile-picture", { responseType: "blob" })
 				.then((res) => {
-					if (isMounted && res.status === 200 && res.data && res.data.size > 0) {
+					if (res.status === 200 && res.data && res.data.size > 0) {
 						urlToRevoke = URL.createObjectURL(res.data);
 						setAvatarUrl(urlToRevoke);
 					}
 				})
-				.catch(() => {
-					// User has no custom profile picture
-				});
-
-			api.get<MyAssociation[]>("/api/associations/my")
-				.then((res) => {
-					if (isMounted) setMyAssociations(res.data ?? []);
-				})
-				.catch(() => {
-					// ignore
-				});
+				.catch(() => {});
 		}
 		return () => {
-			isMounted = false;
 			if (urlToRevoke) URL.revokeObjectURL(urlToRevoke);
 		};
 	}, [auth.isAuthenticated]);
-
 
 	const handleRoleChange = (
 		_event: React.MouseEvent<HTMLElement>,
@@ -156,6 +139,9 @@ export default function DashboardLayout() {
 		if (isMobile) setMobileOpen(false);
 	};
 
+	const isExpanded = isMobile ? mobileOpen : !drawerCollapsed;
+	const isOnProfile = location.pathname === "/dashboard/profile";
+
 	const drawerContent = (
 		<Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
 			{/* Logo / Brand */}
@@ -163,11 +149,11 @@ export default function DashboardLayout() {
 				sx={{
 					display: "flex",
 					alignItems: "center",
-					justifyContent: (isMobile ? mobileOpen : !drawerCollapsed) ? "space-between" : "center",
-					px: (isMobile ? mobileOpen : !drawerCollapsed) ? 2 : 1,
+					justifyContent: isExpanded ? "space-between" : "center",
+					px: isExpanded ? 2 : 1,
 				}}
 			>
-				{(isMobile ? mobileOpen : !drawerCollapsed) && (
+				{isExpanded && (
 					<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
 						<HandshakeIcon color="primary" sx={{ fontSize: 32 }} />
 						<Typography
@@ -186,7 +172,7 @@ export default function DashboardLayout() {
 					</Box>
 				)}
 				<IconButton onClick={handleDrawerToggle} size="small">
-					{(isMobile ? mobileOpen : !drawerCollapsed) ? <ChevronLeftIcon /> : <MenuIcon />}
+					{isExpanded ? <ChevronLeftIcon /> : <MenuIcon />}
 				</IconButton>
 			</Toolbar>
 
@@ -208,7 +194,7 @@ export default function DashboardLayout() {
 							borderRadius: 2,
 							mb: 0.5,
 							minHeight: 48,
-							justifyContent: (isMobile ? mobileOpen : !drawerCollapsed) ? "initial" : "center",
+							justifyContent: isExpanded ? "initial" : "center",
 							px: 2,
 							"&.Mui-selected": {
 								bgcolor: "primary.main",
@@ -222,13 +208,13 @@ export default function DashboardLayout() {
 							sx={{
 								color: "inherit",
 								minWidth: 0,
-								mr: (isMobile ? mobileOpen : !drawerCollapsed) ? 2 : "auto",
+								mr: isExpanded ? 2 : "auto",
 								justifyContent: "center",
 							}}
 						>
 							{item.icon}
 						</ListItemIcon>
-						{!(isMobile ? false : drawerCollapsed) && (
+						{isExpanded && (
 							<ListItemText primary={item.label} primaryTypographyProps={{ fontWeight: 600 }} />
 						)}
 					</ListItemButton>
@@ -240,15 +226,15 @@ export default function DashboardLayout() {
 						<Typography
 							variant="caption"
 							sx={{
-								px: (isMobile ? false : drawerCollapsed) ? 0 : 2,
+								px: !isExpanded ? 0 : 2,
 								display: "block",
-								textAlign: (isMobile ? false : drawerCollapsed) ? "center" : "left",
+								textAlign: !isExpanded ? "center" : "left",
 								color: "text.secondary",
 								fontWeight: "bold",
 								mb: 1,
 							}}
 						>
-							{(isMobile ? false : drawerCollapsed) ? "VOL" : "VOLONTARIO"}
+							{!isExpanded ? "VOL" : "VOLONTARIO"}
 						</Typography>
 						{volunteerNavItems.map((item) => (
 							<ListItemButton
@@ -259,7 +245,7 @@ export default function DashboardLayout() {
 									borderRadius: 2,
 									mb: 0.5,
 									minHeight: 48,
-									justifyContent: (isMobile ? mobileOpen : !drawerCollapsed) ? "initial" : "center",
+									justifyContent: isExpanded ? "initial" : "center",
 									px: 2,
 									"&.Mui-selected": {
 										bgcolor: "primary.main",
@@ -273,13 +259,13 @@ export default function DashboardLayout() {
 									sx={{
 										color: "inherit",
 										minWidth: 0,
-										mr: (isMobile ? mobileOpen : !drawerCollapsed) ? 2 : "auto",
+										mr: isExpanded ? 2 : "auto",
 										justifyContent: "center",
 									}}
 								>
 									{item.icon}
 								</ListItemIcon>
-								{!(isMobile ? false : drawerCollapsed) && (
+								{isExpanded && (
 									<ListItemText primary={item.label} primaryTypographyProps={{ fontWeight: 600 }} />
 								)}
 							</ListItemButton>
@@ -287,21 +273,21 @@ export default function DashboardLayout() {
 					</>
 				)}
 
-			{isAdmin && (
+				{isAdmin && (
 					<>
 						<Divider sx={{ my: 1 }} />
 						<Typography
 							variant="caption"
 							sx={{
-								px: (isMobile ? false : drawerCollapsed) ? 0 : 2,
+								px: !isExpanded ? 0 : 2,
 								display: "block",
-								textAlign: (isMobile ? false : drawerCollapsed) ? "center" : "left",
+								textAlign: !isExpanded ? "center" : "left",
 								color: "text.secondary",
 								fontWeight: "bold",
 								mb: 1,
 							}}
 						>
-							{(isMobile ? false : drawerCollapsed) ? "ADM" : "ADMIN"}
+							{!isExpanded ? "ADM" : "ADMIN"}
 						</Typography>
 						{adminNavItems.map((item) => (
 							<ListItemButton
@@ -312,7 +298,7 @@ export default function DashboardLayout() {
 									borderRadius: 2,
 									mb: 0.5,
 									minHeight: 48,
-									justifyContent: (isMobile ? mobileOpen : !drawerCollapsed) ? "initial" : "center",
+									justifyContent: isExpanded ? "initial" : "center",
 									px: 2,
 									"&.Mui-selected": {
 										bgcolor: "secondary.main",
@@ -326,13 +312,13 @@ export default function DashboardLayout() {
 									sx={{
 										color: "inherit",
 										minWidth: 0,
-										mr: (isMobile ? mobileOpen : !drawerCollapsed) ? 2 : "auto",
+										mr: isExpanded ? 2 : "auto",
 										justifyContent: "center",
 									}}
 								>
 									{item.icon}
 								</ListItemIcon>
-								{!(isMobile ? false : drawerCollapsed) && (
+								{isExpanded && (
 									<ListItemText primary={item.label} primaryTypographyProps={{ fontWeight: 600 }} />
 								)}
 							</ListItemButton>
@@ -341,71 +327,70 @@ export default function DashboardLayout() {
 				)}
 			</List>
 
-			{/* Bottom navigation */}
-			<List sx={{ px: 1, pb: 1 }}>
-				{bottomNavItems.map((item) => (
-					<ListItemButton
-						key={item.path}
-						selected={location.pathname === item.path}
-						onClick={() => handleNav(item.path)}
+			{/* Profile — bottom of sidebar */}
+			<Divider />
+			{isExpanded ? (
+				<Box
+					onClick={() => handleNav("/dashboard/profile")}
+					sx={{
+						m: 1,
+						p: 1.5,
+						display: "flex",
+						alignItems: "center",
+						gap: 1.5,
+						cursor: "pointer",
+						borderRadius: 2,
+						bgcolor: isOnProfile ? "primary.main" : "transparent",
+						color: isOnProfile ? "primary.contrastText" : "inherit",
+						transition: "background-color 0.15s",
+						"&:hover": {
+							bgcolor: isOnProfile ? "primary.dark" : "action.hover",
+						},
+					}}
+				>
+					<Avatar
+						src={avatarUrl || undefined}
 						sx={{
-							minHeight: 48,
-							justifyContent: (isMobile ? mobileOpen : !drawerCollapsed) ? "initial" : "center",
-							px: 2,
+							bgcolor: isOnProfile ? "rgba(255,255,255,0.25)" : "primary.main",
+							width: 36,
+							height: 36,
+							fontSize: "0.9rem",
+							flexShrink: 0,
 						}}
 					>
-						<ListItemIcon
-							sx={{
-								minWidth: 0,
-								mr: (isMobile ? mobileOpen : !drawerCollapsed) ? 2 : "auto",
-								justifyContent: "center",
-							}}
+						{userInitials}
+					</Avatar>
+					<Box sx={{ overflow: "hidden", minWidth: 0 }}>
+						<Typography variant="body2" fontWeight={600} noWrap>
+							{userName}
+						</Typography>
+						<Typography
+							variant="caption"
+							noWrap
+							sx={{ color: isOnProfile ? "rgba(255,255,255,0.75)" : "text.secondary" }}
 						>
-							{item.icon}
-						</ListItemIcon>
-						{(isMobile ? mobileOpen : !drawerCollapsed) && (
-							<ListItemText primary={item.label} primaryTypographyProps={{ fontSize: "0.9rem" }} />
-						)}
-					</ListItemButton>
-				))}
-			</List>
-
-			{/* User info at bottom */}
-			{(isMobile ? mobileOpen : !drawerCollapsed) && (
-				<>
-					<Divider />
-					<Box sx={{ p: 2, display: "flex", alignItems: "center", gap: 1.5 }}>
-						<Avatar src={avatarUrl || undefined} sx={{ bgcolor: "primary.main", width: 36, height: 36, fontSize: "0.9rem" }}>
+							{userEmail}
+						</Typography>
+					</Box>
+				</Box>
+			) : (
+				<Box sx={{ display: "flex", justifyContent: "center", py: 1.5 }}>
+					<IconButton
+						onClick={() => handleNav("/dashboard/profile")}
+						sx={{
+							p: 0.5,
+							bgcolor: isOnProfile ? "primary.main" : "transparent",
+							"&:hover": { bgcolor: isOnProfile ? "primary.dark" : "action.hover" },
+						}}
+					>
+						<Avatar
+							src={avatarUrl || undefined}
+							sx={{ bgcolor: "primary.main", width: 36, height: 36, fontSize: "0.9rem" }}
+						>
 							{userInitials}
 						</Avatar>
-						<Box sx={{ overflow: "hidden" }}>
-							<Typography variant="body2" fontWeight={600} noWrap>
-								{userName}
-							</Typography>
-							<Typography variant="caption" color="text.secondary" noWrap>
-								{userEmail}
-							</Typography>
-							{(() => {
-								const approved = myAssociations.filter((m) => m.membership.status === "APPROVED");
-								if (approved.length === 0) return null;
-								const extra = approved.length - 1;
-								return (
-									<Box sx={{ display: "flex", alignItems: "center", gap: 0.5, mt: 0.25 }}>
-										<GroupsIcon sx={{ fontSize: 12, color: "primary.main" }} />
-										<Typography variant="caption" color="primary.main" noWrap sx={{ fontSize: "0.7rem" }}>
-											{approved[0].association.name}
-										</Typography>
-										{extra > 0 && (
-											<Typography variant="caption" sx={{ fontSize: "0.7rem", color: "text.secondary", flexShrink: 0 }}>
-												+{extra}
-											</Typography>
-										)}
-									</Box>
-								);
-							})()}
-						</Box>
-					</Box>
-				</>
+					</IconButton>
+				</Box>
 			)}
 		</Box>
 	);
@@ -463,30 +448,61 @@ export default function DashboardLayout() {
 						</Avatar>
 					</IconButton>
 
+					{/* Profile menu */}
 					<Menu
 						anchorEl={anchorEl}
 						open={Boolean(anchorEl)}
 						onClose={handleMenuClose}
 						transformOrigin={{ horizontal: "right", vertical: "top" }}
 						anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
+						slotProps={{
+							paper: {
+								sx: {
+									borderRadius: 3,
+									minWidth: 240,
+									mt: 0.5,
+									boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
+									overflow: "visible",
+								},
+							},
+						}}
 					>
-						<MenuItem
-							onClick={() => {
-								handleMenuClose();
-								handleNav("/dashboard/profile");
-							}}
-						>
-							<ListItemIcon>
-								<PersonIcon fontSize="small" />
-							</ListItemIcon>
-							Profilo
-						</MenuItem>
-						<MenuItem onClick={handleLogout}>
-							<ListItemIcon>
-								<LogoutIcon fontSize="small" />
-							</ListItemIcon>
-							Esci
-						</MenuItem>
+						{/* User card */}
+						<Box sx={{ px: 2, pt: 2, pb: 1.5, display: "flex", alignItems: "center", gap: 1.5 }}>
+							<Avatar
+								src={avatarUrl || undefined}
+								sx={{ bgcolor: "primary.main", width: 48, height: 48, fontSize: "1.2rem", flexShrink: 0 }}
+							>
+								{userInitials}
+							</Avatar>
+							<Box sx={{ minWidth: 0 }}>
+								<Typography variant="body2" fontWeight={700} noWrap>
+									{userName}
+								</Typography>
+								<Typography variant="caption" color="text.secondary" noWrap sx={{ display: "block" }}>
+									{userEmail}
+								</Typography>
+							</Box>
+						</Box>
+
+						<Divider sx={{ mx: 1.5 }} />
+
+						<Box sx={{ p: 1 }}>
+							<MenuItem
+								onClick={() => { handleMenuClose(); handleNav("/dashboard/profile"); }}
+								sx={{ borderRadius: 2, gap: 1.5, py: 1 }}
+							>
+								<PersonIcon fontSize="small" sx={{ color: "text.secondary" }} />
+								<Typography variant="body2" fontWeight={500}>Impostazioni profilo</Typography>
+							</MenuItem>
+							<MenuItem
+								onClick={handleLogout}
+								sx={{ borderRadius: 2, gap: 1.5, py: 1, color: "error.main" }}
+							>
+								<LogoutIcon fontSize="small" color="error" />
+								<Typography variant="body2" fontWeight={500} color="error">Esci</Typography>
+							</MenuItem>
+						</Box>
 					</Menu>
 				</Toolbar>
 			</AppBar>
