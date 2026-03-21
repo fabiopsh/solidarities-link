@@ -74,11 +74,13 @@ export default function DashboardLayout() {
   
 	useEffect(() => {
 		let isMounted = true;
+		let urlToRevoke: string | null = null;
 		if (auth.isAuthenticated) {
 			api.get("/api/users/me/profile-picture", { responseType: "blob" })
 				.then((res) => {
 					if (isMounted && res.status === 200 && res.data && res.data.size > 0) {
-						setAvatarUrl(URL.createObjectURL(res.data));
+						urlToRevoke = URL.createObjectURL(res.data);
+						setAvatarUrl(urlToRevoke);
 					}
 				})
 				.catch(() => {
@@ -93,7 +95,10 @@ export default function DashboardLayout() {
 					// ignore
 				});
 		}
-		return () => { isMounted = false; };
+		return () => {
+			isMounted = false;
+			if (urlToRevoke) URL.revokeObjectURL(urlToRevoke);
+		};
 	}, [auth.isAuthenticated]);
 
 

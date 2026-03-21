@@ -185,52 +185,71 @@ export default function ProfilePage() {
 	};
 
 	useEffect(() => {
-		const fetchData = async () => {
-			try {
-				const userRes = await api.get("/api/users/me");
-				setUser(userRes.data);
+		const controller = new AbortController();
+		const signal = controller.signal;
+		let avatarUrlToRevoke: string | null = null;
 
-				// Try to find volunteer profile
-				try {
-					const myProfileRes = await api.get("/api/volunteer-profiles/my");
-					const myProfile: VolunteerProfile = myProfileRes.data;
-					if (myProfile) {
-						setProfile(myProfile);
-						setSelectedCategories(myProfile.serviceCategories || []);
-						try {
-							setConstraints(myProfile.constraints ? JSON.parse(myProfile.constraints) : "");
-						} catch {
-							setConstraints(myProfile.constraints || "");
-						}
-						setMaxDistance(myProfile.maxTaskDistanceMeters || 5000);
-						setTargetAddress(myProfile.targetLocation || "");
-						if (myProfile.latitude && myProfile.longitude) {
-							setLatitude(myProfile.latitude);
-							setLongitude(myProfile.longitude);
-						}
-					}
-				} catch (err: any) {
-					// 404 No profile yet, that's fine
+		const fetchAll = async () => {
+			try {
+				const [userRes, profileRes, assocRes, avatarRes] = await Promise.allSettled([
+					api.get("/api/users/me", { signal }),
+					role === "volunteer"
+						? api.get("/api/volunteer-profiles/my", { signal })
+						: Promise.resolve(null),
+					api.get<MyAssociation[]>("/api/associations/my", { signal }),
+					api.get("/api/users/me/profile-picture", { responseType: "blob", signal }),
+				]);
+
+				// StrictMode cleanup o navigazione avvenuta prima del completamento
+				if (signal.aborted) return;
+
+				if (userRes.status === "fulfilled") {
+					setUser(userRes.value.data);
 				}
-			} catch (err) {
-				console.error("Error fetching user data:", err);
+
+				if (profileRes.status === "fulfilled" && profileRes.value?.data) {
+					const myProfile: VolunteerProfile = profileRes.value.data;
+					setProfile(myProfile);
+					setSelectedCategories(myProfile.serviceCategories || []);
+					try {
+						setConstraints(myProfile.constraints ? JSON.parse(myProfile.constraints) : "");
+					} catch {
+						setConstraints(myProfile.constraints || "");
+					}
+					setMaxDistance(myProfile.maxTaskDistanceMeters || 5000);
+					setTargetAddress(myProfile.targetLocation || "");
+					if (myProfile.latitude && myProfile.longitude) {
+						setLatitude(myProfile.latitude);
+						setLongitude(myProfile.longitude);
+					}
+				}
+				// profileRes "rejected" con 404 significa nessun profilo volontario ancora — normale
+
+				if (assocRes.status === "fulfilled") {
+					setMyAssociations(assocRes.value.data ?? []);
+				}
+
+				if (avatarRes.status === "fulfilled") {
+					const res = avatarRes.value;
+					if (res.status === 200 && res.data && res.data.size > 0) {
+						avatarUrlToRevoke = URL.createObjectURL(res.data);
+						setAvatarUrl(avatarUrlToRevoke);
+					}
+				}
+			} catch (err: any) {
+				if (err?.code === "ERR_CANCELED") return;
+				console.error("Error fetching profile data:", err);
 			} finally {
-				setLoading(false);
+				if (!signal.aborted) setLoading(false);
 			}
 		};
-		fetchData();
-		
-		api.get("/api/users/me/profile-picture", { responseType: "blob" })
-			.then((res) => {
-				if (res.status === 200 && res.data && res.data.size > 0) {
-					setAvatarUrl(URL.createObjectURL(res.data));
-				}
-			})
-			.catch(() => {});
 
-		api.get<MyAssociation[]>("/api/associations/my")
-			.then((res) => setMyAssociations(res.data ?? []))
-			.catch(() => {});
+		fetchAll();
+
+		return () => {
+			controller.abort();
+			if (avatarUrlToRevoke) URL.revokeObjectURL(avatarUrlToRevoke);
+		};
 	}, []);
 
 	const handleCategoryToggle = (cat: ServiceCategory) => {
@@ -283,7 +302,11 @@ export default function ProfilePage() {
 			// Re-fetch avatar
 			const res = await api.get("/api/users/me/profile-picture", { responseType: "blob" });
 			if (res.status === 200 && res.data && res.data.size > 0) {
-				setAvatarUrl(URL.createObjectURL(res.data));
+				const newUrl = URL.createObjectURL(res.data);
+				setAvatarUrl((prev) => {
+					if (prev) URL.revokeObjectURL(prev);
+					return newUrl;
+				});
 			}
 			setSnackbar({ open: true, message: "Foto profilo aggiornata con successo!", severity: "success" });
 		} catch (error) {

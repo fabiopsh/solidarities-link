@@ -68,18 +68,17 @@ export default function TaskCard({ task, currentUserId, onDetailsClick, onCancel
         let isMounted = true;
 
         const fetchNames = async () => {
-            try {
-                if (task.creatorId) {
-                    const res = await api.get(`/api/users/${task.creatorId}/basic`, { cache: { ttl: USER_BASIC_CACHE_TTL } });
-                    if (isMounted) setCreator(res.data);
-                }
-                if (task.volunteerId) {
-                    const res = await api.get(`/api/users/${task.volunteerId}/basic`, { cache: { ttl: USER_BASIC_CACHE_TTL } });
-                    if (isMounted) setVolunteer(res.data);
-                }
-            } catch (err) {
-                console.error("Failed to fetch user names in TaskCard", err);
-            }
+            const fetches = await Promise.allSettled([
+                task.creatorId
+                    ? api.get(`/api/users/${task.creatorId}/basic`, { cache: { ttl: USER_BASIC_CACHE_TTL } })
+                    : Promise.resolve(null),
+                task.volunteerId
+                    ? api.get(`/api/users/${task.volunteerId}/basic`, { cache: { ttl: USER_BASIC_CACHE_TTL } })
+                    : Promise.resolve(null),
+            ]);
+            if (!isMounted) return;
+            if (fetches[0].status === "fulfilled" && fetches[0].value) setCreator(fetches[0].value.data);
+            if (fetches[1].status === "fulfilled" && fetches[1].value) setVolunteer(fetches[1].value.data);
         };
 
         fetchNames();

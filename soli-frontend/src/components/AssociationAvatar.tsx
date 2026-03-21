@@ -15,6 +15,7 @@ export default function AssociationAvatar({ associationId, accentColor, size = 4
 
 	useEffect(() => {
 		let isMounted = true;
+		let urlToRevoke: string | null = null;
 		api
 			.get(`/api/associations/${associationId}/image`, {
 				responseType: "blob",
@@ -22,7 +23,8 @@ export default function AssociationAvatar({ associationId, accentColor, size = 4
 			})
 			.then((res) => {
 				if (isMounted && res.status === 200 && res.data && res.data.size > 0) {
-					setImageUrl(URL.createObjectURL(res.data));
+					urlToRevoke = URL.createObjectURL(res.data);
+					setImageUrl(urlToRevoke);
 				}
 			})
 			.catch(() => {
@@ -30,6 +32,7 @@ export default function AssociationAvatar({ associationId, accentColor, size = 4
 			});
 		return () => {
 			isMounted = false;
+			if (urlToRevoke) URL.revokeObjectURL(urlToRevoke);
 		};
 	}, [associationId]);
 

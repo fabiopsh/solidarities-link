@@ -78,31 +78,26 @@ export default function AssociationsPage() {
 	const showSnackbar = (message: string, severity: "success" | "error") =>
 		setSnackbar({ open: true, message, severity });
 
-	const fetchCurrentUser = useCallback(async () => {
-		try {
-			const res = await api.get("/api/users/me");
-			setCurrentUserId(res.data.id);
-		} catch { /* ignore */ }
-	}, []);
-
-	const fetchAllAssociations = useCallback(async () => {
+	const fetchAllAssociations = useCallback(async (signal?: AbortSignal) => {
 		setLoadingAll(true);
 		try {
-			const res = await api.get<PaginatedResponse<Association>>("/api/associations?page=0&size=100");
+			const res = await api.get<PaginatedResponse<Association>>("/api/associations?page=0&size=100", { signal });
 			setAllAssociations(res.data.data ?? []);
-		} catch {
+		} catch (err: any) {
+			if (err?.code === "ERR_CANCELED") return;
 			showSnackbar("Errore nel caricamento delle associazioni", "error");
 		} finally {
 			setLoadingAll(false);
 		}
 	}, []);
 
-	const fetchMyAssociations = useCallback(async () => {
+	const fetchMyAssociations = useCallback(async (signal?: AbortSignal) => {
 		setLoadingMy(true);
 		try {
-			const res = await api.get<MyAssociation[]>("/api/associations/my");
+			const res = await api.get<MyAssociation[]>("/api/associations/my", { signal });
 			setMyAssociations(res.data ?? []);
-		} catch {
+		} catch (err: any) {
+			if (err?.code === "ERR_CANCELED") return;
 			showSnackbar("Errore nel caricamento delle tue associazioni", "error");
 		} finally {
 			setLoadingMy(false);
@@ -110,12 +105,19 @@ export default function AssociationsPage() {
 	}, []);
 
 	useEffect(() => {
-		if (auth.isAuthenticated) {
-			fetchCurrentUser();
-			fetchAllAssociations();
-			fetchMyAssociations();
-		}
-	}, [auth.isAuthenticated, fetchCurrentUser, fetchAllAssociations, fetchMyAssociations]);
+		if (!auth.isAuthenticated) return;
+		const controller = new AbortController();
+		const signal = controller.signal;
+
+		api.get("/api/users/me", { signal })
+			.then((res) => setCurrentUserId(res.data.id))
+			.catch(() => {});
+
+		fetchAllAssociations(signal);
+		fetchMyAssociations(signal);
+
+		return () => controller.abort();
+	}, [auth.isAuthenticated, fetchAllAssociations, fetchMyAssociations]);
 
 	const isMember = (associationId: string) =>
 		myAssociations.some((m) => m.association.id === associationId);

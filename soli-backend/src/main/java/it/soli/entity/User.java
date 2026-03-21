@@ -30,7 +30,7 @@ public class User extends PanacheEntityBase {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    public UserRole role = UserRole.REQUESTER;
+    public UserRole role = UserRole.USER;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "certification_level")

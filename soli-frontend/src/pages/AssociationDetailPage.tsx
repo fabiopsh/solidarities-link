@@ -82,6 +82,7 @@ export default function AssociationDetailPage() {
 	const [imageUrl, setImageUrl] = useState<string | null>(null);
 	const [uploadingImage, setUploadingImage] = useState(false);
 	const imageInputRef = useRef<HTMLInputElement>(null);
+	const imageUrlRef = useRef<string | null>(null);
 
 	// Edit state
 	const [editMode, setEditMode] = useState(false);
@@ -107,21 +108,28 @@ export default function AssociationDetailPage() {
 		try {
 			const res = await api.get(`/api/associations/${associationId}/image`, { responseType: "blob" });
 			if (res.status === 200 && res.data && res.data.size > 0) {
-				setImageUrl(URL.createObjectURL(res.data));
+				if (imageUrlRef.current) URL.revokeObjectURL(imageUrlRef.current);
+				const newUrl = URL.createObjectURL(res.data);
+				imageUrlRef.current = newUrl;
+				setImageUrl(newUrl);
 			} else {
+				if (imageUrlRef.current) URL.revokeObjectURL(imageUrlRef.current);
+				imageUrlRef.current = null;
 				setImageUrl(null);
 			}
 		} catch {
+			if (imageUrlRef.current) URL.revokeObjectURL(imageUrlRef.current);
+			imageUrlRef.current = null;
 			setImageUrl(null);
 		}
 	}, []);
 
-	const fetchData = useCallback(async () => {
+	const fetchData = useCallback(async (signal?: AbortSignal) => {
 		if (!id) return;
 		try {
 			const [assocRes, userRes] = await Promise.all([
-				api.get<AssociationDetailResponse>(`/api/associations/${id}`),
-				api.get("/api/users/me"),
+				api.get<AssociationDetailResponse>(`/api/associations/${id}`, { signal }),
+				api.get("/api/users/me", { signal }),
 			]);
 			setAssociation(assocRes.data.association);
 			setMembers(assocRes.data.members);
@@ -139,7 +147,8 @@ export default function AssociationDetailPage() {
 				)
 			);
 			setUserNames(Object.fromEntries(nameEntries));
-		} catch {
+		} catch (err: any) {
+			if (err?.code === "ERR_CANCELED") return;
 			showSnackbar("Errore nel caricamento dell'associazione", "error");
 		} finally {
 			setLoading(false);
@@ -147,7 +156,12 @@ export default function AssociationDetailPage() {
 	}, [id, loadImage]);
 
 	useEffect(() => {
-		fetchData();
+		const controller = new AbortController();
+		fetchData(controller.signal);
+		return () => {
+			controller.abort();
+			if (imageUrlRef.current) URL.revokeObjectURL(imageUrlRef.current);
+		};
 	}, [fetchData]);
 
 	// --- Derived ---

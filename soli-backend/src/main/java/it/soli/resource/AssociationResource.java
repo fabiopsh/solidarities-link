@@ -137,7 +137,7 @@ public class AssociationResource {
     }
 
     /**
-     * POST /api/associations — Create association (VOLUNTEER role only).
+     * POST /api/associations — Create association (any authenticated USER).
      * Creator is automatically assigned ADMIN + APPROVED membership.
      */
     @POST

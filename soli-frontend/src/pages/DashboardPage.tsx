@@ -65,18 +65,18 @@ export default function DashboardPage() {
 	const [lastSync, setLastSync] = useState<Date | null>(null);
 	const [syncing, setSyncing] = useState(false);
 
-	const fetchTasksAndUser = async (isManualSync = false) => {
+	const fetchTasksAndUser = async (isManualSync = false, signal?: AbortSignal) => {
 		if (isManualSync) setSyncing(true);
 		try {
-			// Fetch current backend user to get the DB id (which matches creatorId/volunteerId)
-			const userRes = await api.get("/api/users/me");
+			const [userRes, tasksRes] = await Promise.all([
+				api.get("/api/users/me", { signal }),
+				api.get("/api/tasks", { params: { size: 100 }, signal }),
+			]);
 			setDbUser(userRes.data);
-
-			// Now returns only tasks we are allowed to see based on backend RBAC
-			const res = await api.get("/api/tasks", { params: { size: 100 } });
-			setTasks(res.data.data || []);
+			setTasks(tasksRes.data.data || []);
 			setLastSync(new Date());
-		} catch (err) {
+		} catch (err: any) {
+			if (err?.code === "ERR_CANCELED") return;
 			console.error("Error fetching tasks:", err);
 			setError("Impossibile caricare i task. Riprova più tardi.");
 		} finally {
@@ -86,7 +86,9 @@ export default function DashboardPage() {
 	};
 
 	useEffect(() => {
-		fetchTasksAndUser();
+		const controller = new AbortController();
+		fetchTasksAndUser(false, controller.signal);
+		return () => controller.abort();
 	}, [location.pathname]);
 
 	useEffect(() => {
