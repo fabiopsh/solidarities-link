@@ -42,6 +42,16 @@ public class AssociationResource {
         public AssociationRole role;
     }
 
+    public static class MyAssociationDto {
+        public Association association;
+        public AssociationMembership membership;
+
+        public MyAssociationDto(Association association, AssociationMembership membership) {
+            this.association = association;
+            this.membership = membership;
+        }
+    }
+
     // -------------------------------------------------------------------------
     // Helpers
     // -------------------------------------------------------------------------
@@ -66,6 +76,24 @@ public class AssociationResource {
     // -------------------------------------------------------------------------
     // Endpoints
     // -------------------------------------------------------------------------
+
+    /**
+     * GET /api/associations/my — List associations the current user belongs to.
+     */
+    @GET
+    @Path("/my")
+    public Response listMyAssociations() {
+        User currentUser = getAuthenticatedUser();
+        if (currentUser == null) return Response.status(Response.Status.UNAUTHORIZED).build();
+
+        List<AssociationMembership> memberships = AssociationMembership.findByUserId(currentUser.id);
+        List<MyAssociationDto> result = memberships.stream()
+                .map(m -> new MyAssociationDto(Association.findById(m.associationId), m))
+                .filter(dto -> dto.association != null)
+                .toList();
+
+        return Response.ok(result).build();
+    }
 
     /**
      * GET /api/associations — List all associations (paginated, any authenticated user).
@@ -102,7 +130,6 @@ public class AssociationResource {
      */
     @POST
     @Transactional
-    @RolesAllowed({"VOLUNTEER"})
     public Response create(Association association) {
         User currentUser = getAuthenticatedUser();
         if (currentUser == null) return Response.status(Response.Status.UNAUTHORIZED).build();
