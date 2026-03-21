@@ -23,6 +23,9 @@ public class Association extends PanacheEntityBase {
     @Column(name = "creator_id", nullable = false)
     public UUID creatorId;
 
+    @Column(name = "accent_color")
+    public String accentColor;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     public LocalDateTime createdAt;
 

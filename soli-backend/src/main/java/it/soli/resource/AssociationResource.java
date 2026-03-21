@@ -10,6 +10,8 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.List;
 import java.util.UUID;
 
@@ -42,6 +44,16 @@ public class AssociationResource {
         public AssociationRole role;
     }
 
+    public static class MyAssociationDto {
+        public Association association;
+        public AssociationMembership membership;
+
+        public MyAssociationDto(Association association, AssociationMembership membership) {
+            this.association = association;
+            this.membership = membership;
+        }
+    }
+
     // -------------------------------------------------------------------------
     // Helpers
     // -------------------------------------------------------------------------
@@ -63,9 +75,37 @@ public class AssociationResource {
         return null;
     }
 
+    /**
+     * Returns true if the given user is an APPROVED ADMIN or MODERATOR of the association.
+     */
+    private boolean isManagerOf(UUID associationId, UUID userId) {
+        AssociationMembership m = AssociationMembership.findByAssociationIdAndUserId(associationId, userId);
+        return m != null
+                && (m.role == AssociationRole.ADMIN || m.role == AssociationRole.MODERATOR)
+                && m.status == MembershipStatus.APPROVED;
+    }
+
     // -------------------------------------------------------------------------
     // Endpoints
     // -------------------------------------------------------------------------
+
+    /**
+     * GET /api/associations/my — List associations the current user belongs to.
+     */
+    @GET
+    @Path("/my")
+    public Response listMyAssociations() {
+        User currentUser = getAuthenticatedUser();
+        if (currentUser == null) return Response.status(Response.Status.UNAUTHORIZED).build();
+
+        List<AssociationMembership> memberships = AssociationMembership.findByUserId(currentUser.id);
+        List<MyAssociationDto> result = memberships.stream()
+                .map(m -> new MyAssociationDto(Association.findById(m.associationId), m))
+                .filter(dto -> dto.association != null)
+                .toList();
+
+        return Response.ok(result).build();
+    }
 
     /**
      * GET /api/associations — List all associations (paginated, any authenticated user).
@@ -102,7 +142,6 @@ public class AssociationResource {
      */
     @POST
     @Transactional
-    @RolesAllowed({"VOLUNTEER"})
     public Response create(Association association) {
         User currentUser = getAuthenticatedUser();
         if (currentUser == null) return Response.status(Response.Status.UNAUTHORIZED).build();
@@ -143,13 +182,74 @@ public class AssociationResource {
 
         if (updatedAssociation.name != null) association.name = updatedAssociation.name;
         if (updatedAssociation.description != null) association.description = updatedAssociation.description;
+        // accentColor can be set to null to reset; always overwrite
+        association.accentColor = updatedAssociation.accentColor;
 
         return Response.ok(association).build();
     }
 
     /**
+     * PUT /api/associations/{id}/image — Upload association profile image (Admin only).
+     */
+    @PUT
+    @Path("/{id}/image")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Transactional
+    public Response uploadImage(
+            @PathParam("id") UUID id,
+            @org.jboss.resteasy.reactive.RestForm("image") org.jboss.resteasy.reactive.multipart.FileUpload fileUpload) {
+
+        User currentUser = getAuthenticatedUser();
+        if (currentUser == null) return Response.status(Response.Status.UNAUTHORIZED).build();
+
+        Association association = Association.findById(id);
+        if (association == null) return Response.status(Response.Status.NOT_FOUND).build();
+
+        if (getAssociationAdminMembership(id, currentUser.id) == null
+                && !securityIdentity.hasRole(UserRole.ADMIN.name())) {
+            return Response.status(Response.Status.FORBIDDEN).build();
+        }
+
+        try {
+            byte[] fileBytes = Files.readAllBytes(fileUpload.uploadedFile());
+            String contentType = fileUpload.contentType();
+            if (contentType == null) contentType = "application/octet-stream";
+
+            AssociationImage image = AssociationImage.findByAssociationId(id);
+            if (image == null) {
+                image = new AssociationImage();
+                image.id = UUID.randomUUID();
+                image.associationId = id;
+            }
+            image.data = fileBytes;
+            image.contentType = contentType;
+            image.persist();
+
+            return Response.ok().build();
+        } catch (IOException e) {
+            return Response.serverError().entity("Failed to read uploaded file").build();
+        }
+    }
+
+    /**
+     * GET /api/associations/{id}/image — Get association profile image.
+     */
+    @GET
+    @Path("/{id}/image")
+    public Response getImage(@PathParam("id") UUID id) {
+        User currentUser = getAuthenticatedUser();
+        if (currentUser == null) return Response.status(Response.Status.UNAUTHORIZED).build();
+
+        AssociationImage image = AssociationImage.findByAssociationId(id);
+        if (image == null || image.data == null) {
+            return Response.noContent().build();
+        }
+        return Response.ok(image.data).type(image.contentType).build();
+    }
+
+    /**
      * DELETE /api/associations/{id} — Delete association (creator or system admin).
-     * Cascades delete of all memberships.
+     * Cascades delete of all memberships and the profile image.
      */
     @DELETE
     @Path("/{id}")
@@ -169,6 +269,7 @@ public class AssociationResource {
         }
 
         AssociationMembership.delete("associationId", id);
+        AssociationImage.delete("associationId", id);
         association.delete();
 
         return Response.noContent().build();
@@ -241,7 +342,7 @@ public class AssociationResource {
         Association association = Association.findById(id);
         if (association == null) return Response.status(Response.Status.NOT_FOUND).build();
 
-        if (getAssociationAdminMembership(id, currentUser.id) == null) {
+        if (!isManagerOf(id, currentUser.id)) {
             return Response.status(Response.Status.FORBIDDEN).build();
         }
 
@@ -320,8 +421,14 @@ public class AssociationResource {
         boolean isSelf = userId.equals(currentUser.id);
         boolean isAssociationAdmin = getAssociationAdminMembership(id, currentUser.id) != null;
         boolean isSystemAdmin = securityIdentity.hasRole(UserRole.ADMIN.name());
+        // Moderators can remove/reject only MEMBER-role users (pending or approved)
+        AssociationMembership callerMembership = AssociationMembership.findByAssociationIdAndUserId(id, currentUser.id);
+        boolean isModeratorRemovingMember = callerMembership != null
+                && callerMembership.role == AssociationRole.MODERATOR
+                && callerMembership.status == MembershipStatus.APPROVED
+                && membership.role == AssociationRole.MEMBER;
 
-        if (!isSelf && !isAssociationAdmin && !isSystemAdmin) {
+        if (!isSelf && !isAssociationAdmin && !isSystemAdmin && !isModeratorRemovingMember) {
             return Response.status(Response.Status.FORBIDDEN).build();
         }
 

@@ -31,7 +31,9 @@ import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 import LogoutIcon from "@mui/icons-material/Logout";
 import PersonIcon from "@mui/icons-material/Person";
 import HandshakeIcon from "@mui/icons-material/Handshake";
+import GroupsIcon from "@mui/icons-material/Groups";
 import { useRole, type UserRole } from "../context/RoleContext";
+import type { MyAssociation } from "../types/models/Association";
 
 const DRAWER_WIDTH = 280;
 const DRAWER_WIDTH_COLLAPSED = 72;
@@ -50,6 +52,8 @@ const navItems: NavItem[] = [
 
 const adminNavItems: NavItem[] = [{ label: "Gestione Admin", icon: <DashboardIcon />, path: "/dashboard/admin" }];
 
+const volunteerNavItems: NavItem[] = [{ label: "Associazioni", icon: <GroupsIcon />, path: "/dashboard/associations" }];
+
 const bottomNavItems: NavItem[] = [{ label: "Profilo", icon: <PersonIcon />, path: "/dashboard/profile" }];
 
 export default function DashboardLayout() {
@@ -65,6 +69,7 @@ export default function DashboardLayout() {
 	const navigate = useNavigate();
 	const location = useLocation();
 	const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+	const [myAssociations, setMyAssociations] = useState<MyAssociation[]>([]);
 	const { role, setRole } = useRole();
   
 	useEffect(() => {
@@ -78,6 +83,14 @@ export default function DashboardLayout() {
 				})
 				.catch(() => {
 					// User has no custom profile picture
+				});
+
+			api.get<MyAssociation[]>("/api/associations/my")
+				.then((res) => {
+					if (isMounted) setMyAssociations(res.data ?? []);
+				})
+				.catch(() => {
+					// ignore
 				});
 		}
 		return () => { isMounted = false; };
@@ -101,6 +114,10 @@ export default function DashboardLayout() {
 		}
 		// Se il volontario prova a creare una nuova richiesta
 		if (role === "volunteer" && location.pathname === "/dashboard/requests/new") {
+			navigate("/dashboard", { replace: true });
+		}
+		// Le associazioni sono solo per la vista volontario
+		if (role === "requester" && location.pathname.startsWith("/dashboard/associations")) {
 			navigate("/dashboard", { replace: true });
 		}
 	}, [role, location.pathname, navigate]);
@@ -212,7 +229,60 @@ export default function DashboardLayout() {
 					</ListItemButton>
 				))}
 
-				{isAdmin && (
+				{role === "volunteer" && (
+					<>
+						<Divider sx={{ my: 1 }} />
+						<Typography
+							variant="caption"
+							sx={{
+								px: (isMobile ? false : drawerCollapsed) ? 0 : 2,
+								display: "block",
+								textAlign: (isMobile ? false : drawerCollapsed) ? "center" : "left",
+								color: "text.secondary",
+								fontWeight: "bold",
+								mb: 1,
+							}}
+						>
+							{(isMobile ? false : drawerCollapsed) ? "VOL" : "VOLONTARIO"}
+						</Typography>
+						{volunteerNavItems.map((item) => (
+							<ListItemButton
+								key={item.label}
+								onClick={() => handleNav(item.path)}
+								selected={location.pathname === item.path || location.pathname.startsWith(item.path)}
+								sx={{
+									borderRadius: 2,
+									mb: 0.5,
+									minHeight: 48,
+									justifyContent: (isMobile ? mobileOpen : !drawerCollapsed) ? "initial" : "center",
+									px: 2,
+									"&.Mui-selected": {
+										bgcolor: "primary.main",
+										color: "primary.contrastText",
+										"&:hover": { bgcolor: "primary.dark" },
+										"& .MuiListItemIcon-root": { color: "inherit" },
+									},
+								}}
+							>
+								<ListItemIcon
+									sx={{
+										color: "inherit",
+										minWidth: 0,
+										mr: (isMobile ? mobileOpen : !drawerCollapsed) ? 2 : "auto",
+										justifyContent: "center",
+									}}
+								>
+									{item.icon}
+								</ListItemIcon>
+								{!(isMobile ? false : drawerCollapsed) && (
+									<ListItemText primary={item.label} primaryTypographyProps={{ fontWeight: 600 }} />
+								)}
+							</ListItemButton>
+						))}
+					</>
+				)}
+
+			{isAdmin && (
 					<>
 						<Divider sx={{ my: 1 }} />
 						<Typography
@@ -310,6 +380,24 @@ export default function DashboardLayout() {
 							<Typography variant="caption" color="text.secondary" noWrap>
 								{userEmail}
 							</Typography>
+							{(() => {
+								const approved = myAssociations.filter((m) => m.membership.status === "APPROVED");
+								if (approved.length === 0) return null;
+								const extra = approved.length - 1;
+								return (
+									<Box sx={{ display: "flex", alignItems: "center", gap: 0.5, mt: 0.25 }}>
+										<GroupsIcon sx={{ fontSize: 12, color: "primary.main" }} />
+										<Typography variant="caption" color="primary.main" noWrap sx={{ fontSize: "0.7rem" }}>
+											{approved[0].association.name}
+										</Typography>
+										{extra > 0 && (
+											<Typography variant="caption" sx={{ fontSize: "0.7rem", color: "text.secondary", flexShrink: 0 }}>
+												+{extra}
+											</Typography>
+										)}
+									</Box>
+								);
+							})()}
 						</Box>
 					</Box>
 				</>
