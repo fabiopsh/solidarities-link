@@ -73,6 +73,16 @@ public class AssociationResource {
         return null;
     }
 
+    /**
+     * Returns true if the given user is an APPROVED ADMIN or MODERATOR of the association.
+     */
+    private boolean isManagerOf(UUID associationId, UUID userId) {
+        AssociationMembership m = AssociationMembership.findByAssociationIdAndUserId(associationId, userId);
+        return m != null
+                && (m.role == AssociationRole.ADMIN || m.role == AssociationRole.MODERATOR)
+                && m.status == MembershipStatus.APPROVED;
+    }
+
     // -------------------------------------------------------------------------
     // Endpoints
     // -------------------------------------------------------------------------
@@ -268,7 +278,7 @@ public class AssociationResource {
         Association association = Association.findById(id);
         if (association == null) return Response.status(Response.Status.NOT_FOUND).build();
 
-        if (getAssociationAdminMembership(id, currentUser.id) == null) {
+        if (!isManagerOf(id, currentUser.id)) {
             return Response.status(Response.Status.FORBIDDEN).build();
         }
 
@@ -347,8 +357,14 @@ public class AssociationResource {
         boolean isSelf = userId.equals(currentUser.id);
         boolean isAssociationAdmin = getAssociationAdminMembership(id, currentUser.id) != null;
         boolean isSystemAdmin = securityIdentity.hasRole(UserRole.ADMIN.name());
+        // Moderators can remove/reject only MEMBER-role users (pending or approved)
+        AssociationMembership callerMembership = AssociationMembership.findByAssociationIdAndUserId(id, currentUser.id);
+        boolean isModeratorRemovingMember = callerMembership != null
+                && callerMembership.role == AssociationRole.MODERATOR
+                && callerMembership.status == MembershipStatus.APPROVED
+                && membership.role == AssociationRole.MEMBER;
 
-        if (!isSelf && !isAssociationAdmin && !isSystemAdmin) {
+        if (!isSelf && !isAssociationAdmin && !isSystemAdmin && !isModeratorRemovingMember) {
             return Response.status(Response.Status.FORBIDDEN).build();
         }
 

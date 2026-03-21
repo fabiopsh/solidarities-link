@@ -13,6 +13,7 @@ import ProfilePage from "./pages/ProfilePage";
 import WalletPage from "./pages/WalletPage";
 import AdminDashboardPage from "./pages/AdminDashboardPage";
 import AssociationsPage from "./pages/AssociationsPage";
+import AssociationDetailPage from "./pages/AssociationDetailPage";
 
 export default function App() {
 	return (
@@ -42,6 +43,7 @@ export default function App() {
 							<Route path="profile" element={<ProfilePage />} />
 							<Route path="admin" element={<AdminDashboardPage />} />
 							<Route path="associations" element={<AssociationsPage />} />
+							<Route path="associations/:id" element={<AssociationDetailPage />} />
 						</Route>
 
 						{/* Default: redirect to dashboard (ProtectedRoute handles unauth) */}

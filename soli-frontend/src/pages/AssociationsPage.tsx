@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "react-oidc-context";
+import { useNavigate } from "react-router-dom";
 import api from "../api";
 import {
 	Box,
@@ -50,6 +51,7 @@ const FILTER_OPTIONS: { value: MembershipFilter; label: string }[] = [
 
 export default function AssociationsPage() {
 	const auth = useAuth();
+	const navigate = useNavigate();
 	const { role } = useRole();
 
 	const [allAssociations, setAllAssociations] = useState<Association[]>([]);
@@ -323,7 +325,13 @@ export default function AssociationsPage() {
 													</Box>
 													<Box sx={{ minWidth: 0 }}>
 														<Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
-															<Typography variant="body2" fontWeight={600} noWrap>
+															<Typography
+																variant="body2"
+																fontWeight={600}
+																noWrap
+																onClick={() => navigate(`/dashboard/associations/${assoc.id}`)}
+																sx={{ cursor: "pointer", "&:hover": { color: "primary.main", textDecoration: "underline" } }}
+															>
 																{assoc.name}
 															</Typography>
 															{membership && (
@@ -439,7 +447,13 @@ export default function AssociationsPage() {
 										>
 											<Box sx={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 1 }}>
 												<Box sx={{ minWidth: 0 }}>
-													<Typography variant="body2" fontWeight={600} gutterBottom={false} noWrap>
+													<Typography
+														variant="body2"
+														fontWeight={600}
+														noWrap
+														onClick={() => navigate(`/dashboard/associations/${association.id}`)}
+														sx={{ cursor: "pointer", "&:hover": { color: "primary.main", textDecoration: "underline" } }}
+													>
 														{association.name}
 													</Typography>
 													{association.description && (
