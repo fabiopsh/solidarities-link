@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { QRCodeSVG } from "qrcode.react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
 	Box,
@@ -630,15 +631,45 @@ export default function TaskDetailPage() {
 								<Typography variant="body2" sx={{ mb: 3, opacity: 0.85 }}>
 									{tokenHint}
 								</Typography>
+								{/* QR Code scansionabile */}
+								<Box
+									sx={{
+										display: "flex",
+										justifyContent: "center",
+										mb: 2,
+									}}
+								>
+									<Box
+										sx={{
+											background: "#FFFFFF",
+											borderRadius: 3,
+											p: 2,
+											display: "inline-flex",
+											boxShadow: "0 4px 16px rgba(0,0,0,0.12)",
+										}}
+									>
+										<QRCodeSVG
+											value={activeToken}
+											size={180}
+											fgColor="#004D40"
+											bgColor="#FFFFFF"
+											level="H"
+										/>
+									</Box>
+								</Box>
+								{/* Fallback testo alfanumerico */}
+								<Typography variant="caption" sx={{ opacity: 0.75, mb: 0.5, display: "block" }}>
+									Codice manuale:
+								</Typography>
 								<Box
 									sx={{
 										background: "rgba(255,255,255,0.95)",
 										color: "#004D40",
-										py: 2.5,
+										py: 2,
 										px: 2,
 										borderRadius: 2,
 										fontFamily: "'Courier New', monospace",
-										fontSize: "1.8rem",
+										fontSize: "1.4rem",
 										fontWeight: 900,
 										letterSpacing: 6,
 										boxShadow: "inset 0 2px 8px rgba(0,0,0,0.08)",
