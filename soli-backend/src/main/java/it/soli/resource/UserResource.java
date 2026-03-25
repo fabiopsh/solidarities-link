@@ -90,6 +90,24 @@ public class UserResource {
     }
 
     /**
+     * PUT /api/users/me/notifications-read - Mark notifications as read
+     */
+    @PUT
+    @Path("/me/notifications-read")
+    @Transactional
+    public Response markNotificationsRead() {
+        if (jwt.getSubject() == null) {
+            return Response.status(Response.Status.UNAUTHORIZED).build();
+        }
+        User user = User.findByKeycloakId(jwt.getSubject());
+        if (user == null) {
+            return Response.status(Response.Status.NOT_FOUND).build();
+        }
+        user.notificationsReadAt = java.time.LocalDateTime.now();
+        return Response.ok().build();
+    }
+
+    /**
      * GET /api/users - List all users.
      */
     @GET

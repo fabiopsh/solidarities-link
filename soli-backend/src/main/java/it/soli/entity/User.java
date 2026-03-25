@@ -48,6 +48,9 @@ public class User extends PanacheEntityBase {
     @Column(name = "created_at", nullable = false, updatable = false)
     public LocalDateTime createdAt;
 
+    @Column(name = "notifications_read_at")
+    public LocalDateTime notificationsReadAt;
+
     @Column(name = "updated_at")
     public LocalDateTime updatedAt;
 

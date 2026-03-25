@@ -41,6 +41,17 @@ public class TaskResource {
     }
 
     @GET
+    @Path("/my-accepted")
+    public Response getMyAcceptedTasks() {
+        User currentUser = getAuthenticatedUser();
+        if (currentUser == null) {
+            return Response.status(Response.Status.UNAUTHORIZED).build();
+        }
+        List<Task> accepted = Task.list("creatorId = ?1 AND status = ?2", currentUser.id, TaskStatus.ACCEPTED);
+        return Response.ok(accepted).build();
+    }
+
+    @GET
     @Path("/daily-count")
     public Response getDailyCount() {
         User currentUser = getAuthenticatedUser();

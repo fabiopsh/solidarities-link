@@ -33,6 +33,7 @@ import PersonIcon from "@mui/icons-material/Person";
 import HandshakeIcon from "@mui/icons-material/Handshake";
 import GroupsIcon from "@mui/icons-material/Groups";
 import { useRole, type UserRole } from "../context/RoleContext";
+import NotificationDropdown from "./NotificationDropdown";
 
 const DRAWER_WIDTH = 280;
 const DRAWER_WIDTH_COLLAPSED = 72;
@@ -441,6 +442,8 @@ export default function DashboardLayout() {
 							Richiedente
 						</ToggleButton>
 					</ToggleButtonGroup>
+
+					<NotificationDropdown />
 
 					<IconButton onClick={handleMenuOpen} size="small">
 						<Avatar src={avatarUrl || undefined} sx={{ bgcolor: "primary.main", width: 36, height: 36, fontSize: "0.875rem" }}>
