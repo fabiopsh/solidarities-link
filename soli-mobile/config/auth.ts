@@ -49,7 +49,6 @@ export const discovery: AuthSession.DiscoveryDocument = {
 export const redirectUri = AuthSession.makeRedirectUri({
 	scheme: "solimobile",
 	path: "callback",
-	preferLocalhost: true, // Force generating a localhost/127.0.0.1 URI
 });
 
 // Log the actual redirect URI so we can add it to Keycloak
