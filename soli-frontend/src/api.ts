@@ -10,6 +10,15 @@ const oidcStorageKey = `oidc.user:${keycloakAuthority}:${clientId}`;
 export const USER_BASIC_CACHE_TTL = 1000 * 60 * 5; // 5 minutes
 export const IMAGE_CACHE_TTL = 1000 * 60 * 60; // 1 hour
 
+// In-memory token set synchronously via useLayoutEffect in ProtectedRoute,
+// before any useEffect (fetch) can fire in child components.
+// This avoids a race condition where oidc-client-ts updates React state
+// before writing to localStorage, causing the interceptor to find no token.
+let _accessToken: string | null = null;
+export function setAccessToken(token: string | null) {
+	_accessToken = token;
+}
+
 const api = setupCache(
 	axios.create({
 		baseURL: import.meta.env.VITE_API_BASE_URL || "",
@@ -26,16 +35,23 @@ const api = setupCache(
 
 api.interceptors.request.use(
 	(config) => {
-		try {
-			const oidcStorageString = localStorage.getItem(oidcStorageKey);
-			if (oidcStorageString) {
-				const oidcData = JSON.parse(oidcStorageString);
-				if (oidcData && oidcData.access_token) {
-					config.headers.Authorization = `Bearer ${oidcData.access_token}`;
+		// Prefer the in-memory token (set synchronously by ProtectedRoute before
+		// any fetch effect runs) to avoid the post-login race condition with localStorage.
+		const token = _accessToken ?? (() => {
+			try {
+				const raw = localStorage.getItem(oidcStorageKey);
+				if (raw) {
+					const parsed = JSON.parse(raw);
+					return parsed?.access_token ?? null;
 				}
+			} catch {
+				// ignore
 			}
-		} catch (error) {
-			console.error("Error reading OIDC token from local storage:", error);
+			return null;
+		})();
+
+		if (token) {
+			config.headers.Authorization = `Bearer ${token}`;
 		}
 		return config;
 	},
