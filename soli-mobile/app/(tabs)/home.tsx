@@ -1,22 +1,31 @@
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { View, Text, StyleSheet, ScrollView } from "react-native";
 import { useAuth } from "@/context/AuthContext";
+import { useRole } from "@/context/RoleContext";
 
 /**
- * Home screen — placeholder page shown after successful authentication.
- * Displays a welcome message with the user's name and a "work in progress" notice.
+ * Home screen — welcome dashboard.
+ * Shows the current user's name, active role badge, and a placeholder card.
  */
 export default function HomeScreen() {
-	const { user, logout } = useAuth();
+	const { user } = useAuth();
+	const { role } = useRole();
 
-	// Build a display name: prefer given_name, fall back to name, then email
 	const displayName = user?.given_name || user?.name || user?.email || "Utente";
+	const isVolunteer = role === "volunteer";
 
 	return (
-		<View style={styles.container}>
+		<ScrollView style={styles.container} contentContainerStyle={styles.content}>
 			{/* Welcome section */}
 			<View style={styles.welcomeSection}>
 				<Text style={styles.welcomeText}>Ciao, {displayName}! 👋</Text>
 				<Text style={styles.subtitle}>Benvenuto su SoLi</Text>
+
+				{/* Role badge */}
+				<View style={[styles.roleBadge, isVolunteer ? styles.roleBadgeVolunteer : styles.roleBadgeRequester]}>
+					<Text style={[styles.roleText, isVolunteer ? styles.roleTextVolunteer : styles.roleTextRequester]}>
+						{isVolunteer ? "Volontario" : "Richiedente"}
+					</Text>
+				</View>
 			</View>
 
 			{/* Placeholder card */}
@@ -24,16 +33,11 @@ export default function HomeScreen() {
 				<Text style={styles.cardEmoji}>🚧</Text>
 				<Text style={styles.cardTitle}>In costruzione</Text>
 				<Text style={styles.cardDescription}>
-					Questa sezione è in fase di sviluppo. Presto potrai accedere a tutte le funzionalità di SoLi direttamente
-					dal tuo smartphone.
+					Questa sezione è in fase di sviluppo. Presto potrai accedere a tutte le funzionalità di SoLi
+					direttamente dal tuo smartphone.
 				</Text>
 			</View>
-
-			{/* Logout button */}
-			<TouchableOpacity style={styles.logoutButton} onPress={logout} activeOpacity={0.7}>
-				<Text style={styles.logoutButtonText}>Esci</Text>
-			</TouchableOpacity>
-		</View>
+		</ScrollView>
 	);
 }
 
@@ -41,8 +45,10 @@ const styles = StyleSheet.create({
 	container: {
 		flex: 1,
 		backgroundColor: "#F5F5F5",
+	},
+	content: {
 		padding: 24,
-		paddingTop: 60,
+		paddingTop: 36,
 	},
 	welcomeSection: {
 		marginBottom: 32,
@@ -55,8 +61,30 @@ const styles = StyleSheet.create({
 	},
 	subtitle: {
 		fontSize: 16,
-		color: "#666",
-		fontWeight: "400",
+		color: "#666666",
+		marginBottom: 16,
+	},
+	roleBadge: {
+		alignSelf: "flex-start",
+		paddingVertical: 5,
+		paddingHorizontal: 14,
+		borderRadius: 20,
+	},
+	roleBadgeVolunteer: {
+		backgroundColor: "#E8F5E9",
+	},
+	roleBadgeRequester: {
+		backgroundColor: "#FFF3E0",
+	},
+	roleText: {
+		fontSize: 13,
+		fontWeight: "600",
+	},
+	roleTextVolunteer: {
+		color: "#2E7D32",
+	},
+	roleTextRequester: {
+		color: "#E65100",
 	},
 	card: {
 		backgroundColor: "#FFFFFF",
@@ -68,7 +96,6 @@ const styles = StyleSheet.create({
 		shadowOpacity: 0.08,
 		shadowRadius: 8,
 		elevation: 3,
-		marginBottom: 32,
 	},
 	cardEmoji: {
 		fontSize: 48,
@@ -82,22 +109,8 @@ const styles = StyleSheet.create({
 	},
 	cardDescription: {
 		fontSize: 14,
-		color: "#666",
+		color: "#666666",
 		textAlign: "center",
 		lineHeight: 22,
-	},
-	logoutButton: {
-		alignSelf: "center",
-		paddingVertical: 12,
-		paddingHorizontal: 32,
-		borderRadius: 12,
-		borderWidth: 1.5,
-		borderColor: "#D32F2F",
-		backgroundColor: "transparent",
-	},
-	logoutButtonText: {
-		color: "#D32F2F",
-		fontSize: 16,
-		fontWeight: "600",
 	},
 });

@@ -4,6 +4,7 @@ import { StatusBar } from "expo-status-bar";
 import "react-native-reanimated";
 
 import { AuthProvider, useAuth } from "@/context/AuthContext";
+import { RoleProvider } from "@/context/RoleContext";
 
 /**
  * Navigation guard that redirects based on authentication state.
@@ -38,15 +39,17 @@ function AuthNavigationGuard({ children }: { children: React.ReactNode }) {
 export default function RootLayout() {
 	return (
 		<AuthProvider>
-			<AuthNavigationGuard>
-				<Stack screenOptions={{ headerShown: false }}>
-					<Stack.Screen name="index" options={{ headerShown: false }} />
-					<Stack.Screen name="login" options={{ headerShown: false }} />
-					<Stack.Screen name="callback" options={{ headerShown: false, animation: "none" }} />
-					<Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-				</Stack>
-				<StatusBar style="auto" />
-			</AuthNavigationGuard>
+			<RoleProvider>
+				<AuthNavigationGuard>
+					<Stack screenOptions={{ headerShown: false }}>
+						<Stack.Screen name="index" options={{ headerShown: false }} />
+						<Stack.Screen name="login" options={{ headerShown: false }} />
+						<Stack.Screen name="callback" options={{ headerShown: false, animation: "none" }} />
+						<Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+					</Stack>
+					<StatusBar style="auto" />
+				</AuthNavigationGuard>
+			</RoleProvider>
 		</AuthProvider>
 	);
 }
