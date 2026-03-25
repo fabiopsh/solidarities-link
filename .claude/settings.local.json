@@ -2,7 +2,13 @@
   "permissions": {
     "allow": [
       "Bash(./mvnw compile:*)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(del \"C:\\\\Users\\\\fabio\\\\Documents\\\\Unipi - Project\\\\solidarities-link\\\\soli-mobile\\\\app\\\\\\(tabs\\)\\\\home.tsx\")",
+      "Bash(find \"C:\\\\Users\\\\fabio\\\\Documents\\\\Unipi - Project\\\\solidarities-link\\\\soli-mobile\\\\app\\\\\\(tabs\\)\" -type f)",
+      "Bash(grep -r auth.user?.profile 'C:\\\\Users\\\\fabio\\\\Documents\\\\Unipi - Project\\\\solidarities-link\\\\soli-frontend\\\\src')",
+      "Bash(find 'C:\\\\Users\\\\fabio\\\\Documents\\\\Unipi - Project\\\\solidarities-link' -type f -name *Task*Resource*.java -o -name *Task*Controller*.java)",
+      "Bash(python3 -c \":*)",
+      "Bash(node -e \":*)"
     ]
   }
 }

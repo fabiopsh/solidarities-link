@@ -4,6 +4,7 @@ import * as SecureStore from "expo-secure-store";
 import * as Linking from "expo-linking";
 import { Platform } from "react-native";
 import { discovery, redirectUri, scopes, keycloakConfig } from "@/config/auth";
+import { setApiToken } from "@/config/api";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -134,17 +135,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 	}
 
 	/**
-	 * Save tokens and user info to secure storage.
+	 * Save tokens and user info to memory and secure storage.
+	 *
+	 * Order matters:
+	 *  1. setApiToken()    — in-memory cache, read synchronously by the Axios
+	 *                        interceptor on the very next request
+	 *  2. setAccessToken() — React state update → triggers re-render / nav guard
+	 *  3. SecureStore      — persisted asynchronously (may complete after the
+	 *                        first API call is already in-flight)
 	 */
 	async function saveSession(tokenResult: AuthSession.TokenResponse) {
 		const token = tokenResult.accessToken;
+
+		// 1. In-memory first — interceptor never has to wait for SecureStore
+		setApiToken(token);
+
+		// 2. React state — navigation guard will push home screen on next render
 		setAccessToken(token);
 
-		// Extract user from id_token if available, otherwise from access_token
 		const userInfo = extractUserInfo(tokenResult.idToken || token);
 		setUser(userInfo);
 
-		// Persist to secure store
+		// 3. Persist (async — happens after the first render cycle)
 		await SecureStore.setItemAsync(TOKEN_KEY, token);
 		if (tokenResult.refreshToken) {
 			await SecureStore.setItemAsync(REFRESH_TOKEN_KEY, tokenResult.refreshToken);
@@ -165,20 +177,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 			const storedRefreshToken = await SecureStore.getItemAsync(REFRESH_TOKEN_KEY);
 
 			if (storedToken && storedUser) {
-				// Check if token is expired
 				const payload = decodeJwtPayload(storedToken);
 				const exp = payload.exp as number;
 				const now = Math.floor(Date.now() / 1000);
 
 				if (exp && exp > now) {
-					// Token still valid
+					// Token still valid — populate in-memory cache FIRST so that
+					// any API call that fires right after setAccessToken() already
+					// has the token without needing to await SecureStore again.
+					setApiToken(storedToken);
 					setAccessToken(storedToken);
 					setUser(JSON.parse(storedUser));
 				} else if (storedRefreshToken) {
-					// Try to refresh
+					// Token expired — try silent refresh (saveSession will call setApiToken)
 					await refreshAccessToken(storedRefreshToken);
 				} else {
-					// Token expired and no refresh token
+					// No refresh token — force re-login
 					await clearSession();
 				}
 			}
@@ -215,6 +229,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 	 * Clear all tokens and user info from state and secure store.
 	 */
 	async function clearSession() {
+		setApiToken(null);
 		setAccessToken(null);
 		setUser(null);
 		await SecureStore.deleteItemAsync(TOKEN_KEY);
@@ -231,7 +246,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 	}, [request, promptAsync]);
 
 	const register = useCallback(async () => {
-		// Open the Keycloak registration page in the system browser
 		const registrationUrl =
 			`${keycloakConfig.baseUrl}/realms/${keycloakConfig.realm}/protocol/openid-connect/registrations` +
 			`?client_id=${encodeURIComponent(keycloakConfig.clientId)}` +

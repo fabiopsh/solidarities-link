@@ -13,6 +13,30 @@ const API_PORT = 8080; // Quarkus backend (matches docker-compose and Vite proxy
 
 export const API_BASE_URL = `http://${SERVER_IP}:${API_PORT}`;
 
+// ─── In-memory token cache ────────────────────────────────────────────────────
+// Mirrors the same pattern used in the web frontend (soli-frontend/src/api.ts).
+//
+// Race condition without this cache:
+//   1. saveSession() calls setAccessToken(token) → React state updates → nav guard
+//      immediately pushes the home screen
+//   2. SecureStore.setItemAsync(token) is still in-flight (async)
+//   3. Home screen mounts, useFocusEffect fires, interceptor reads SecureStore
+//      → finds the OLD / absent token → 401
+//
+// With the cache:
+//   AuthContext calls setApiToken(token) BEFORE awaiting SecureStore, so by
+//   the time any screen makes an API call the token is already here.
+
+let _token: string | null = null;
+
+/**
+ * Set (or clear) the in-memory token.
+ * Called by AuthContext whenever the access token changes.
+ */
+export function setApiToken(token: string | null): void {
+	_token = token;
+}
+
 // ─── Axios instance ───────────────────────────────────────────────────────────
 
 const api = axios.create({
@@ -25,15 +49,23 @@ const api = axios.create({
 });
 
 // ─── Request interceptor — inject JWT ────────────────────────────────────────
-// Reads the access token from SecureStore on every request so the latest token
-// is always used (handles token refreshes transparently).
+// Priority:
+//   1. In-memory token  (set synchronously by AuthContext — always up-to-date)
+//   2. SecureStore      (fallback for cold-start before AuthContext has run)
 
 api.interceptors.request.use(
 	async (config) => {
+		// 1. Fast path — use in-memory token if available
+		if (_token) {
+			config.headers.Authorization = `Bearer ${_token}`;
+			return config;
+		}
+
+		// 2. Slow path — read from SecureStore (cold-start / hot-reload)
 		try {
-			const token = await SecureStore.getItemAsync("soli_access_token");
-			if (token) {
-				config.headers.Authorization = `Bearer ${token}`;
+			const stored = await SecureStore.getItemAsync("soli_access_token");
+			if (stored) {
+				config.headers.Authorization = `Bearer ${stored}`;
 			}
 		} catch (err) {
 			// SecureStore failure should not block the request — log and continue
@@ -41,6 +73,7 @@ api.interceptors.request.use(
 				console.warn("[api] Could not read token from SecureStore:", err);
 			}
 		}
+
 		return config;
 	},
 	(error) => Promise.reject(error),
