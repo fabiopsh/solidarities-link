@@ -3,6 +3,11 @@ package it.soli.service;
 import it.soli.entity.ServiceCategory;
 import jakarta.enterprise.context.ApplicationScoped;
 
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 import java.util.LinkedHashMap;
@@ -41,6 +46,10 @@ public class MockAIService {
     private static final Pattern DATE_NUMERIC_PATTERN =
             Pattern.compile("\\b(\\d{1,2}[/\\-]\\d{1,2}(?:[/\\-]\\d{2,4})?)\\b");
 
+    // Time patterns: "alle 15", "alle 15:30", "ore 14", "ore 9:00", "alle ore 10"
+    private static final Pattern TIME_PATTERN =
+            Pattern.compile("(?:alle(?:\\s+ore)?|ore)\\s+(\\d{1,2})(?:[:.]?(\\d{2}))?", Pattern.CASE_INSENSITIVE);
+
     private static final List<String> RELATIVE_DATE_KEYWORDS = List.of(
             "oggi", "domani", "dopodomani",
             "la prossima settimana", "settimana prossima",
@@ -52,6 +61,16 @@ public class MockAIService {
     private static final List<String> WEEKDAY_KEYWORDS = List.of(
             "lunedì", "martedì", "mercoledì", "giovedì",
             "venerdì", "sabato", "domenica");
+
+    private static final Map<String, DayOfWeek> WEEKDAY_MAP = Map.of(
+            "lunedì", DayOfWeek.MONDAY,
+            "martedì", DayOfWeek.TUESDAY,
+            "mercoledì", DayOfWeek.WEDNESDAY,
+            "giovedì", DayOfWeek.THURSDAY,
+            "venerdì", DayOfWeek.FRIDAY,
+            "sabato", DayOfWeek.SATURDAY,
+            "domenica", DayOfWeek.SUNDAY
+    );
 
     // ── Category keywords ───────────────────────────────────────────────
     private static final List<String> PHYSICAL_SUPPORT_KEYWORDS = List.of(
@@ -213,6 +232,8 @@ public class MockAIService {
         public String estimatedDuration;
         public UrgencyLevel urgency;
         public String extractedDate;
+        /** Resolved ISO datetime string (e.g. "2026-03-27T15:00:00") */
+        public String scheduledAt;
     }
 
     // ── Public API ──────────────────────────────────────────────────────
@@ -257,6 +278,9 @@ public class MockAIService {
 
         // 3. Extract date references
         result.extractedDate = extractDate(lowerText);
+
+        // 4. Resolve to ISO datetime for the frontend datepicker
+        result.scheduledAt = resolveToIsoDateTime(lowerText, result.extractedDate);
 
         return result;
     }
@@ -323,6 +347,130 @@ public class MockAIService {
         }
 
         return null;
+    }
+
+    /**
+     * Extract an explicit time reference from the text (e.g. "alle 15:30", "ore 9").
+     * Returns a LocalTime or null if no time is found.
+     */
+    private LocalTime extractTime(String lowerText) {
+        Matcher matcher = TIME_PATTERN.matcher(lowerText);
+        if (matcher.find()) {
+            int hour = Integer.parseInt(matcher.group(1));
+            int minute = matcher.group(2) != null ? Integer.parseInt(matcher.group(2)) : 0;
+            if (hour >= 0 && hour <= 23 && minute >= 0 && minute <= 59) {
+                return LocalTime.of(hour, minute);
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Resolve the extractedDate label + any time reference into an ISO datetime string.
+     * Ensures the result is at least 1 hour in the future.
+     */
+    private String resolveToIsoDateTime(String lowerText, String extractedDate) {
+        if (extractedDate == null) {
+            return null;
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        LocalTime explicitTime = extractTime(lowerText);
+        LocalTime defaultTime = LocalTime.of(10, 0); // fallback: 10:00
+        LocalDate resolvedDate = null;
+
+        // ── Relative expressions ────────────────────────────────────
+        switch (extractedDate) {
+            case "oggi":
+                resolvedDate = now.toLocalDate();
+                if (explicitTime == null) {
+                    // Default to 2 hours from now, rounded to next half-hour
+                    LocalTime shifted = now.toLocalTime().plusHours(2);
+                    int min = shifted.getMinute() < 30 ? 30 : 0;
+                    int hr = min == 0 ? shifted.getHour() + 1 : shifted.getHour();
+                    explicitTime = LocalTime.of(Math.min(hr, 23), min);
+                }
+                break;
+            case "domani":
+                resolvedDate = now.toLocalDate().plusDays(1);
+                break;
+            case "dopodomani":
+                resolvedDate = now.toLocalDate().plusDays(2);
+                break;
+            case "fra un'ora": case "tra un'ora":
+                return enforceMinimum(now.plusHours(1));
+            case "fra due giorni": case "tra due giorni":
+                resolvedDate = now.toLocalDate().plusDays(2);
+                break;
+            case "fra una settimana": case "tra una settimana":
+            case "la prossima settimana": case "settimana prossima":
+                resolvedDate = now.toLocalDate().plusWeeks(1);
+                break;
+            case "il prossimo mese": case "mese prossimo":
+                resolvedDate = now.toLocalDate().plusMonths(1);
+                break;
+            default:
+                // Check if it's a weekday name
+                DayOfWeek targetDay = WEEKDAY_MAP.get(extractedDate);
+                if (targetDay != null) {
+                    resolvedDate = nextOccurrence(now.toLocalDate(), targetDay);
+                } else {
+                    // Try to parse numeric date (dd/mm or dd/mm/yyyy)
+                    resolvedDate = parseNumericDate(extractedDate);
+                }
+                break;
+        }
+
+        if (resolvedDate == null) {
+            return null;
+        }
+
+        LocalTime time = explicitTime != null ? explicitTime : defaultTime;
+        LocalDateTime resolved = LocalDateTime.of(resolvedDate, time);
+
+        return enforceMinimum(resolved);
+    }
+
+    /**
+     * Parse a numeric date string like "27/03" or "27/03/2026".
+     */
+    private LocalDate parseNumericDate(String dateStr) {
+        try {
+            String[] parts = dateStr.split("[/\\-]");
+            int day = Integer.parseInt(parts[0]);
+            int month = Integer.parseInt(parts[1]);
+            int year = parts.length >= 3 ? Integer.parseInt(parts[2]) : LocalDate.now().getYear();
+            // Handle 2-digit years
+            if (year < 100) {
+                year += 2000;
+            }
+            return LocalDate.of(year, month, day);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    /**
+     * Find the next occurrence of a given day of week (at least 1 day ahead).
+     */
+    private LocalDate nextOccurrence(LocalDate from, DayOfWeek target) {
+        LocalDate next = from.plusDays(1);
+        while (next.getDayOfWeek() != target) {
+            next = next.plusDays(1);
+        }
+        return next;
+    }
+
+    /**
+     * Ensure the datetime is at least 1 hour in the future.
+     * Returns an ISO-8601 string without seconds.
+     */
+    private String enforceMinimum(LocalDateTime dateTime) {
+        LocalDateTime minimum = LocalDateTime.now().plusHours(1);
+        if (dateTime.isBefore(minimum)) {
+            dateTime = minimum;
+        }
+        return dateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm"));
     }
 
     private boolean containsAny(String text, List<String> keywords) {
