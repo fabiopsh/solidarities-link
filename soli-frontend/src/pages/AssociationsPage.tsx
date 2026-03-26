@@ -225,7 +225,7 @@ export default function AssociationsPage() {
 
 			<Grid container spacing={3} alignItems="flex-start">
 				{/* LEFT — Global list */}
-				<Grid item xs={12} md={6}>
+				<Grid size={{ xs: 12, md: 6 }}>
 					<Card sx={{ borderRadius: 3, boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
 						<CardContent sx={{ p: 3 }}>
 							<Typography variant="h6" fontWeight={700} mb={2.5}>
@@ -399,7 +399,7 @@ export default function AssociationsPage() {
 				</Grid>
 
 				{/* RIGHT — My associations */}
-				<Grid item xs={12} md={6}>
+				<Grid size={{ xs: 12, md: 6 }}>
 					<Card sx={{ borderRadius: 3, boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
 						<CardContent sx={{ p: 3 }}>
 							<Typography variant="h6" fontWeight={700} mb={2.5}>

@@ -289,11 +289,11 @@ export default function ProfilePage() {
 	const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
 		if (!e.target.files || e.target.files.length === 0) return;
 		const file = e.target.files[0];
-		
+
 		const formData = new FormData();
 		// Match the parameter name in the @RestForm annotation on the backend
 		formData.append("image", file);
-		
+
 		setUploadingAvatar(true);
 		try {
 			await api.put("/api/users/me/profile-picture", formData, {
@@ -330,6 +330,7 @@ export default function ProfilePage() {
 		? `${user.firstName?.charAt(0) || ""}${user.lastName?.charAt(0) || ""}`.toUpperCase()
 		: "U";
 
+	// TODO: rimuovere essendo che pare che non venga mai utilizzato
 	const getRoleLabel = (role: string) => {
 		switch (role) {
 			case "REQUESTER":
@@ -400,8 +401,8 @@ export default function ProfilePage() {
 										<CircularProgress size={24} sx={{ color: "white", bgcolor: "primary.dark", borderRadius: "50%", p: 0.5 }} />
 									) : (
 										<Tooltip title="Cambia foto profilo">
-											<IconButton 
-												component="label" 
+											<IconButton
+												component="label"
 												sx={{ bgcolor: "white", boxShadow: 2, "&:hover": { bgcolor: "grey.100" } }}
 												size="small"
 											>
@@ -544,179 +545,179 @@ export default function ProfilePage() {
 
 				{/* Volunteer Profile Form */}
 				{role === "volunteer" && (
-				<Grid size={{ xs: 12, md: 7 }}>
-					<Card sx={{ borderRadius: 3, boxShadow: "0 4px 20px rgba(0,0,0,0.05)" }}>
-						<CardContent sx={{ p: 4 }}>
-							<Typography variant="h6" fontWeight={700} gutterBottom>
-								⚙️ Preferenze Volontario
-							</Typography>
-							<Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-								Configura i tuoi ambiti di intervento e le tue disponibilità.
-							</Typography>
-
-							{/* Service Categories */}
-							<Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1 }}>
-								Ambiti di Intervento
-							</Typography>
-							<Paper variant="outlined" sx={{ p: 2, mb: 3, borderRadius: 2 }}>
-								<FormGroup>
-									{SERVICE_CATEGORIES.map((cat) => (
-										<FormControlLabel
-											key={cat.value}
-											control={
-												<Checkbox
-													checked={selectedCategories.includes(cat.value)}
-													onChange={() => handleCategoryToggle(cat.value)}
-													color="primary"
-												/>
-											}
-											label={
-												<Typography variant="body2">
-													{cat.emoji} {cat.label}
-												</Typography>
-											}
-										/>
-									))}
-								</FormGroup>
-							</Paper>
-
-							{/* Constraints */}
-							<Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1 }}>
-								Vincoli e Limitazioni
-							</Typography>
-							<TextField
-								fullWidth
-								multiline
-								rows={3}
-								placeholder="Es: allergie, limitazioni fisiche, disponibilità solo in orari specifici..."
-								value={constraints}
-								onChange={(e) => setConstraints(e.target.value)}
-								sx={{ mb: 4 }}
-								variant="outlined"
-								size="small"
-							/>
-
-							{/* Location Map */}
-							<Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1 }}>
-								Centro di Intervento Operativo
-							</Typography>
-							<Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-								Inserisci la città o l'indirizzo da cui partirai per le attività di volontariato.
-							</Typography>
-							<Box sx={{ display: "flex", gap: 2, mb: 2 }}>
-								<Autocomplete
-									fullWidth
-									options={options}
-									getOptionLabel={(option) => (typeof option === "string" ? option : option.display_name)}
-									filterOptions={(x) => x}
-									autoComplete
-									includeInputInList
-									filterSelectedOptions
-									value={targetAddress}
-									noOptionsText="Nessun luogo trovato"
-									onChange={(_event, newValue: any) => {
-										if (newValue) {
-											if (newValue.type === "my_location") {
-												handleMyLocationSelect();
-											} else {
-												setTargetAddress(newValue.display_name);
-												const lat = parseFloat(newValue.lat);
-												const lon = parseFloat(newValue.lon);
-												if (!isNaN(lat) && !isNaN(lon)) {
-													setLatitude(lat);
-													setLongitude(lon);
-												}
-											}
-										} else {
-											setTargetAddress("");
-										}
-									}}
-									onInputChange={(_event, newInputValue) => {
-										setInputValue(newInputValue);
-									}}
-									renderInput={(params) => (
-										<TextField
-											{...params}
-											label="Indirizzo / Luogo"
-											placeholder="Es: Via Roma 1, Milano"
-											variant="outlined"
-											size="small"
-											InputProps={{
-												...params.InputProps,
-												endAdornment: (
-													<>
-														{inputValue.length > 0 && options.length === 0 ? <CircularProgress color="inherit" size={20} /> : null}
-														{params.InputProps.endAdornment}
-													</>
-												),
-											}}
-										/>
-									)}
-								/>
-							</Box>
-							<Box sx={{ height: 300, width: "100%", borderRadius: 2, overflow: "hidden", border: "1px solid", borderColor: "divider", position: "relative", zIndex: 0, mb: 4 }}>
-								<MapContainer center={[latitude, longitude]} zoom={12} style={{ height: "100%", width: "100%" }}>
-									<TileLayer
-										attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-										url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-									/>
-									<LocationMarker
-										position={[latitude, longitude]}
-										setPosition={(p) => { setLatitude(p.lat); setLongitude(p.lng); }}
-										onDragEnd={(p) => handleReverseGeocode(p.lat, p.lng)}
-									/>
-									<Circle
-										center={[latitude, longitude]}
-										radius={maxDistance}
-										pathOptions={{ fillColor: '#00796B', color: '#004D40', fillOpacity: 0.2 }}
-									/>
-								</MapContainer>
-							</Box>
-
-							{/* Max Distance */}
-							<Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1 }}>
-								Distanza Massima di Intervento
-							</Typography>
-							<Box sx={{ px: 1, mb: 3 }}>
-								<Slider
-									value={maxDistance}
-									onChange={(_, val) => setMaxDistance(val as number)}
-									min={500}
-									max={20000}
-									step={500}
-									valueLabelDisplay="auto"
-									valueLabelFormat={(v) => `${(v / 1000).toFixed(1)} km`}
-									marks={[
-										{ value: 500, label: "0.5 km" },
-										{ value: 10000, label: "10 km" },
-										{ value: 20000, label: "20 km" },
-									]}
-									sx={{ color: "primary.main" }}
-								/>
-								<Typography variant="caption" color="text.secondary">
-									Raggio attuale: <strong>{(maxDistance / 1000).toFixed(1)} km</strong>
+					<Grid size={{ xs: 12, md: 7 }}>
+						<Card sx={{ borderRadius: 3, boxShadow: "0 4px 20px rgba(0,0,0,0.05)" }}>
+							<CardContent sx={{ p: 4 }}>
+								<Typography variant="h6" fontWeight={700} gutterBottom>
+									⚙️ Preferenze Volontario
 								</Typography>
-							</Box>
+								<Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+									Configura i tuoi ambiti di intervento e le tue disponibilità.
+								</Typography>
 
-							<Button
-								variant="contained"
-								startIcon={saving ? <CircularProgress size={18} color="inherit" /> : <SaveIcon />}
-								onClick={handleSave}
-								disabled={saving}
-								fullWidth
-								size="large"
-								sx={{
-									fontWeight: "bold",
-									borderRadius: 2,
-									py: 1.5,
-									boxShadow: "0 4px 12px rgba(0, 121, 107, 0.3)",
-								}}
-							>
-								{saving ? "Salvataggio..." : "Salva Preferenze"}
-							</Button>
-						</CardContent>
-					</Card>
-				</Grid>
+								{/* Service Categories */}
+								<Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1 }}>
+									Ambiti di Intervento
+								</Typography>
+								<Paper variant="outlined" sx={{ p: 2, mb: 3, borderRadius: 2 }}>
+									<FormGroup>
+										{SERVICE_CATEGORIES.map((cat) => (
+											<FormControlLabel
+												key={cat.value}
+												control={
+													<Checkbox
+														checked={selectedCategories.includes(cat.value)}
+														onChange={() => handleCategoryToggle(cat.value)}
+														color="primary"
+													/>
+												}
+												label={
+													<Typography variant="body2">
+														{cat.emoji} {cat.label}
+													</Typography>
+												}
+											/>
+										))}
+									</FormGroup>
+								</Paper>
+
+								{/* Constraints */}
+								<Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1 }}>
+									Vincoli e Limitazioni
+								</Typography>
+								<TextField
+									fullWidth
+									multiline
+									rows={3}
+									placeholder="Es: allergie, limitazioni fisiche, disponibilità solo in orari specifici..."
+									value={constraints}
+									onChange={(e) => setConstraints(e.target.value)}
+									sx={{ mb: 4 }}
+									variant="outlined"
+									size="small"
+								/>
+
+								{/* Location Map */}
+								<Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1 }}>
+									Centro di Intervento Operativo
+								</Typography>
+								<Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+									Inserisci la città o l'indirizzo da cui partirai per le attività di volontariato.
+								</Typography>
+								<Box sx={{ display: "flex", gap: 2, mb: 2 }}>
+									<Autocomplete
+										fullWidth
+										options={options}
+										getOptionLabel={(option) => (typeof option === "string" ? option : option.display_name)}
+										filterOptions={(x) => x}
+										autoComplete
+										includeInputInList
+										filterSelectedOptions
+										value={targetAddress}
+										noOptionsText="Nessun luogo trovato"
+										onChange={(_event, newValue: any) => {
+											if (newValue) {
+												if (newValue.type === "my_location") {
+													handleMyLocationSelect();
+												} else {
+													setTargetAddress(newValue.display_name);
+													const lat = parseFloat(newValue.lat);
+													const lon = parseFloat(newValue.lon);
+													if (!isNaN(lat) && !isNaN(lon)) {
+														setLatitude(lat);
+														setLongitude(lon);
+													}
+												}
+											} else {
+												setTargetAddress("");
+											}
+										}}
+										onInputChange={(_event, newInputValue) => {
+											setInputValue(newInputValue);
+										}}
+										renderInput={(params) => (
+											<TextField
+												{...params}
+												label="Indirizzo / Luogo"
+												placeholder="Es: Via Roma 1, Milano"
+												variant="outlined"
+												size="small"
+												InputProps={{
+													...params.InputProps,
+													endAdornment: (
+														<>
+															{inputValue.length > 0 && options.length === 0 ? <CircularProgress color="inherit" size={20} /> : null}
+															{params.InputProps.endAdornment}
+														</>
+													),
+												}}
+											/>
+										)}
+									/>
+								</Box>
+								<Box sx={{ height: 300, width: "100%", borderRadius: 2, overflow: "hidden", border: "1px solid", borderColor: "divider", position: "relative", zIndex: 0, mb: 4 }}>
+									<MapContainer center={[latitude, longitude]} zoom={12} style={{ height: "100%", width: "100%" }}>
+										<TileLayer
+											attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+											url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+										/>
+										<LocationMarker
+											position={[latitude, longitude]}
+											setPosition={(p) => { setLatitude(p.lat); setLongitude(p.lng); }}
+											onDragEnd={(p) => handleReverseGeocode(p.lat, p.lng)}
+										/>
+										<Circle
+											center={[latitude, longitude]}
+											radius={maxDistance}
+											pathOptions={{ fillColor: '#00796B', color: '#004D40', fillOpacity: 0.2 }}
+										/>
+									</MapContainer>
+								</Box>
+
+								{/* Max Distance */}
+								<Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1 }}>
+									Distanza Massima di Intervento
+								</Typography>
+								<Box sx={{ px: 1, mb: 3 }}>
+									<Slider
+										value={maxDistance}
+										onChange={(_, val) => setMaxDistance(val as number)}
+										min={500}
+										max={20000}
+										step={500}
+										valueLabelDisplay="auto"
+										valueLabelFormat={(v) => `${(v / 1000).toFixed(1)} km`}
+										marks={[
+											{ value: 500, label: "0.5 km" },
+											{ value: 10000, label: "10 km" },
+											{ value: 20000, label: "20 km" },
+										]}
+										sx={{ color: "primary.main" }}
+									/>
+									<Typography variant="caption" color="text.secondary">
+										Raggio attuale: <strong>{(maxDistance / 1000).toFixed(1)} km</strong>
+									</Typography>
+								</Box>
+
+								<Button
+									variant="contained"
+									startIcon={saving ? <CircularProgress size={18} color="inherit" /> : <SaveIcon />}
+									onClick={handleSave}
+									disabled={saving}
+									fullWidth
+									size="large"
+									sx={{
+										fontWeight: "bold",
+										borderRadius: 2,
+										py: 1.5,
+										boxShadow: "0 4px 12px rgba(0, 121, 107, 0.3)",
+									}}
+								>
+									{saving ? "Salvataggio..." : "Salva Preferenze"}
+								</Button>
+							</CardContent>
+						</Card>
+					</Grid>
 				)}
 			</Grid>
 
