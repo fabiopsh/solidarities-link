@@ -2,8 +2,12 @@
 FROM node:22-alpine AS build
 WORKDIR /app
 COPY package.json package-lock.json ./
-RUN npm ci
+RUN npm install
 COPY . .
+ARG VITE_KEYCLOAK_URL
+ARG VITE_KEYCLOAK_CLIENT_ID
+ENV VITE_KEYCLOAK_URL=$VITE_KEYCLOAK_URL
+ENV VITE_KEYCLOAK_CLIENT_ID=$VITE_KEYCLOAK_CLIENT_ID
 RUN npm run build
 
 # --- Stage 2: Serve ---

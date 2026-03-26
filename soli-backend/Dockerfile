@@ -4,9 +4,8 @@ WORKDIR /app
 COPY pom.xml .
 COPY .mvn .mvn
 COPY mvnw .
-RUN mvn dependency:go-offline -B
 COPY src ./src
-RUN mvn package -DskipTests -Dquarkus.package.jar.type=uber-jar
+RUN --mount=type=cache,target=/root/.m2 mvn package -DskipTests -Dquarkus.package.jar.type=uber-jar
 
 # --- Stage 2: Run ---
 FROM eclipse-temurin:21-jre-jammy
