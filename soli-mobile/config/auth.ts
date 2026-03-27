@@ -6,11 +6,22 @@ import { Platform } from "react-native";
  * Uses Authorization Code flow with PKCE (S256).
  */
 
-// Keycloak server base URL — selected automatically per platform:
-// - iOS Simulator: http://localhost:8180
-// - Android Emulator: http://10.0.2.2:8180 (special alias for host loopback)
-// - Physical device: replace with http://<YOUR_LAN_IP>:8180
-const KEYCLOAK_BASE_URL = Platform.OS === "android" ? "http://10.0.2.2:8180" : "http://localhost:8180";
+import Constants from "expo-constants";
+
+// Helper for dynamic IP resolution to support both Emulators, Simulators and Physical Devices flawlessly
+function getServerIp(): string {
+	const hostUri = Constants.expoConfig?.hostUri;
+	if (hostUri) {
+		return hostUri.split(":")[0];
+	}
+	// Fallback if not running in Expo Go or hostUri is missing
+	return Platform.OS === "android" ? "10.0.2.2" : "127.0.0.1";
+}
+
+export const SERVER_IP = getServerIp();
+
+// Keycloak server base URL
+const KEYCLOAK_BASE_URL = `http://${SERVER_IP}:8180`;
 const REALM = "soli";
 const CLIENT_ID = "soli-mobile";
 
@@ -33,6 +44,7 @@ export const discovery: AuthSession.DiscoveryDocument = {
 
 /**
  * Redirect URI using the `solimobile` custom scheme defined in app.json.
+ * For development in Expo Go, this maps properly to your LAN IP.
  */
 export const redirectUri = AuthSession.makeRedirectUri({
 	scheme: "solimobile",

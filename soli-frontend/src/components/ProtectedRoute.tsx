@@ -1,6 +1,8 @@
+import { useLayoutEffect } from "react";
 import { useAuth } from "react-oidc-context";
 import { Navigate } from "react-router-dom";
 import { Box, CircularProgress, Typography } from "@mui/material";
+import { setAccessToken } from "../api";
 
 interface ProtectedRouteProps {
 	children: React.ReactNode;
@@ -14,6 +16,13 @@ interface ProtectedRouteProps {
  */
 export default function ProtectedRoute({ children }: ProtectedRouteProps) {
 	const auth = useAuth();
+
+	// Sync the access token to the API module synchronously (useLayoutEffect fires
+	// before any useEffect in child components), preventing the race condition where
+	// the dashboard fetches data before oidc-client-ts has written to localStorage.
+	useLayoutEffect(() => {
+		setAccessToken(auth.user?.access_token ?? null);
+	}, [auth.user?.access_token]);
 
 	// Still loading OIDC state (checking localStorage, silent renew, etc.)
 	if (auth.isLoading) {

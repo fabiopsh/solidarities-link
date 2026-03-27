@@ -22,4 +22,11 @@ export interface Task {
 	rewardCredits: number;
 	createdAt: string;
 	updatedAt: string;
+	// Geolocation
+	latitude?: number;
+	longitude?: number;
+	// Completion tracking
+	acceptedAt?: string;
+	creatorConfirmed?: boolean;
+	volunteerConfirmed?: boolean;
 }
