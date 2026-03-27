@@ -330,21 +330,7 @@ export default function ProfilePage() {
 		? `${user.firstName?.charAt(0) || ""}${user.lastName?.charAt(0) || ""}`.toUpperCase()
 		: "U";
 
-	// TODO: rimuovere essendo che pare che non venga mai utilizzato
-	const getRoleLabel = (role: string) => {
-		switch (role) {
-			case "REQUESTER":
-				return "Richiedente";
-			case "VOLUNTEER":
-				return "Volontario";
-			case "CAREGIVER":
-				return "Caregiver";
-			case "ADMIN":
-				return "Amministratore";
-			default:
-				return role;
-		}
-	};
+
 
 	const getCertLabel = (cert?: string) => {
 		switch (cert) {
