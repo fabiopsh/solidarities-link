@@ -81,10 +81,10 @@ export default function NotificationDropdown() {
 		}
 	}, [role]);
 
-	// Re-fetch when role changes + auto-poll
+	// Re-fetch when role changes + auto-poll (every 30 seconds)
 	useEffect(() => {
 		fetchNotifications();
-		const interval = setInterval(fetchNotifications, 3000);
+		const interval = setInterval(fetchNotifications, 30000);
 		return () => clearInterval(interval);
 	}, [fetchNotifications]);
 
@@ -96,7 +96,7 @@ export default function NotificationDropdown() {
 	const handleClose = () => {
 		// Persist read timestamp on backend
 		if (notifications.length > 0) {
-			api.put("/api/users/me/notifications-read").catch(() => {});
+			api.put("/api/users/me/notifications-read").catch(() => { });
 			// Optimistically set the read timestamp to now
 			setNotificationsReadAt(new Date().toISOString());
 		}
