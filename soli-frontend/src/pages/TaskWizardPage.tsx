@@ -223,11 +223,15 @@ export default function TaskWizardPage() {
 				setDescription(res.data.description || "");
 				setCategory(res.data.category || "");
 				setTargetAddress(res.data.targetAddress || "");
+				if (res.data.urgency) {
+					setUrgencyLevel(res.data.urgency as UrgencyLevel);
+				}
 				handleNext(); // Move strictly to next step when done
 			}
 		} catch (err: any) {
 			console.error("Extraction error:", err);
-			setError("Errore durante l'elaborazione dell'assistente.");
+			const serverMessage = err?.response?.data?.error;
+			setError(serverMessage || "Errore durante l'elaborazione dell'assistente.");
 		} finally {
 			setIsExtracting(false);
 		}

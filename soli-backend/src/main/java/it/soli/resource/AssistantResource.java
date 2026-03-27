@@ -25,7 +25,18 @@ public class AssistantResource {
             return Response.status(Response.Status.BAD_REQUEST).entity("Text is required").build();
         }
 
+        if (!mockAIService.isMessageSafe(payload.text)) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(new ErrorResponse("Il messaggio contiene contenuti non appropriati. Per favore, riformula la richiesta."))
+                    .build();
+        }
+
         MockAIService.IntentExtractionResult result = mockAIService.extractIntent(payload.text);
         return Response.ok(result).build();
+    }
+
+    public static class ErrorResponse {
+        public String error;
+        public ErrorResponse(String error) { this.error = error; }
     }
 }
