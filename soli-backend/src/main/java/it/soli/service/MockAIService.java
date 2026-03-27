@@ -36,7 +36,7 @@ public class MockAIService {
                 "al più presto", "stamattina", "stasera",
                 "questo pomeriggio", "entro oggi"));
         URGENCY_KEYWORDS.put(UrgencyLevel.MEDIUM, List.of(
-                "domani", "dopodomani", "questa settimana",
+                "domani","domattina", "dopodomani", "questa settimana",
                 "prossimi giorni", "fra poco", "settimana prossima",
                 "il prossimo"));
     }
@@ -46,12 +46,12 @@ public class MockAIService {
     private static final Pattern DATE_NUMERIC_PATTERN =
             Pattern.compile("\\b(\\d{1,2}[/\\-]\\d{1,2}(?:[/\\-]\\d{2,4})?)\\b");
 
-    // Time patterns: "alle 15", "alle 15:30", "ore 14", "ore 9:00", "alle ore 10"
+    // Time patterns: "alle 15", "alle 15:30", "ore 14", "ore 9:00", "alle ore 10", "entro le 10"
     private static final Pattern TIME_PATTERN =
-            Pattern.compile("(?:alle(?:\\s+ore)?|ore)\\s+(\\d{1,2})(?:[:.]?(\\d{2}))?", Pattern.CASE_INSENSITIVE);
+            Pattern.compile("(?:entro\\s+le(?:\\s+ore)?|alle(?:\\s+ore)?|ore)\\s+(\\d{1,2})(?:[:.]?(\\d{2}))?", Pattern.CASE_INSENSITIVE);
 
     private static final List<String> RELATIVE_DATE_KEYWORDS = List.of(
-            "oggi", "domani", "dopodomani",
+            "oggi", "domani", "dopodomani", "domattina",
             "la prossima settimana", "settimana prossima",
             "il prossimo mese", "mese prossimo",
             "fra un'ora", "tra un'ora",
@@ -232,6 +232,8 @@ public class MockAIService {
         public String estimatedDuration;
         public UrgencyLevel urgency;
         public String extractedDate;
+        public String extractedDateIso;
+        public String extractedTimeIso;
         /** Resolved ISO datetime string (e.g. "2026-03-27T15:00:00") */
         public String scheduledAt;
     }
@@ -280,7 +282,7 @@ public class MockAIService {
         result.extractedDate = extractDate(lowerText);
 
         // 4. Resolve to ISO datetime for the frontend datepicker
-        result.scheduledAt = resolveToIsoDateTime(lowerText, result.extractedDate);
+        result.scheduledAt = resolveToIsoDateTime(lowerText, result.extractedDate, result);
 
         return result;
     }
@@ -369,64 +371,66 @@ public class MockAIService {
      * Resolve the extractedDate label + any time reference into an ISO datetime string.
      * Ensures the result is at least 1 hour in the future.
      */
-    private String resolveToIsoDateTime(String lowerText, String extractedDate) {
-        if (extractedDate == null) {
-            return null;
-        }
-
+    private String resolveToIsoDateTime(String lowerText, String extractedDate, IntentExtractionResult result) {
         LocalDateTime now = LocalDateTime.now();
         LocalTime explicitTime = extractTime(lowerText);
-        LocalTime defaultTime = LocalTime.of(10, 0); // fallback: 10:00
         LocalDate resolvedDate = null;
 
-        // ── Relative expressions ────────────────────────────────────
-        switch (extractedDate) {
-            case "oggi":
-                resolvedDate = now.toLocalDate();
-                if (explicitTime == null) {
-                    // Default to 2 hours from now, rounded to next half-hour
-                    LocalTime shifted = now.toLocalTime().plusHours(2);
-                    int min = shifted.getMinute() < 30 ? 30 : 0;
-                    int hr = min == 0 ? shifted.getHour() + 1 : shifted.getHour();
-                    explicitTime = LocalTime.of(Math.min(hr, 23), min);
-                }
-                break;
-            case "domani":
-                resolvedDate = now.toLocalDate().plusDays(1);
-                break;
-            case "dopodomani":
-                resolvedDate = now.toLocalDate().plusDays(2);
-                break;
-            case "fra un'ora": case "tra un'ora":
-                return enforceMinimum(now.plusHours(1));
-            case "fra due giorni": case "tra due giorni":
-                resolvedDate = now.toLocalDate().plusDays(2);
-                break;
-            case "fra una settimana": case "tra una settimana":
-            case "la prossima settimana": case "settimana prossima":
-                resolvedDate = now.toLocalDate().plusWeeks(1);
-                break;
-            case "il prossimo mese": case "mese prossimo":
-                resolvedDate = now.toLocalDate().plusMonths(1);
-                break;
-            default:
-                // Check if it's a weekday name
-                DayOfWeek targetDay = WEEKDAY_MAP.get(extractedDate);
-                if (targetDay != null) {
-                    resolvedDate = nextOccurrence(now.toLocalDate(), targetDay);
-                } else {
-                    // Try to parse numeric date (dd/mm or dd/mm/yyyy)
-                    resolvedDate = parseNumericDate(extractedDate);
-                }
-                break;
+        if (explicitTime != null) {
+            result.extractedTimeIso = String.format("%02d:%02d", explicitTime.getHour(), explicitTime.getMinute());
         }
 
-        if (resolvedDate == null) {
+        if (extractedDate != null) {
+            // ── Relative expressions ────────────────────────────────────
+            switch (extractedDate) {
+                case "oggi":
+                    resolvedDate = now.toLocalDate();
+                    break;
+                case "domani":
+                    resolvedDate = now.toLocalDate().plusDays(1);
+                    break;
+                case "domattina":
+                    resolvedDate = now.toLocalDate().plusDays(1);
+                    break;
+                case "dopodomani":
+                    resolvedDate = now.toLocalDate().plusDays(2);
+                    break;
+                case "fra un'ora": case "tra un'ora":
+                    LocalDateTime plusHour = now.plusHours(1);
+                    result.extractedDateIso = plusHour.toLocalDate().toString();
+                    result.extractedTimeIso = String.format("%02d:%02d", plusHour.getHour(), plusHour.getMinute());
+                    return enforceMinimum(plusHour);
+                case "fra due giorni": case "tra due giorni":
+                    resolvedDate = now.toLocalDate().plusDays(2);
+                    break;
+                case "fra una settimana": case "tra una settimana":
+                case "la prossima settimana": case "settimana prossima":
+                    resolvedDate = now.toLocalDate().plusWeeks(1);
+                    break;
+                case "il prossimo mese": case "mese prossimo":
+                    resolvedDate = now.toLocalDate().plusMonths(1);
+                    break;
+                default:
+                    // Check if it's a weekday name
+                    DayOfWeek targetDay = WEEKDAY_MAP.get(extractedDate);
+                    if (targetDay != null) {
+                        resolvedDate = nextOccurrence(now.toLocalDate(), targetDay);
+                    } else {
+                        // Try to parse numeric date (dd/mm or dd/mm/yyyy)
+                        resolvedDate = parseNumericDate(extractedDate);
+                    }
+                    break;
+            }
+            if (resolvedDate != null) {
+                result.extractedDateIso = resolvedDate.toString();
+            }
+        }
+
+        if (resolvedDate == null || explicitTime == null) {
             return null;
         }
 
-        LocalTime time = explicitTime != null ? explicitTime : defaultTime;
-        LocalDateTime resolved = LocalDateTime.of(resolvedDate, time);
+        LocalDateTime resolved = LocalDateTime.of(resolvedDate, explicitTime);
 
         return enforceMinimum(resolved);
     }

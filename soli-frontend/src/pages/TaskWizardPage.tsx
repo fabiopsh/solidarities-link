@@ -28,7 +28,8 @@ import EventIcon from "@mui/icons-material/Event";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import WarningIcon from "@mui/icons-material/Warning";
 import ReportIcon from "@mui/icons-material/Report";
-import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { TimePicker } from "@mui/x-date-pickers/TimePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs from "dayjs";
@@ -112,18 +113,23 @@ export default function TaskWizardPage() {
 	const [description, setDescription] = useState("");
 	const [category, setCategory] = useState<ServiceCategory | "">("");
 	const [urgencyLevel, setUrgencyLevel] = useState<UrgencyLevel | "">("MEDIUM");
-	const [scheduledAt, setScheduledAt] = useState<dayjs.Dayjs | null>(null);
+	const [scheduledDate, setScheduledDate] = useState<dayjs.Dayjs | null>(null);
+	const [scheduledTime, setScheduledTime] = useState<dayjs.Dayjs | null>(null);
 	const [targetAddress, setTargetAddress] = useState("");
 	const [latitude, setLatitude] = useState<number>(45.4642);
 	const [longitude, setLongitude] = useState<number>(9.1900);
 	const [options, setOptions] = useState<any[]>([]);
 	const [inputValue, setInputValue] = useState("");
 
-	// Minimum datetime for the picker (1 hour from now)
-	const minDateTime = useMemo(() => dayjs().add(1, "hour"), []);
-	const scheduledAtError = scheduledAt && scheduledAt.isBefore(dayjs().add(1, "hour"))
-		? "La data deve essere almeno 1 ora nel futuro"
-		: null;
+	const scheduledAtError = useMemo(() => {
+		if (scheduledDate && scheduledTime) {
+			const combined = scheduledDate.hour(scheduledTime.hour()).minute(scheduledTime.minute()).second(0).millisecond(0);
+			if (combined.isBefore(dayjs().add(1, "hour"))) {
+				return "L'orario deve essere almeno 1 ora nel futuro";
+			}
+		}
+		return null;
+	}, [scheduledDate, scheduledTime]);
 
 	// Get current position on mount
 	useEffect(() => {
@@ -238,11 +244,25 @@ export default function TaskWizardPage() {
 				if (res.data.urgency) {
 					setUrgencyLevel(res.data.urgency as UrgencyLevel);
 				}
-				if (res.data.scheduledAt) {
-					const parsed = dayjs(res.data.scheduledAt);
-					if (parsed.isValid()) {
-						setScheduledAt(parsed);
+				if (res.data.extractedDateIso) {
+					const pd = dayjs(res.data.extractedDateIso, "YYYY-MM-DD");
+					if (pd.isValid()) {
+						setScheduledDate(pd);
+					} else {
+						setScheduledDate(null);
 					}
+				} else {
+					setScheduledDate(null);
+				}
+				if (res.data.extractedTimeIso) {
+					const pt = dayjs(`1970-01-01T${res.data.extractedTimeIso}`);
+					if (pt.isValid()) {
+						setScheduledTime(pt);
+					} else {
+						setScheduledTime(null);
+					}
+				} else {
+					setScheduledTime(null);
 				}
 				handleNext(); // Move strictly to next step when done
 			}
@@ -265,7 +285,9 @@ export default function TaskWizardPage() {
 				description,
 				category,
 				urgencyLevel,
-				scheduledAt: scheduledAt ? scheduledAt.toISOString() : null,
+				scheduledAt: (scheduledDate && scheduledTime) 
+					? scheduledDate.hour(scheduledTime.hour()).minute(scheduledTime.minute()).toISOString() 
+					: null,
 				targetAddress,
 				latitude,
 				longitude,
@@ -442,83 +464,57 @@ export default function TaskWizardPage() {
 							InputProps={{ sx: { fontSize: "1.1rem" } }}
 						/>
 
-						{/* ── Datepicker ── */}
+						{/* ── Date and Time picker ── */}
 						<Box>
 							<Typography variant="subtitle1" fontWeight="bold" sx={{ mb: 1 }}>
-								Quando hai bisogno di aiuto? (indicativo)
+								Quando hai bisogno di aiuto? *
 							</Typography>
 							<Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-								Indica una data e ora approssimativa. Deve essere almeno 1 ora nel futuro.
+								Indica una data e ora obbligatoria. Deve essere almeno 1 ora nel futuro.
 							</Typography>
 							<LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="it">
-								<DateTimePicker
-									label="Data e ora"
-									value={scheduledAt}
-									onChange={(value) => setScheduledAt(value)}
-									minDateTime={minDateTime}
-									ampmInClock={false}
-									format="DD/MM/YYYY HH:mm"
-									slotProps={{
-										textField: {
-											fullWidth: true,
-											variant: "outlined",
-											error: !!scheduledAtError,
-											helperText: scheduledAtError || "Opzionale — lascia vuoto se non hai una preferenza",
-											InputProps: { sx: { fontSize: "1.1rem" } },
-										},
-										day: {
-											sx: {
-												"&.Mui-selected": {
-													backgroundColor: "#00796B",
-													"&:hover": { backgroundColor: "#004D40" },
+								<Grid container spacing={2}>
+									<Grid size={{ xs: 12, sm: 6 }}>
+										<DatePicker
+											label="Data"
+											value={scheduledDate}
+											onChange={(value) => setScheduledDate(value)}
+											format="DD/MM/YYYY"
+											disablePast
+											slotProps={{
+												textField: {
+													fullWidth: true,
+													required: true,
+													variant: "outlined",
+													InputProps: { sx: { fontSize: "1.1rem" } },
 												},
-												"&.MuiPickersDay-today": {
-													borderColor: "#00796B",
+											}}
+										/>
+									</Grid>
+									<Grid size={{ xs: 12, sm: 6 }}>
+										<TimePicker
+											label="Orario"
+											value={scheduledTime}
+											onChange={(value) => setScheduledTime(value)}
+											ampmInClock={false}
+											ampm={false}
+											slotProps={{
+												textField: {
+													fullWidth: true,
+													required: true,
+													variant: "outlined",
+													error: !!scheduledAtError,
+													InputProps: { sx: { fontSize: "1.1rem" } },
 												},
-											},
-										},
-										desktopPaper: {
-											sx: {
-												borderRadius: 3,
-												boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
-												"& .MuiPickersLayout-actionBar button": {
-													color: "#00796B",
-												},
-												"& .MuiClock-pin, & .MuiClockPointer-root, & .MuiClockPointer-thumb": {
-													backgroundColor: "#00796B",
-												},
-												"& .MuiClockPointer-thumb": {
-													borderColor: "#00796B",
-												},
-												"& .MuiClockNumber-root.Mui-selected": {
-													backgroundColor: "#00796B",
-												},
-												"& .MuiTabs-indicator": {
-													backgroundColor: "#00796B",
-												},
-												"& .MuiTab-root.Mui-selected": {
-													color: "#00796B",
-												},
-												"& .MuiPickersYear-yearButton.Mui-selected, & .MuiPickersMonth-monthButton.Mui-selected": {
-													backgroundColor: "#00796B",
-													"&:hover": { backgroundColor: "#004D40" },
-												},
-											},
-										},
-										mobilePaper: {
-											sx: {
-												borderRadius: 3,
-												"& .MuiPickersToolbar-root": {
-													backgroundColor: "#00796B",
-													color: "white",
-												},
-												"& .MuiPickersLayout-actionBar button": {
-													color: "#00796B",
-												},
-											},
-										},
-									}}
-								/>
+											}}
+										/>
+									</Grid>
+								</Grid>
+								{scheduledAtError && (
+									<Typography color="error" variant="caption" sx={{ mt: 1, display: "block" }}>
+										{scheduledAtError}
+									</Typography>
+								)}
 							</LocalizationProvider>
 						</Box>
 
@@ -530,7 +526,7 @@ export default function TaskWizardPage() {
 								variant="contained"
 								size="large"
 								onClick={handleNext}
-								disabled={!title || !category || !urgencyLevel || !!scheduledAtError}
+								disabled={!title || !category || !urgencyLevel || !scheduledDate || !scheduledTime || !!scheduledAtError}
 								sx={{ px: 4, py: 1.5, fontSize: "1.1rem" }}
 							>
 								Avanti
@@ -673,13 +669,13 @@ export default function TaskWizardPage() {
 							</Typography>
 							<Typography variant="body1">{description || "Nessuna descrizione aggiuntiva"}</Typography>
 
-							{scheduledAt && (
+							{scheduledDate && scheduledTime && (
 								<>
 									<Typography variant="subtitle1" color="text.secondary" sx={{ mt: 2 }}>
 										Quando
 									</Typography>
 									<Typography variant="body1" gutterBottom>
-										{scheduledAt.locale("it").format("dddd D MMMM YYYY, HH:mm")}
+										{scheduledDate.hour(scheduledTime.hour()).minute(scheduledTime.minute()).locale("it").format("dddd D MMMM YYYY, HH:mm")}
 									</Typography>
 								</>
 							)}
