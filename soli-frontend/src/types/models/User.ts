@@ -16,5 +16,6 @@ export interface User {
 	status: UserStatus;
 	lastKnownLocation?: string;
 	createdAt: string;
+	notificationsReadAt?: string;
 	updatedAt: string;
 }
