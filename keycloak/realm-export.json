@@ -10,7 +10,6 @@
 		"realm": [
 			{ "name": "volunteer", "description": "Volontario Civico" },
 			{ "name": "requester", "description": "Richiedente" },
-			{ "name": "caregiver", "description": "Caregiver" },
 			{ "name": "admin", "description": "Amministratore" }
 		]
 	},

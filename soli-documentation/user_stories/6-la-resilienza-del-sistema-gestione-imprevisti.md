@@ -1,4 +1,4 @@
-# 7. La Resilienza del Sistema (Gestione Imprevisti)
+# 6. La Resilienza del Sistema (Gestione Imprevisti)
 
 **Titolo:** Rilascio del task per imprevisto
 

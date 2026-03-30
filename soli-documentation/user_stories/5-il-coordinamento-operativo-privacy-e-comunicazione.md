@@ -1,4 +1,4 @@
-# 6. Il Coordinamento Operativo (Privacy e Comunicazione)
+# 5. Il Coordinamento Operativo (Privacy e Comunicazione)
 
 **Titolo:** Chat contestuale anonimizzata
 

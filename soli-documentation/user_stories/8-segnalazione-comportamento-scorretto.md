@@ -1,4 +1,4 @@
-# 9. Segnalazione comportamento scorretto
+# 8. Segnalazione comportamento scorretto
 
 **Titolo:** Segnalazione di comportamento inappropriato
 
