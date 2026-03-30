@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import {
 	Box,
@@ -28,6 +28,12 @@ import EventIcon from "@mui/icons-material/Event";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import WarningIcon from "@mui/icons-material/Warning";
 import ReportIcon from "@mui/icons-material/Report";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { TimePicker } from "@mui/x-date-pickers/TimePicker";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import dayjs from "dayjs";
+import "dayjs/locale/it";
 import api from "../api";
 import type { ServiceCategory } from "../types/models/VolunteerProfile";
 import type { UrgencyLevel } from "../types/models/Task";
@@ -107,11 +113,23 @@ export default function TaskWizardPage() {
 	const [description, setDescription] = useState("");
 	const [category, setCategory] = useState<ServiceCategory | "">("");
 	const [urgencyLevel, setUrgencyLevel] = useState<UrgencyLevel | "">("MEDIUM");
+	const [scheduledDate, setScheduledDate] = useState<dayjs.Dayjs | null>(null);
+	const [scheduledTime, setScheduledTime] = useState<dayjs.Dayjs | null>(null);
 	const [targetAddress, setTargetAddress] = useState("");
 	const [latitude, setLatitude] = useState<number>(45.4642);
 	const [longitude, setLongitude] = useState<number>(9.1900);
 	const [options, setOptions] = useState<any[]>([]);
 	const [inputValue, setInputValue] = useState("");
+
+	const scheduledAtError = useMemo(() => {
+		if (scheduledDate && scheduledTime) {
+			const combined = scheduledDate.hour(scheduledTime.hour()).minute(scheduledTime.minute()).second(0).millisecond(0);
+			if (combined.isBefore(dayjs().add(1, "hour"))) {
+				return "L'orario deve essere almeno 1 ora nel futuro";
+			}
+		}
+		return null;
+	}, [scheduledDate, scheduledTime]);
 
 	// Get current position on mount
 	useEffect(() => {
@@ -226,6 +244,26 @@ export default function TaskWizardPage() {
 				if (res.data.urgency) {
 					setUrgencyLevel(res.data.urgency as UrgencyLevel);
 				}
+				if (res.data.extractedDateIso) {
+					const pd = dayjs(res.data.extractedDateIso, "YYYY-MM-DD");
+					if (pd.isValid()) {
+						setScheduledDate(pd);
+					} else {
+						setScheduledDate(null);
+					}
+				} else {
+					setScheduledDate(null);
+				}
+				if (res.data.extractedTimeIso) {
+					const pt = dayjs(`1970-01-01T${res.data.extractedTimeIso}`);
+					if (pt.isValid()) {
+						setScheduledTime(pt);
+					} else {
+						setScheduledTime(null);
+					}
+				} else {
+					setScheduledTime(null);
+				}
 				handleNext(); // Move strictly to next step when done
 			}
 		} catch (err: any) {
@@ -247,6 +285,9 @@ export default function TaskWizardPage() {
 				description,
 				category,
 				urgencyLevel,
+				scheduledAt: (scheduledDate && scheduledTime) 
+					? scheduledDate.hour(scheduledTime.hour()).minute(scheduledTime.minute()).toISOString() 
+					: null,
 				targetAddress,
 				latitude,
 				longitude,
@@ -422,6 +463,61 @@ export default function TaskWizardPage() {
 							onChange={(e) => setDescription(e.target.value)}
 							InputProps={{ sx: { fontSize: "1.1rem" } }}
 						/>
+
+						{/* ── Date and Time picker ── */}
+						<Box>
+							<Typography variant="subtitle1" fontWeight="bold" sx={{ mb: 1 }}>
+								Quando hai bisogno di aiuto? *
+							</Typography>
+							<Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+								Indica una data e ora obbligatoria. Deve essere almeno 1 ora nel futuro.
+							</Typography>
+							<LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="it">
+								<Grid container spacing={2}>
+									<Grid size={{ xs: 12, sm: 6 }}>
+										<DatePicker
+											label="Data"
+											value={scheduledDate}
+											onChange={(value) => setScheduledDate(value)}
+											format="DD/MM/YYYY"
+											disablePast
+											slotProps={{
+												textField: {
+													fullWidth: true,
+													required: true,
+													variant: "outlined",
+													InputProps: { sx: { fontSize: "1.1rem" } },
+												},
+											}}
+										/>
+									</Grid>
+									<Grid size={{ xs: 12, sm: 6 }}>
+										<TimePicker
+											label="Orario"
+											value={scheduledTime}
+											onChange={(value) => setScheduledTime(value)}
+											ampmInClock={false}
+											ampm={false}
+											slotProps={{
+												textField: {
+													fullWidth: true,
+													required: true,
+													variant: "outlined",
+													error: !!scheduledAtError,
+													InputProps: { sx: { fontSize: "1.1rem" } },
+												},
+											}}
+										/>
+									</Grid>
+								</Grid>
+								{scheduledAtError && (
+									<Typography color="error" variant="caption" sx={{ mt: 1, display: "block" }}>
+										{scheduledAtError}
+									</Typography>
+								)}
+							</LocalizationProvider>
+						</Box>
+
 						<Box sx={{ display: "flex", justifyContent: "space-between", mt: 2 }}>
 							<Button size="large" onClick={handleBack}>
 								Indietro
@@ -430,7 +526,7 @@ export default function TaskWizardPage() {
 								variant="contained"
 								size="large"
 								onClick={handleNext}
-								disabled={!title || !category || !urgencyLevel}
+								disabled={!title || !category || !urgencyLevel || !scheduledDate || !scheduledTime || !!scheduledAtError}
 								sx={{ px: 4, py: 1.5, fontSize: "1.1rem" }}
 							>
 								Avanti
@@ -572,6 +668,17 @@ export default function TaskWizardPage() {
 								Descrizione
 							</Typography>
 							<Typography variant="body1">{description || "Nessuna descrizione aggiuntiva"}</Typography>
+
+							{scheduledDate && scheduledTime && (
+								<>
+									<Typography variant="subtitle1" color="text.secondary" sx={{ mt: 2 }}>
+										Quando
+									</Typography>
+									<Typography variant="body1" gutterBottom>
+										{scheduledDate.hour(scheduledTime.hour()).minute(scheduledTime.minute()).locale("it").format("dddd D MMMM YYYY, HH:mm")}
+									</Typography>
+								</>
+							)}
 						</Box>
 						<Box sx={{ display: "flex", justifyContent: "space-between", mt: 2 }}>
 							<Button size="large" onClick={handleBack} disabled={isSubmitting}>
