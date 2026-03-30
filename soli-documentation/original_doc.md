@@ -20,7 +20,7 @@ Il progetto supera la rigidità delle strutture fisiche, consentendo che il desi
 
 Il sistema si propone come un intermediario fiduciario tra due attori principali: il **Richiedente** (soggetti fragili, anziani, persone con disabilità o cittadini con necessità temporanee) e il **Volontario Civico Certificato** (cittadini attivi disposti a offrire il proprio tempo).
 
-L'utente fragile, o anche un suo caregiver, inserisce una **richiesta di aiuto specifica** (es: "Supporto per la spesa pesante", "Accompagnamento a visita medica", "Supporto configurazione smartphone"). Il sistema **classifica la richiesta in base all'urgenza** e alla tipologia di **competenza necessaria**.
+L'utente fragile, inserisce una **richiesta di aiuto specifica** (es: "Supporto per la spesa pesante", "Accompagnamento a visita medica", "Supporto configurazione smartphone"). Il sistema **classifica la richiesta in base all'urgenza** e alla tipologia di **competenza necessaria**.
 
 In base ad un **algoritmo di matching**, il sistema notifica la richiesta ai Volontari Civici che **si trovano nelle vicinanze** (favorendo la possibile riduzione degli spostamenti e l'impatto ambientale), e i quali possiedono le **certificazioni o i feedback adeguati** per quella specifica tipologia di task. Una volta accettato il task, il volontario svolge l'attività. Oltre a ciò, il sistema monitora lo stato di avanzamento (meccanismo di check-in e check-out) per **garantire il corretto svolgimento**.
 
@@ -141,7 +141,6 @@ _Al meglio delle nostre conoscenze_, il nostro gruppo ha identificato i seguenti
 
 - **Richiedente**: utente dell’applicazione che pubblica una richiesta di assistenza personale;
 - **Volontario Civico Certificato**: utente dell’applicazione che accetta una richiesta ottenuta per notifica, che può accettare o rifiutare.
-- **Caregiver**: utente che gestisce volontariamente le richieste di un terzo soggetto.
 - **Task**: unità di lavoro atomica gestito del sistema. Ha uno stato interno: aperto (in attesa di essere accettato) / chiuso (richiesta accettata);
 - **Algoritmo di matching**: algoritmo che permette di incrociare domanda e offerta basandosi su diversi parametri (disponibilità oraria, competenza, prossimità, rotazione equa);
 - **Certificazioni**: attestazioni di qualità. Un utente registrato al sistema si suddivide nei seguenti livelli: i) LV1 \= registrazione iniziale SPID, ii) LV2 \= Volontario certificato (training badge, certificazioni online), iii) LV3 = partnership con associazione di volontariato ufficialmente riconosciuta;
@@ -168,8 +167,6 @@ _Al meglio delle nostre conoscenze_, il nostro gruppo ha identificato i seguenti
 - **FR-01: Autenticazione tramite Identità Digitale:** Il sistema deve permettere la registrazione e l'accesso degli utenti (Volontari e Richiedenti) esclusivamente tramite integrazione con sistemi di identità digitale pubblica (SPID/CIEid/servizi di emulazione di registrazione) per garantire la certificazione dell'identità (Livello di fiducia LV1).
 
 - **FR-02: Profilazione Volontario e Gestione Preferenze:** Il sistema deve consentire al Volontario Civico di configurare il proprio profilo operativo, selezionando gli ambiti di intervento preferiti, impostando vincoli specifici (es. limitazioni fisiche, allergie) e definendo la propria disponibilità oraria.
-
-- **FR-03: Gestione Account Caregiver:** Il sistema deve permettere a un utente (Caregiver) di registrare, gestire richieste e monitorare le attività per conto di un soggetto terzo fragile (es. genitore anziano), mantenendo distinta l'identità del gestore da quella del beneficiario.
 
 ### 2\. Creazione e Gestione delle Richieste (Task)
 
@@ -200,7 +197,7 @@ _Al meglio delle nostre conoscenze_, il nostro gruppo ha identificato i seguenti
 - **FR-16 Gestione Dispute e Segnalazioni:** Il sistema deve permettere agli utenti di segnalare comportamenti inappropriati tramite un form dedicato, sospendendo cautelativamente l'utente segnalato fino a verifica.
 - **FR-17 Gestione Storico e Audit:** Il sistema deve memorizzare lo storico dei task completati e delle transazioni di crediti per permettere la consultazione del Wallet e la risoluzione di dispute.
 - **FR-18 Gestione Stato della Task:** Il sistema deve gestire lo stato interno di ogni task (creata, notificata, accettata, in esecuzione, completata, rilasciata, annullata), impedendo transizioni non valide.
-- **FR-19 Annullamento Richiesta:** Il sistema deve permettere al Richiedente (o Caregiver) di annullare una richiesta prima dell’avvio del task, notificando automaticamente i volontari coinvolti.
+- **FR-19 Annullamento Richiesta:** Il sistema deve permettere al Richiedente di annullare una richiesta prima dell’avvio del task, notificando automaticamente i volontari coinvolti.
 
 ## **Requisiti Non Funzionali**
 
@@ -244,11 +241,6 @@ _Al meglio delle nostre conoscenze_, il nostro gruppo ha identificato i seguenti
 
 **Come** Volontario Civico Certificato con poco tempo a disposizione, **Voglio** ricevere notifiche push _solo_ per richieste di aiuto che si trovano nel mio raggio di azione immediato (quartiere/isolato) e che corrispondono alle mie competenze certificate (es. "Supporto Digitale"), **Affinché** io possa accettare ed eseguire task mentre sto già compiendo i miei spostamenti quotidiani, riducendo l'impatto ambientale e massimizzando l'utilità del mio tempo senza dover filtrare manualmente centinaia di richieste non pertinenti.
 
-### 3\. Il Caregiver e la Sicurezza (Monitoraggio)
-
-**Titolo:** Gestione delegata e sicurezza del familiare fragile
-
-**Come** Caregiver (figlio/a di un genitore anziano che vive solo), **Voglio** poter inserire una richiesta per conto del mio familiare e monitorare in tempo reale lo stato di avanzamento del servizio (check-in/check-out) visualizzando il profilo del volontario assegnato, **Affinché** io abbia la totale tranquillità che mio padre/madre stia interagendo con una persona identificata, affidabile e che il servizio sia stato effettivamente erogato in sicurezza, anche se non posso essere fisicamente presente.
 
 ### 4\. L'Utente Attivo e la Gratificazione (Gamification e Reward)
 
@@ -278,7 +270,7 @@ _Al meglio delle nostre conoscenze_, il nostro gruppo ha identificato i seguenti
 
 **Titolo:** Annullamento della richiesta prima dell’avvio
 
-**Come** Richiedente (o Caregiver), **Voglio** poter annullare una richiesta di aiuto prima che il servizio abbia inizio, **Affinché** eventuali cambi di programma o imprevisti non facciano perdere tempo ai volontari e la rete rimanga efficiente e rispettosa del tempo di tutti.
+**Come** Richiedente, **Voglio** poter annullare una richiesta di aiuto prima che il servizio abbia inizio, **Affinché** eventuali cambi di programma o imprevisti non facciano perdere tempo ai volontari e la rete rimanga efficiente e rispettosa del tempo di tutti.
 
 ### 9\. Segnalazione comportamento scorretto
 

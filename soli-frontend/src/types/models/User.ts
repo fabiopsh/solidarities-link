@@ -1,4 +1,4 @@
-export type UserRole = "REQUESTER" | "VOLUNTEER" | "CAREGIVER" | "ADMIN";
+export type UserRole = "REQUESTER" | "VOLUNTEER" | "ADMIN";
 
 export type CertificationLevel = "LV1_SPID" | "LV2_TRAINED" | "LV3_PARTNER";
 

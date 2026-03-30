@@ -1,4 +1,4 @@
-# 5. Il Nuovo Volontario e l'Onboarding (Identità Certificata)
+# 4. Il Nuovo Volontario e l'Onboarding (Identità Certificata)
 
 **Titolo:** Registrazione rapida e sicura tramite SPID
 

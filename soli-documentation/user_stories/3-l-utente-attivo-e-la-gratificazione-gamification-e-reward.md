@@ -1,4 +1,4 @@
-# 4. L'Utente Attivo e la Gratificazione (Gamification e Reward)
+# 3. L'Utente Attivo e la Gratificazione (Gamification e Reward)
 
 **Titolo:** Validazione del servizio e riscatto Crediti SOLI
 

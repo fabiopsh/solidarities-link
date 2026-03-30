@@ -7,7 +7,7 @@ Questo documento definisce le strutture dati principali (Entities) necessarie pe
 Rappresenta ogni attore primario del sistema. Gestisce l'autenticazione tramite SPID (FR-01) e le informazioni anagrafiche.
 
 - `id`: UUID (Primary Key)
-- `role`: Enum `[REQUESTER, VOLUNTEER, CAREGIVER, ADMIN]` (Determina l'accesso)
+- `role`: Enum `[REQUESTER, VOLUNTEER, ADMIN]` (Determina l'accesso)
 - `fiscalCode`: String (Codice Fiscale univoco, derivato da autenticazione SPID)
 - `firstName`: String
 - `lastName`: String
@@ -21,7 +21,6 @@ Rappresenta ogni attore primario del sistema. Gestisce l'autenticazione tramite 
 **Relazioni:**
 
 - Ha `0..1` `VolunteerProfile` (se `role == VOLUNTEER`)
-- Ha `0..*` `CaregiverRelation` (come caregiver o beneficiario)
 - Ha `1` `Wallet`
 
 ## 2. VolunteerProfile (Profilo Volontario)
@@ -35,17 +34,8 @@ Estensione dell'utente per definire preferenze, disponibilità e competenze (FR-
 - `constraints`: JSONB / Array di String (Vincoli e limitazioni, es. allergie, fobie)
 - `maxTaskDistanceMeters`: Integer (Raggio massimo di notifica in metri da location attuale)
 
-## 3. CaregiverRelation (Relazione Caregiver - Assistito)
 
-Gestisce il legame tra un tutore e uno o più soggetti fragili a cui amministra i task (FR-03).
-
-- `id`: UUID (Primary Key)
-- `caregiverId`: UUID (Foreign Key -> `User.id`)
-- `beneficiaryId`: UUID (Foreign Key -> `User.id`)
-- `relationshipType`: String (Es. "Genitore", "Paziente")
-- `createdAt`: Timestamp
-
-## 4. Task (Richiesta di Aiuto)
+## 3. Task (Richiesta di Aiuto)
 
 Entità core che rappresenta il bisogno dell'utente e il ciclo di vita del task nel sistema (FR-04, FR-06, FR-18).
 
@@ -72,7 +62,7 @@ Entità core che rappresenta il bisogno dell'utente e il ciclo di vita del task 
 - Ha `0..*` `TaskNotification`
 - Ha `0..1` `ChatSession` (Aperta solo ad accettazione completata)
 
-## 5. TaskNotification (Notifica di Matching e Rotazione)
+## 4. TaskNotification (Notifica di Matching e Rotazione)
 
 Traccia a chi viene inviata la notifica ed evita invii broadcast. Base per le logiche di rotazione equa (FR-09, FR-10).
 
@@ -83,7 +73,7 @@ Traccia a chi viene inviata la notifica ed evita invii broadcast. Base per le lo
 - `notifiedAt`: Timestamp
 - `respondedAt`: Timestamp (Nullable)
 
-## 6. ChatSession & ChatMessage (Comunicazione Controllata)
+## 5. ChatSession & ChatMessage (Comunicazione Controllata)
 
 Sistema di messaggistica interno anonimizzato (nessun numero personale). Viene abilitata con l'accettazione (FR-11).
 
@@ -103,7 +93,7 @@ Sistema di messaggistica interno anonimizzato (nessun numero personale). Viene a
 - `isFlagged`: Boolean (Popolato dall'LLM-in-the-middle se individua rischi manipolazione o offese)
 - `sentAt`: Timestamp
 
-## 7. Wallet & Transaction (Gestione Crediti ed Economia Circolare)
+## 6. Wallet & Transaction (Gestione Crediti ed Economia Circolare)
 
 Il deposito e lo storico spesa dei crediti derivati dal volontariato secondo principi Time Banking (FR-13, FR-14).
 
@@ -123,7 +113,7 @@ Il deposito e lo storico spesa dei crediti derivati dal volontariato secondo pri
 - `referenceId`: UUID (ID task completato o ID premialità per rintracciabilità)
 - `timestamp`: Timestamp
 
-## 8. Reward (Catalogo Premialità e Sponsorizzazioni)
+## 7. Reward (Catalogo Premialità e Sponsorizzazioni)
 
 Gestisce i premi non cash che possono essere riscattati o donati a terzi (FR-15).
 
@@ -135,7 +125,7 @@ Gestisce i premi non cash che possono essere riscattati o donati a terzi (FR-15)
 - `stockLimit`: Integer (Quantità fisica o digitale di voucher/ticket disponibili)
 - `isActive`: Boolean
 
-## 9. Report (Moderazione Umana e Dispute)
+## 8. Report (Moderazione Umana e Dispute)
 
 Segnalazioni post-task generate da operatori, richiedenti o volontari in seguito ad accordi violati o problemi (FR-16).
 
@@ -148,7 +138,7 @@ Segnalazioni post-task generate da operatori, richiedenti o volontari in seguito
 - `createdAt`: Timestamp
 - `resolvedAt`: Timestamp (Nullable)
 
-## 10. AuditLog (Tracciamento Eventi Immutabile)
+## 9. AuditLog (Tracciamento Eventi Immutabile)
 
 Coda cronologica ed immutabile per sicurezza su dati critici o cambi stato task/crediti (FR-17).
 

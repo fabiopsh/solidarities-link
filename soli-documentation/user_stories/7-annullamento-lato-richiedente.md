@@ -1,8 +1,9 @@
-# 8. Annullamento lato Richiedente
+# 7. Annullamento lato Richiedente
 
 **Titolo:** Annullamento della richiesta con regole differenziate
 
-**Come** Richiedente (o Caregiver), **Voglio** poter annullare una richiesta di aiuto prima che sia stata accettata da un volontario, oppure entro 10 minuti dall'accettazione, **Affinché** eventuali cambi di programma o imprevisti non facciano perdere tempo ai volontari e la rete rimanga efficiente e rispettosa del tempo di tutti.
+**Come** Richiedente, 
+**Voglio** poter annullare una richiesta di aiuto prima che sia stata accettata da un volontario, oppure entro 10 minuti dall'accettazione, **Affinché** eventuali cambi di programma o imprevisti non facciano perdere tempo ai volontari e la rete rimanga efficiente e rispettosa del tempo di tutti.
 
 ## Criteri di accettazione
 

@@ -162,7 +162,7 @@ Al primo avvio, Keycloak importa automaticamente il file `keycloak/realm-export.
 - Client **soli-frontend** (web, pubblico, PKCE)
 - Client **soli-mobile** (mobile, pubblico, PKCE)
 - Client **soli-backend** (confidenziale)
-- Ruoli: `volunteer`, `requester`, `caregiver`, `admin`
+- Ruoli: `volunteer`, `requester`, `admin`
 - Utente di test: `admin@soli.it` / `admin`
 
 ### Verifica
