@@ -224,19 +224,8 @@ export default function DashboardLayout() {
 				{role === "volunteer" && (
 					<>
 						<Divider sx={{ my: 1 }} />
-						<Typography
-							variant="caption"
-							sx={{
-								px: !isExpanded ? 0 : 2,
-								display: "block",
-								textAlign: !isExpanded ? "center" : "left",
-								color: "text.secondary",
-								fontWeight: "bold",
-								mb: 1,
-							}}
-						>
-							{!isExpanded ? "VOL" : "VOLONTARIO"}
-						</Typography>
+
+
 						{volunteerNavItems.map((item) => (
 							<ListItemButton
 								key={item.label}
