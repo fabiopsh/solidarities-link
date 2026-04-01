@@ -362,7 +362,9 @@ export default function ProfilePage() {
 				Il tuo Profilo
 			</Typography>
 			<Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
-				Gestisci le tue informazioni personali e le preferenze operative.
+				{role === "requester"
+					? "Gestisci le tue informazioni personali."
+					: "Gestisci le tue informazioni personali e le preferenze operative."}
 			</Typography>
 
 			<Grid container spacing={3} justifyContent={role === "requester" ? "center" : "flex-start"}>
@@ -425,19 +427,23 @@ export default function ProfilePage() {
 						</Box>
 						<CardContent sx={{ p: 3 }}>
 							<Stack spacing={2}>
-								<Divider />
-								<Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 2, flexWrap: "wrap" }}>
-									<Typography variant="body2" color="text.secondary">
-										Certificazione
-									</Typography>
-									<Chip
-										icon={<VerifiedUserIcon />}
-										label={getCertLabel(user?.certificationLevel)}
-										size="small"
-										variant="outlined"
-										sx={{ fontWeight: 500 }}
-									/>
-								</Box>
+								{role !== "requester" && (
+									<>
+										<Divider />
+										<Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 2, flexWrap: "wrap" }}>
+											<Typography variant="body2" color="text.secondary">
+												Certificazione
+											</Typography>
+											<Chip
+												icon={<VerifiedUserIcon />}
+												label={getCertLabel(user?.certificationLevel)}
+												size="small"
+												variant="outlined"
+												sx={{ fontWeight: 500 }}
+											/>
+										</Box>
+									</>
+								)}
 								<Divider />
 								<Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 2, flexWrap: "wrap" }}>
 									<Typography variant="body2" color="text.secondary">
@@ -461,69 +467,73 @@ export default function ProfilePage() {
 										})
 										: "—"}
 								</Typography>
-								<Divider />
-								<Box>
-									<Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1.5 }}>
-										<GroupsIcon fontSize="small" color="primary" />
-										<Typography variant="body2" fontWeight={600}>
-											Associazioni
-										</Typography>
-									</Box>
-									{myAssociations.length === 0 ? (
-										<Typography variant="caption" color="text.secondary">
-											Non sei ancora iscritto a nessuna associazione
-										</Typography>
-									) : (
-										<Stack spacing={1}>
-											{myAssociations.map(({ association, membership }) => (
-												<Paper
-													key={association.id}
-													elevation={0}
-													onClick={() => navigate(`/dashboard/associations/${association.id}`)}
-													sx={{
-														display: "flex",
-														alignItems: "center",
-														justifyContent: "space-between",
-														gap: 1,
-														p: 1,
-														borderRadius: 2,
-														bgcolor: "background.default",
-														cursor: "pointer",
-														"&:hover": { bgcolor: "action.hover" },
-													}}
-												>
-													<Box sx={{ display: "flex", alignItems: "center", gap: 1, minWidth: 0 }}>
-														<AssociationAvatar
-															associationId={association.id}
-															accentColor={association.accentColor ?? undefined}
-															size={28}
-														/>
-														<Typography variant="body2" fontWeight={500} noWrap>
-															{association.name}
-														</Typography>
-													</Box>
-													<Stack direction="row" spacing={0.5} flexShrink={0}>
-														<Chip
-															label={ASSOC_ROLE_LABELS[membership.role]}
-															color={ASSOC_ROLE_COLORS[membership.role]}
-															size="small"
-															sx={{ height: 20, fontSize: "0.7rem" }}
-														/>
-														{membership.status === "PENDING" && (
-															<Chip
-																label="In attesa"
-																color="warning"
-																variant="outlined"
-																size="small"
-																sx={{ height: 20, fontSize: "0.7rem" }}
-															/>
-														)}
-													</Stack>
-												</Paper>
-											))}
-										</Stack>
-									)}
-								</Box>
+								{role !== "requester" && (
+									<>
+										<Divider />
+										<Box>
+											<Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1.5 }}>
+												<GroupsIcon fontSize="small" color="primary" />
+												<Typography variant="body2" fontWeight={600}>
+													Associazioni
+												</Typography>
+											</Box>
+											{myAssociations.length === 0 ? (
+												<Typography variant="caption" color="text.secondary">
+													Non sei ancora iscritto a nessuna associazione
+												</Typography>
+											) : (
+												<Stack spacing={1}>
+													{myAssociations.map(({ association, membership }) => (
+														<Paper
+															key={association.id}
+															elevation={0}
+															onClick={() => navigate(`/dashboard/associations/${association.id}`)}
+															sx={{
+																display: "flex",
+																alignItems: "center",
+																justifyContent: "space-between",
+																gap: 1,
+																p: 1,
+																borderRadius: 2,
+																bgcolor: "background.default",
+																cursor: "pointer",
+																"&:hover": { bgcolor: "action.hover" },
+															}}
+														>
+															<Box sx={{ display: "flex", alignItems: "center", gap: 1, minWidth: 0 }}>
+																<AssociationAvatar
+																	associationId={association.id}
+																	accentColor={association.accentColor ?? undefined}
+																	size={28}
+																/>
+																<Typography variant="body2" fontWeight={500} noWrap>
+																	{association.name}
+																</Typography>
+															</Box>
+															<Stack direction="row" spacing={0.5} flexShrink={0}>
+																<Chip
+																	label={ASSOC_ROLE_LABELS[membership.role]}
+																	color={ASSOC_ROLE_COLORS[membership.role]}
+																	size="small"
+																	sx={{ height: 20, fontSize: "0.7rem" }}
+																/>
+																{membership.status === "PENDING" && (
+																	<Chip
+																		label="In attesa"
+																		color="warning"
+																		variant="outlined"
+																		size="small"
+																		sx={{ height: 20, fontSize: "0.7rem" }}
+																	/>
+																)}
+															</Stack>
+														</Paper>
+													))}
+												</Stack>
+											)}
+										</Box>
+									</>
+								)}
 							</Stack>
 						</CardContent>
 					</Card>
