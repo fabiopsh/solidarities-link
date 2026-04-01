@@ -14,6 +14,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.UUID;
+import jakarta.enterprise.event.Event;
 
 import io.quarkus.runtime.StartupEvent;
 import org.eclipse.microprofile.context.ManagedExecutor;
@@ -37,9 +38,19 @@ public class TaskService {
     @Inject
     WalletService walletService;
 
+    @Inject
+    Event<Task> taskCreatedEvent;
+
     private static final SecureRandom secureRandom = new SecureRandom();
     private static final int DAILY_TASK_LIMIT = 5;
     private static final int CANCEL_WINDOW_MINUTES = 10;
+
+    public void onTaskCreatedSuccess(@Observes(during = jakarta.enterprise.event.TransactionPhase.AFTER_SUCCESS) Task task) {
+        // Trigger matching asynchronously after the task is committed successfully
+        managedExecutor.execute(() -> {
+            matchingService.matchAndNotifyVolunteers(task);
+        });
+    }
 
     private String generateToken() {
         byte[] tokenBytes = new byte[8]; // 64 bits
@@ -182,10 +193,8 @@ public class TaskService {
 
         task.persist();
         
-        // Trigger matching asynchronously to avoid blocking the client per NFR-04
-        managedExecutor.execute(() -> {
-            matchingService.matchAndNotifyVolunteers(task);
-        });
+        // Fire the event. The observer with AFTER_SUCCESS will catch it after the transaction commits.
+        taskCreatedEvent.fire(task);
 
         return task;
     }
