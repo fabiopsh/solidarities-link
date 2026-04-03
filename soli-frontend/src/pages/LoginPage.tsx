@@ -1,17 +1,32 @@
 import { useAuth } from "react-oidc-context";
+import { UserManager } from "oidc-client-ts";
 import { Navigate } from "react-router-dom";
 import { Box, Button, Card, CardContent, Typography, CircularProgress } from "@mui/material";
 import HandshakeIcon from "@mui/icons-material/Handshake";
 import LoginIcon from "@mui/icons-material/Login";
+import { oidcConfig } from "../config/auth";
 
 export default function LoginPage() {
 	const auth = useAuth();
 
 	const handleRegister = async () => {
-		// signinRedirect accetta un oggetto di configurazione
-		await auth.signinRedirect({
-			prompt: "create",
+		// Il tema classico di Keycloak non supporta prompt=create per il redirect diretto
+		// alla registrazione. Si usa invece l'endpoint /registrations di Keycloak,
+		// sovrascrivendo l'authorization_endpoint nei metadati del UserManager.
+		// PKCE e state vengono gestiti normalmente da oidc-client-ts.
+		const authority = (oidcConfig.authority as string) ?? "http://localhost:8180/realms/soli";
+		const registrationManager = new UserManager({
+			...oidcConfig,
+			metadata: {
+				issuer: authority,
+				authorization_endpoint: `${authority}/protocol/openid-connect/registrations`,
+				token_endpoint: `${authority}/protocol/openid-connect/token`,
+				userinfo_endpoint: `${authority}/protocol/openid-connect/userinfo`,
+				end_session_endpoint: `${authority}/protocol/openid-connect/logout`,
+				jwks_uri: `${authority}/protocol/openid-connect/certs`,
+			},
 		});
+		await registrationManager.signinRedirect();
 	};
 
 	if (auth.isLoading) {
