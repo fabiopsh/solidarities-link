@@ -338,7 +338,7 @@ export default function TaskDetailPage() {
 		return (
 			<Box sx={{ maxWidth: 800, mx: "auto", mt: 4 }}>
 				<Alert severity="error">{error || "Task non trovato"}</Alert>
-				<Button startIcon={<ArrowBackIcon />} onClick={() => navigate("/dashboard")} sx={{ mt: 2 }}>
+				<Button startIcon={<ArrowBackIcon />} onClick={() => navigate(-1)} sx={{ mt: 2 }}>
 					Torna alla Dashboard
 				</Button>
 			</Box>
@@ -373,7 +373,7 @@ export default function TaskDetailPage() {
 
 	return (
 		<Box sx={{ maxWidth: 900, mx: "auto" }}>
-			<Button startIcon={<ArrowBackIcon />} onClick={() => navigate("/dashboard")} sx={{ mb: 3 }}>
+			<Button startIcon={<ArrowBackIcon />} onClick={() => navigate(-1)} sx={{ mb: 3 }}>
 				Torna indietro
 			</Button>
 
