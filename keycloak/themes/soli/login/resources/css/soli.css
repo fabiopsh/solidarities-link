@@ -10,6 +10,19 @@
 	font-family: "Inter", "Roboto", "Helvetica", "Arial", sans-serif !important;
 }
 
+/* Ripristina Font Awesome per le icone (es. toggle mostra/nascondi password).
+   La regola * !important sopra sovrascrive il font degli icon glyph (PUA Unicode)
+   producendo un quadrato rotto. Queste classi usano il font originale. */
+.fa,
+.fas,
+.far,
+.fal,
+.fab,
+[class^="fa-"],
+[class*=" fa-"] {
+	font-family: "FontAwesome", "Font Awesome 5 Free" !important;
+}
+
 /* --- Background: teal gradient --- */
 body {
 	background: linear-gradient(135deg, #004d40 0%, #00796b 40%, #48a999 100%) !important;
@@ -17,7 +30,12 @@ body {
 }
 
 /* --- Login container --- */
-.login-pf {
+/* Azzera lo sfondo su tutti i wrapper intermedi del tema classico Keycloak
+   (#kc-container e .login-pf-page hanno sfondo bianco per default) */
+.login-pf,
+#kc-container,
+.login-pf-page,
+.login-pf-page-header {
 	background: transparent !important;
 }
 
@@ -33,82 +51,123 @@ body {
 	align-items: center !important;
 	justify-content: center !important;
 	min-height: 100vh !important;
+	padding: 24px 16px !important;
+	box-sizing: border-box !important;
 }
 
-/* --- Header --- */
+/* --- Header esterno (nascosto: il branding SoLi è ora dentro la card) --- */
 #kc-header {
-	background: none !important;
-	border: none !important;
-	padding: 0 !important;
-	margin: 0 !important;
-	position: static !important;
+	display: none !important;
 }
 
-#kc-header-wrapper {
+/* --- Branding SoLi dentro la card ---
+   In Keycloak classic, #kc-page-title è dentro header.login-pf-header
+   dentro .card-pf. Usiamo ::before e ::after dell'header per aggiungere
+   emoji e "SoLi" sopra il titolo della pagina, con flexbox order per
+   controllare l'ordine visivo: emoji → SoLi → titolo pagina. */
+.card-pf .login-pf-header,
+.card-pf header {
+	display: flex !important;
+	flex-direction: column !important;
+	align-items: center !important;
 	text-align: center !important;
-	padding: 0 0 20px 0 !important;
-	color: transparent !important;
-	font-size: 0 !important;
-	overflow: visible !important;
+	margin-bottom: 20px !important;
+	padding: 0 !important;
+	border: none !important;
+	background: transparent !important;
 }
 
-#kc-header-wrapper::before {
+.card-pf .login-pf-header::before,
+.card-pf header::before {
 	content: "🤝" !important;
 	display: block !important;
-	font-size: 56px !important;
-	margin-bottom: 8px !important;
+	font-size: 48px !important;
 	line-height: 1.2 !important;
+	margin-bottom: 4px !important;
+	order: 1 !important;
 }
 
-#kc-header-wrapper::after {
-	content: "SoLi" !important;
+.card-pf .login-pf-header::after,
+.card-pf header::after {
+	content: "Solidarities Link" !important;
 	display: block !important;
-	font-size: 2.2rem !important;
+	font-size: 1.5rem !important;
 	font-weight: 700 !important;
-	background: linear-gradient(135deg, #ffffff 0%, #b2dfdb 100%) !important;
+	background: linear-gradient(135deg, #00796b 0%, #48a999 100%) !important;
 	-webkit-background-clip: text !important;
 	-webkit-text-fill-color: transparent !important;
 	background-clip: text !important;
+	margin-bottom: 6px !important;
+	order: 2 !important;
 }
 
-/* --- Card / Form container --- */
-#kc-content {
-	max-width: 440px !important;
-	width: 100% !important;
-	margin: 0 auto !important;
+/* Tutti i figli reali dell'header (h1, span, p...) appaiono dopo
+   i pseudo-elementi (order 1 e 2) indipendentemente dal DOM order.
+   Questo garantisce che "Register", "Required fields" e simili
+   stiano sempre sotto emoji e nome. */
+.card-pf .login-pf-header > *,
+.card-pf header > * {
+	order: 3 !important;
 }
 
-#kc-content-wrapper {
-	background: #ffffff !important;
-	border-radius: 24px !important;
-	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18) !important;
-	padding: 40px 36px !important;
-	border: none !important;
-}
-
-.login-pf .container {
-	max-width: 440px !important;
-	padding: 0 16px !important;
-}
-
-/* card-pf overrides */
+/* --- Card / Form container ---
+   .card-pf è il card visivo che contiene branding + titolo + form.
+   #kc-content-wrapper è solo un wrapper strutturale trasparente. */
 .card-pf {
 	background: #ffffff !important;
 	border-radius: 24px !important;
 	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18) !important;
 	border: none !important;
-	margin: 0 !important;
-	padding: 32px !important;
+	padding: 36px !important;
+	max-width: 440px !important;
+	width: 100% !important;
+	margin: 0 auto !important;
+	align-self: center !important;
+	box-sizing: border-box !important;
+	height: fit-content !important;
 }
 
-/* --- Page title --- */
-#kc-page-title,
-.login-pf .card-pf h1 {
-	font-size: 1.4rem !important;
-	font-weight: 600 !important;
-	color: #212121 !important;
+#kc-content {
+	width: 100% !important;
+}
+
+#kc-content-wrapper {
+	background: transparent !important;
+	border-radius: 0 !important;
+	box-shadow: none !important;
+	padding: 0 !important;
+	border: none !important;
+}
+
+/* Catchphrase sopra il form, sotto il titolo pagina */
+#kc-content-wrapper::before {
+	content: "Il desiderio di aiutare incontra il bisogno in tempo reale." !important;
+	display: block !important;
+	font-size: 0.85rem !important;
+	color: #9e9e9e !important;
 	text-align: center !important;
-	margin-bottom: 24px !important;
+	font-style: italic !important;
+	margin-bottom: 20px !important;
+	line-height: 1.5 !important;
+}
+
+.login-pf .container,
+.register-pf .container {
+	max-width: 440px !important;
+	padding: 0 !important;
+	width: 100% !important;
+}
+
+/* --- Page title (sottotitolo dentro la card, appare dopo emoji e "SoLi") --- */
+#kc-page-title,
+.login-pf .card-pf h1,
+.register-pf .card-pf h1 {
+	font-size: 0.9rem !important;
+	font-weight: 400 !important;
+	color: #757575 !important;
+	text-align: center !important;
+	margin: 0 0 20px 0 !important;
+	order: 3 !important;
 }
 
 /* --- Form labels --- */
@@ -307,15 +366,23 @@ div.kc-logo-text {
 	border-radius: 3px;
 }
 
+/* --- Pagina di registrazione ---
+   Usa .register-pf come classe body invece di .login-pf.
+   Replica il centering flex di #kc-container-wrapper. */
+.register-pf {
+	display: flex !important;
+	flex-direction: column !important;
+	align-items: center !important;
+	justify-content: center !important;
+	min-height: 100vh !important;
+	padding: 24px 16px !important;
+	box-sizing: border-box !important;
+}
+
 /* --- Responsive --- */
 @media (max-width: 480px) {
 	.card-pf {
 		padding: 24px 20px !important;
-		border-radius: 20px !important;
-	}
-
-	#kc-content-wrapper {
-		padding: 28px 20px !important;
 		border-radius: 20px !important;
 	}
 }

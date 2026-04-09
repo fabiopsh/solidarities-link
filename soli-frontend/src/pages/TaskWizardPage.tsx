@@ -28,8 +28,8 @@ import EventIcon from "@mui/icons-material/Event";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import WarningIcon from "@mui/icons-material/Warning";
 import ReportIcon from "@mui/icons-material/Report";
-import { DatePicker } from "@mui/x-date-pickers/DatePicker";
-import { TimePicker } from "@mui/x-date-pickers/TimePicker";
+import { MobileDatePicker } from "@mui/x-date-pickers/MobileDatePicker";
+import { MobileTimePicker } from "@mui/x-date-pickers/MobileTimePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs from "dayjs";
@@ -115,6 +115,8 @@ export default function TaskWizardPage() {
 	const [urgencyLevel, setUrgencyLevel] = useState<UrgencyLevel | "">("MEDIUM");
 	const [scheduledDate, setScheduledDate] = useState<dayjs.Dayjs | null>(null);
 	const [scheduledTime, setScheduledTime] = useState<dayjs.Dayjs | null>(null);
+	const [datePickerOpen, setDatePickerOpen] = useState(false);
+	const [timePickerOpen, setTimePickerOpen] = useState(false);
 	const [targetAddress, setTargetAddress] = useState("");
 	const [latitude, setLatitude] = useState<number>(45.4642);
 	const [longitude, setLongitude] = useState<number>(9.1900);
@@ -475,39 +477,61 @@ export default function TaskWizardPage() {
 							<LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="it">
 								<Grid container spacing={2}>
 									<Grid size={{ xs: 12, sm: 6 }}>
-										<DatePicker
-											label="Data"
-											value={scheduledDate}
-											onChange={(value) => setScheduledDate(value)}
-											format="DD/MM/YYYY"
-											disablePast
-											slotProps={{
-												textField: {
-													fullWidth: true,
-													required: true,
-													variant: "outlined",
-													InputProps: { sx: { fontSize: "1.1rem" } },
-												},
-											}}
-										/>
+										<Box sx={{ position: "relative" }}>
+											<MobileDatePicker
+												label="Data"
+												value={scheduledDate}
+												onChange={(value) => setScheduledDate(value)}
+												format="DD/MM/YYYY"
+												disablePast
+												open={datePickerOpen}
+												onOpen={() => setDatePickerOpen(true)}
+												onClose={() => setDatePickerOpen(false)}
+												slotProps={{
+													textField: {
+														fullWidth: true,
+														required: true,
+														variant: "outlined",
+														InputProps: { sx: { fontSize: "1.1rem", pointerEvents: "none" } },
+													},
+												}}
+											/>
+											<Box
+												sx={{ position: "absolute", inset: 0, cursor: "pointer", zIndex: 1 }}
+												onClick={() => setDatePickerOpen(true)}
+											/>
+										</Box>
 									</Grid>
 									<Grid size={{ xs: 12, sm: 6 }}>
-										<TimePicker
-											label="Orario"
-											value={scheduledTime}
-											onChange={(value) => setScheduledTime(value)}
-											ampmInClock={false}
-											ampm={false}
-											slotProps={{
-												textField: {
-													fullWidth: true,
-													required: true,
-													variant: "outlined",
-													error: !!scheduledAtError,
-													InputProps: { sx: { fontSize: "1.1rem" } },
-												},
-											}}
-										/>
+										<Box sx={{ position: "relative" }}>
+											<MobileTimePicker
+												label="Orario"
+												value={scheduledTime}
+												onChange={(value) => setScheduledTime(value)}
+												ampm={false}
+												open={timePickerOpen}
+												onOpen={() => setTimePickerOpen(true)}
+												onClose={() => setTimePickerOpen(false)}
+												slotProps={{
+													textField: {
+														fullWidth: true,
+														required: true,
+														variant: "outlined",
+														error: !!scheduledAtError,
+														InputProps: { sx: { fontSize: "1.1rem", pointerEvents: "none" } },
+													},
+													dialog: {
+														PaperProps: {
+															sx: { borderRadius: 4 },
+														},
+													},
+												}}
+											/>
+											<Box
+												sx={{ position: "absolute", inset: 0, cursor: "pointer", zIndex: 1 }}
+												onClick={() => setTimePickerOpen(true)}
+											/>
+										</Box>
 									</Grid>
 								</Grid>
 								{scheduledAtError && (

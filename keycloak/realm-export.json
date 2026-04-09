@@ -5,6 +5,9 @@
 	"registrationEmailAsUsername": true,
 	"loginWithEmailAllowed": true,
 	"sslRequired": "none",
+	"internationalizationEnabled": true,
+	"supportedLocales": ["it", "en"],
+	"defaultLocale": "it",
 	"loginTheme": "soli",
 	"roles": {
 		"realm": [
