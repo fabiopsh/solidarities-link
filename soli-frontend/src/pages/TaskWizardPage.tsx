@@ -126,12 +126,22 @@ export default function TaskWizardPage() {
 	const scheduledAtError = useMemo(() => {
 		if (scheduledDate && scheduledTime) {
 			const combined = scheduledDate.hour(scheduledTime.hour()).minute(scheduledTime.minute()).second(0).millisecond(0);
-			if (combined.isBefore(dayjs().add(1, "hour"))) {
-				return "L'orario deve essere almeno 1 ora nel futuro";
+			if (combined.isBefore(dayjs())) {
+				return "L'orario non può essere nel passato";
 			}
 		}
 		return null;
 	}, [scheduledDate, scheduledTime]);
+
+	const scheduledAtWarning = useMemo(() => {
+		if (scheduledDate && scheduledTime && !scheduledAtError) {
+			const combined = scheduledDate.hour(scheduledTime.hour()).minute(scheduledTime.minute()).second(0).millisecond(0);
+			if (combined.isBefore(dayjs().add(30, "minute"))) {
+				return "Si consiglia di programmare il task almeno 30 minuti nel futuro per dare tempo ai volontari di organizzarsi.";
+			}
+		}
+		return null;
+	}, [scheduledDate, scheduledTime, scheduledAtError]);
 
 	// Get current position on mount
 	useEffect(() => {
@@ -472,7 +482,7 @@ export default function TaskWizardPage() {
 								Quando hai bisogno di aiuto? *
 							</Typography>
 							<Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-								Indica una data e ora obbligatoria. Deve essere almeno 1 ora nel futuro.
+								Indica una data e ora obbligatoria. Si consiglia almeno 30 minuti nel futuro.
 							</Typography>
 							<LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="it">
 								<Grid container spacing={2}>
@@ -537,6 +547,11 @@ export default function TaskWizardPage() {
 								{scheduledAtError && (
 									<Typography color="error" variant="caption" sx={{ mt: 1, display: "block" }}>
 										{scheduledAtError}
+									</Typography>
+								)}
+								{scheduledAtWarning && !scheduledAtError && (
+									<Typography color="warning.main" variant="caption" sx={{ mt: 1, display: "block" }}>
+										⚠️ {scheduledAtWarning}
 									</Typography>
 								)}
 							</LocalizationProvider>
