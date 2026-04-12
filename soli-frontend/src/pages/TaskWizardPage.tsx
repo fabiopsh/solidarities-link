@@ -479,10 +479,10 @@ export default function TaskWizardPage() {
 						{/* ── Date and Time picker ── */}
 						<Box>
 							<Typography variant="subtitle1" fontWeight="bold" sx={{ mb: 1 }}>
-								Quando hai bisogno di aiuto? *
+								Quando hai bisogno di aiuto? (Opzionale)
 							</Typography>
 							<Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-								Indica una data e ora obbligatoria. Si consiglia almeno 30 minuti nel futuro.
+								Inserire data e ora indicativa. Si consiglia almeno 30 minuti nel futuro.
 							</Typography>
 							<LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="it">
 								<Grid container spacing={2}>
@@ -500,7 +500,7 @@ export default function TaskWizardPage() {
 												slotProps={{
 													textField: {
 														fullWidth: true,
-														required: true,
+														required: false,
 														variant: "outlined",
 														InputProps: { sx: { fontSize: "1.1rem", pointerEvents: "none" } },
 													},
@@ -525,7 +525,7 @@ export default function TaskWizardPage() {
 												slotProps={{
 													textField: {
 														fullWidth: true,
-														required: true,
+														required: false,
 														variant: "outlined",
 														error: !!scheduledAtError,
 														InputProps: { sx: { fontSize: "1.1rem", pointerEvents: "none" } },
@@ -565,7 +565,7 @@ export default function TaskWizardPage() {
 								variant="contained"
 								size="large"
 								onClick={handleNext}
-								disabled={!title || !category || !urgencyLevel || !scheduledDate || !scheduledTime || !!scheduledAtError}
+								disabled={!title || !category || !urgencyLevel || !!scheduledAtError}
 								sx={{ px: 4, py: 1.5, fontSize: "1.1rem" }}
 							>
 								Avanti
