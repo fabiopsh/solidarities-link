@@ -329,7 +329,7 @@ export default function TaskWizardPage() {
 						</Button>
 
 						<Collapse in={showAiAssistant}>
-							<Box sx={{ display: "flex", flexDirection: "column", gap: 2, bgcolor: "rgba(0, 121, 107, 0.04)", p: 2, borderRadius: 3, border: "1px solid", borderColor: "rgba(0, 121, 107, 0.2)" }}>
+							<Box sx={{ display: "flex", flexDirection: "column", gap: 2, bgcolor: "rgba(0, 121, 107, 0.04)", p: 2, borderRadius: 1, border: "1px solid", borderColor: "rgba(0, 121, 107, 0.2)" }}>
 								<Typography variant="body2" color="primary.dark">
 									Raccontaci a parole tue di cosa hai bisogno. Il nostro assistente compilerà il modulo per te.
 								</Typography>
