@@ -369,7 +369,7 @@ public class MockAIService {
 
     /**
      * Resolve the extractedDate label + any time reference into an ISO datetime string.
-     * Ensures the result is at least 1 hour in the future.
+     * Ensures the result is not in the past.
      */
     private String resolveToIsoDateTime(String lowerText, String extractedDate, IntentExtractionResult result) {
         LocalDateTime now = LocalDateTime.now();
@@ -466,13 +466,13 @@ public class MockAIService {
     }
 
     /**
-     * Ensure the datetime is at least 1 hour in the future.
+     * Ensure the datetime is not in the past.
      * Returns an ISO-8601 string without seconds.
      */
     private String enforceMinimum(LocalDateTime dateTime) {
-        LocalDateTime minimum = LocalDateTime.now().plusHours(1);
-        if (dateTime.isBefore(minimum)) {
-            dateTime = minimum;
+        LocalDateTime now = LocalDateTime.now();
+        if (dateTime.isBefore(now)) {
+            dateTime = now;
         }
         return dateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm"));
     }

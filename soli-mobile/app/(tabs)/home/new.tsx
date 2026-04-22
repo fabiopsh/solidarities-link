@@ -59,17 +59,33 @@ export default function NewTaskScreen() {
 
 	// ─── Validation ───────────────────────────────────────────────────────────
 
+	const [scheduledAtWarning, setScheduledAtWarning] = useState("");
+
 	const validateScheduledAt = (val: string) => {
 		if (!val.trim()) {
 			setScheduledAtError("");
+			setScheduledAtWarning("");
 			return true;
 		}
 		const d = new Date(val);
 		if (isNaN(d.getTime())) {
 			setScheduledAtError("Formato non valido. Usa YYYY-MM-DDTHH:MM");
+			setScheduledAtWarning("");
+			return false;
+		}
+		if (d.getTime() < Date.now()) {
+			setScheduledAtError("L'orario non può essere nel passato");
+			setScheduledAtWarning("");
 			return false;
 		}
 		setScheduledAtError("");
+		// Soft warning for less than 30 minutes
+		const thirtyMinFromNow = Date.now() + 30 * 60 * 1000;
+		if (d.getTime() < thirtyMinFromNow) {
+			setScheduledAtWarning("Si consiglia almeno 30 minuti nel futuro per dare tempo ai volontari.");
+		} else {
+			setScheduledAtWarning("");
+		}
 		return true;
 	};
 
@@ -220,6 +236,7 @@ export default function NewTaskScreen() {
 			{/* Scheduled at */}
 			<View style={styles.fieldGroup}>
 				<Text style={styles.fieldLabel}>Data e ora (opzionale)</Text>
+				<Text style={styles.fieldHint}>Si consiglia almeno 30 minuti nel futuro.</Text>
 				<TextInput
 					value={scheduledAt}
 					onChangeText={(v) => { setScheduledAt(v); validateScheduledAt(v); }}
@@ -229,6 +246,7 @@ export default function NewTaskScreen() {
 					returnKeyType="done"
 				/>
 				{scheduledAtError ? <Text style={styles.fieldError}>{scheduledAtError}</Text> : null}
+				{!scheduledAtError && scheduledAtWarning ? <Text style={styles.fieldWarning}>⚠️ {scheduledAtWarning}</Text> : null}
 			</View>
 
 			{/* Continue button */}
@@ -366,6 +384,8 @@ const styles = StyleSheet.create({
 	inputMultiline: { paddingTop: 12, minHeight: 100 },
 	inputError: { borderColor: SoliColors.error },
 	fieldError: { fontSize: 12, color: SoliColors.error, marginTop: 4 },
+	fieldHint: { fontSize: 12, color: SoliColors.text.secondary, marginBottom: 6 },
+	fieldWarning: { fontSize: 12, color: "#F57C00", marginTop: 4 },
 
 	categoryGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
 	categoryTile: {
