@@ -8,7 +8,15 @@
       "Bash(grep -r auth.user?.profile 'C:\\\\Users\\\\fabio\\\\Documents\\\\Unipi - Project\\\\solidarities-link\\\\soli-frontend\\\\src')",
       "Bash(find 'C:\\\\Users\\\\fabio\\\\Documents\\\\Unipi - Project\\\\solidarities-link' -type f -name *Task*Resource*.java -o -name *Task*Controller*.java)",
       "Bash(python3 -c \":*)",
-      "Bash(node -e \":*)"
+      "Bash(node -e \":*)",
+      "Bash(pandoc \"/Users/fabiopsh/Downloads/Contenuto email.docx\" -o /tmp/email_content.md)",
+      "Read(//tmp/**)",
+      "Bash(node -e ':*)",
+      "Bash(npm root:*)",
+      "Bash(NODE_PATH=/opt/homebrew/lib/node_modules node /tmp/create_elaborato.js)",
+      "Bash(NODE_PATH=/opt/homebrew/lib/node_modules python3 \"/Users/fabiopsh/Library/Application Support/Claude/local-agent-mode-sessions/skills-plugin/c98b1064-0d31-480e-bdff-8de15f055a6f/d6fa7968-e7d0-45c8-9eee-5f8c038e4b2b/skills/docx/scripts/office/validate.py\" \"/Users/fabiopsh/Desktop/Elaborato_UniversiPA_SOLI.docx\")",
+      "Bash(python3 -c \"import zipfile; z = zipfile.ZipFile\\('/Users/fabiopsh/Desktop/Elaborato_UniversiPA_SOLI.docx'\\); print\\('OK - files:', len\\(z.namelist\\(\\)\\)\\); print\\(z.namelist\\(\\)\\)\")",
+      "Bash(pandoc \"/Users/fabiopsh/Desktop/Elaborato_UniversiPA_SOLI.docx\" -o /tmp/verify.md)"
     ]
   }
 }
