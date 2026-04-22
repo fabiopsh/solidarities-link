@@ -17,6 +17,7 @@ import {
 	Autocomplete,
 	Grid,
 	Paper,
+	Collapse,
 } from "@mui/material";
 import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import DirectionsCarIcon from "@mui/icons-material/DirectionsCar";
@@ -52,7 +53,7 @@ const DefaultIcon = L.icon({
 });
 L.Marker.prototype.options.icon = DefaultIcon;
 
-const steps = ["SoliAssistant (Opzionale)", "Dettagli Richiesta", "Posizione", "Conferma"];
+const steps = ["Dettagli Richiesta", "Posizione", "Conferma"];
 
 const CATEGORIES: { value: ServiceCategory; label: string; icon: any; color: string }[] = [
 	{ value: "MOBILITY", label: "Mobilità / Accompagnamento", icon: DirectionsCarIcon, color: "#2196f3" },
@@ -100,6 +101,7 @@ export default function TaskWizardPage() {
 	const [activeStep, setActiveStep] = useState(0);
 	const [aiInput, setAiInput] = useState("");
 	const [isExtracting, setIsExtracting] = useState(false);
+	const [showAiAssistant, setShowAiAssistant] = useState(false);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 
@@ -222,7 +224,13 @@ export default function TaskWizardPage() {
 	};
 
 	const handleNext = () => setActiveStep((prev) => prev + 1);
-	const handleBack = () => setActiveStep((prev) => prev - 1);
+	const handleBack = () => {
+		if (activeStep === 0) {
+			navigate(-1);
+		} else {
+			setActiveStep((prev) => prev - 1);
+		}
+	};
 
 	// Fetch daily task count on mount
 	useEffect(() => {
@@ -276,7 +284,7 @@ export default function TaskWizardPage() {
 				} else {
 					setScheduledTime(null);
 				}
-				handleNext(); // Move strictly to next step when done
+				setShowAiAssistant(false);
 			}
 		} catch (err: any) {
 			console.error("Extraction error:", err);
@@ -297,8 +305,8 @@ export default function TaskWizardPage() {
 				description,
 				category,
 				urgencyLevel,
-				scheduledAt: (scheduledDate && scheduledTime) 
-					? scheduledDate.hour(scheduledTime.hour()).minute(scheduledTime.minute()).toISOString() 
+				scheduledAt: (scheduledDate && scheduledTime)
+					? scheduledDate.hour(scheduledTime.hour()).minute(scheduledTime.minute()).toISOString()
 					: null,
 				targetAddress,
 				latitude,
@@ -320,50 +328,51 @@ export default function TaskWizardPage() {
 			case 0:
 				return (
 					<Box sx={{ display: "flex", flexDirection: "column", gap: 3, pt: 2 }}>
-						<Typography variant="body1" color="text.secondary">
-							Raccontaci a parole tue di cosa hai bisogno. Il nostro assistente intelligente compilerà il modulo
-							per te. Puoi anche saltare questo passaggio e compilare manualmente.
-						</Typography>
-						<TextField
-							fullWidth
-							multiline
-							rows={4}
+						<Button
 							variant="outlined"
-							placeholder="Es: Ho bisogno di qualcuno che mi accompagni a fare la spesa questo giovedì mattina..."
-							value={aiInput}
-							onChange={(e) => setAiInput(e.target.value)}
-							disabled={isExtracting}
-							InputProps={{
-								sx: { fontSize: "1.2rem", p: 2 }, // Larger text for accessibility
-							}}
-						/>
-						<Box sx={{ display: "flex", justifyContent: "space-between", mt: 2 }}>
-							<Button size="large" onClick={handleNext} disabled={isExtracting}>
-								Salta
-							</Button>
-							<Button
-								variant="contained"
-								size="large"
-								startIcon={isExtracting ? <CircularProgress size={24} color="inherit" /> : <AutoAwesomeIcon />}
-								onClick={handleExtractIntent}
-								disabled={isExtracting || !aiInput.trim()}
-								sx={{
-									px: 4,
-									py: 1.5,
-									background: "linear-gradient(45deg, #00796B 30%, #48A999 90%)",
-									color: "white",
-									fontWeight: "bold",
-									fontSize: "1.1rem",
-								}}
-							>
-								{isExtracting ? "Analisi in corso..." : "Usa Assistente"}
-							</Button>
-						</Box>
-					</Box>
-				);
-			case 1:
-				return (
-					<Box sx={{ display: "flex", flexDirection: "column", gap: 3, pt: 2 }}>
+							startIcon={<AutoAwesomeIcon />}
+							onClick={() => setShowAiAssistant((prev) => !prev)}
+							sx={{ alignSelf: "flex-start", fontWeight: "bold", borderWidth: "2px", "&:hover": { borderWidth: "2px" } }}
+							color="primary"
+						>
+							{showAiAssistant ? "Chiudi Assistente IA" : "Usa Assistente IA (Compila automaticamente i campi)"}
+						</Button>
+
+						<Collapse in={showAiAssistant}>
+							<Box sx={{ display: "flex", flexDirection: "column", gap: 2, bgcolor: "rgba(0, 121, 107, 0.04)", p: 2, borderRadius: 1, border: "1px solid", borderColor: "rgba(0, 121, 107, 0.2)" }}>
+								<Typography variant="body2" color="primary.dark">
+									Raccontaci a parole tue di cosa hai bisogno. Il nostro assistente compilerà il modulo per te.
+								</Typography>
+								<TextField
+									fullWidth
+									multiline
+									rows={3}
+									variant="outlined"
+									placeholder="Es: Ho bisogno di qualcuno che mi accompagni a fare la spesa giovedì alle 10:00 del mattino..."
+									value={aiInput}
+									onChange={(e) => setAiInput(e.target.value)}
+									disabled={isExtracting}
+									InputProps={{
+										sx: { fontSize: "1.1rem", bgcolor: "background.paper" },
+									}}
+								/>
+								<Button
+									variant="contained"
+									onClick={handleExtractIntent}
+									disabled={isExtracting || !aiInput.trim()}
+									startIcon={isExtracting ? <CircularProgress size={20} color="inherit" /> : <AutoAwesomeIcon />}
+									sx={{
+										alignSelf: "flex-end",
+										background: "linear-gradient(45deg, #00796B 0%, #48A999 100%)",
+										color: "white",
+										fontWeight: "bold"
+									}}
+								>
+									{isExtracting ? "Analisi..." : "Compila i campi"}
+								</Button>
+							</Box>
+						</Collapse>
+
 						<TextField
 							label="Titolo della Richiesta"
 							fullWidth
@@ -573,7 +582,7 @@ export default function TaskWizardPage() {
 						</Box>
 					</Box>
 				);
-			case 2:
+			case 1:
 				return (
 					<Box sx={{ display: "flex", flexDirection: "column", gap: 3, pt: 2 }}>
 						<Typography variant="body1" color="text.secondary">
@@ -637,9 +646,9 @@ export default function TaskWizardPage() {
 									attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
 									url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
 								/>
-								<LocationMarker 
-									position={[latitude, longitude]} 
-									setPosition={(p) => { setLatitude(p.lat); setLongitude(p.lng); }} 
+								<LocationMarker
+									position={[latitude, longitude]}
+									setPosition={(p) => { setLatitude(p.lat); setLongitude(p.lng); }}
 									onDragEnd={(p) => handleReverseGeocode(p.lat, p.lng)}
 								/>
 							</MapContainer>
@@ -660,7 +669,7 @@ export default function TaskWizardPage() {
 						</Box>
 					</Box>
 				);
-			case 3:
+			case 2:
 				return (
 					<Box sx={{ display: "flex", flexDirection: "column", gap: 3, pt: 2 }}>
 						<Typography variant="h6" gutterBottom>
