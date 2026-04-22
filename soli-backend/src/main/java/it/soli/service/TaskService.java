@@ -4,6 +4,7 @@ import it.soli.entity.AuditLog;
 import it.soli.entity.AuditEntityType;
 import it.soli.entity.Task;
 import it.soli.entity.TaskStatus;
+import it.soli.entity.UrgencyLevel;
 import it.soli.exception.IllegalTaskStateException;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -89,17 +90,32 @@ public class TaskService {
             throw new IllegalTaskStateException("Cannot assign task. Current status is " + task.status + ", expected OPEN.");
         }
 
+        // Prevent the volunteer who previously released the task from accepting it again
+        java.util.List<AuditLog> logs = AuditLog.find("entityId = ?1 AND action = 'STATUS_CHANGE' AND actorId = ?2", taskId, volunteerId).list();
+        boolean hasReleased = logs.stream().anyMatch(log -> 
+            log.oldValue != null && log.newValue != null &&
+            log.oldValue.contains("\"ACCEPTED\"") && log.newValue.contains("\"OPEN\"")
+        );
+        if (hasReleased) {
+            throw new IllegalTaskStateException("Non puoi riprendere in carico un task a cui hai già rinunciato.");
+        }
+
         TaskStatus oldStatus = task.status;
         task.volunteerId = volunteerId;
         task.status = TaskStatus.ACCEPTED;
         task.acceptedAt = LocalDateTime.now();
         task.checkInToken = generateToken(); // Generate token for check-in
 
-        // Create a ChatSession for real-time messaging between creator and volunteer
-        it.soli.entity.ChatSession session = new it.soli.entity.ChatSession();
-        session.taskId = taskId;
-        session.isActive = true;
-        session.persist();
+        // Create or reuse a ChatSession for real-time messaging between creator and volunteer
+        it.soli.entity.ChatSession session = it.soli.entity.ChatSession.find("taskId", taskId).firstResult();
+        if (session == null) {
+            session = new it.soli.entity.ChatSession();
+            session.taskId = taskId;
+            session.isActive = true;
+            session.persist();
+        } else {
+            session.isActive = true;
+        }
 
         logStateChange(task, oldStatus, task.status, getCurrentUserId());
         return task;
@@ -281,6 +297,47 @@ public class TaskService {
                 walletService.assignCreditsForTask(task);
             });
         }
+
+        return task;
+    }
+
+    @Transactional
+    public Task releaseTask(UUID taskId, UUID volunteerId) {
+        Task task = Task.findById(taskId);
+        if (task == null) {
+            throw new IllegalArgumentException("Task not found");
+        }
+
+        if (task.status != TaskStatus.ACCEPTED) {
+            throw new IllegalTaskStateException("Cannot release task. Current status is " + task.status + ", expected ACCEPTED.");
+        }
+
+        if (!task.volunteerId.equals(volunteerId)) {
+            throw new IllegalArgumentException("Only the assigned volunteer can release the task.");
+        }
+
+        TaskStatus oldStatus = task.status;
+        task.volunteerId = null;
+        task.acceptedAt = null;
+        task.checkInToken = null;
+        task.checkOutToken = null;
+        task.status = TaskStatus.OPEN;
+
+        // Increase criticality by one step
+        if (task.urgencyLevel == UrgencyLevel.LOW) {
+            task.urgencyLevel = UrgencyLevel.MEDIUM;
+        } else if (task.urgencyLevel == UrgencyLevel.MEDIUM) {
+            task.urgencyLevel = UrgencyLevel.HIGH;
+        } else if (task.urgencyLevel == UrgencyLevel.HIGH) {
+            task.urgencyLevel = UrgencyLevel.CRITICAL;
+        }
+
+        logStateChange(task, oldStatus, task.status, volunteerId);
+
+        // Restart matching
+        managedExecutor.execute(() -> {
+            matchingService.matchAndNotifyVolunteers(task);
+        });
 
         return task;
     }
