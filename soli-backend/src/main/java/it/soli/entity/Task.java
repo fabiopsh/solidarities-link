@@ -39,6 +39,9 @@ public class Task extends PanacheEntityBase {
     @Column(name = "scheduled_at")
     public LocalDateTime scheduledAt;
 
+    @Column(name = "has_scheduled_time")
+    public Boolean hasScheduledTime = false;
+
     @Column(name = "target_location")
     public String targetLocation;
 

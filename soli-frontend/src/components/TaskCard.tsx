@@ -16,6 +16,7 @@ import type { Task, UrgencyLevel } from "../types/models/Task";
 import type { ServiceCategory } from "../types/models/VolunteerProfile";
 import api, { USER_BASIC_CACHE_TTL } from "../api";
 import UserAvatar from "./UserAvatar";
+import { formatScheduledAt } from "../utils/dateFormat";
 
 const CATEGORY_CONFIG: Record<ServiceCategory | string, { label: string; icon: any; color: string }> = {
     MOBILITY: { label: "Mobilità", icon: DirectionsCarIcon, color: "#2196f3" },
@@ -200,13 +201,7 @@ export default function TaskCard({ task, currentUserId, onDetailsClick, onCancel
                                 <ScheduleIcon sx={{ fontSize: 18, color: "text.secondary" }} />
                             </Box>
                             <Typography variant="body2" color="text.secondary" fontWeight={600} sx={{ fontSize: "0.85rem" }}>
-                                {new Date(task.scheduledAt).toLocaleDateString("it-IT", {
-                                    weekday: "short",
-                                    month: "short",
-                                    day: "numeric",
-                                    hour: "2-digit",
-                                    minute: "2-digit",
-                                })}
+                                {formatScheduledAt(task.scheduledAt!, task.hasScheduledTime, "short")}
                             </Typography>
                         </Box>
                     )}

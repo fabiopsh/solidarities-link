@@ -49,6 +49,7 @@ import { useAuth } from "react-oidc-context";
 import api, { USER_BASIC_CACHE_TTL } from "../api";
 import type { Task } from "../types/models/Task";
 import type { User } from "../types/models/User";
+import { formatScheduledAt } from "../utils/dateFormat";
 
 interface ChatMessage {
 	id: string;
@@ -534,17 +535,10 @@ export default function TaskDetailPage() {
 												</Box>
 												<Box>
 													<Typography variant="caption" color="text.secondary" display="block" fontWeight={600}>
-														DATA E ORA PREVISTA
+														{(() => { const timeIsSet = task.hasScheduledTime != null ? task.hasScheduledTime : (new Date(task.scheduledAt!).getHours() !== 0 || new Date(task.scheduledAt!).getMinutes() !== 0); return timeIsSet ? "DATA E ORA PREVISTA" : "DATA PREVISTA"; })()}
 													</Typography>
 													<Typography variant="body1" fontWeight={700}>
-														{new Date(task.scheduledAt).toLocaleString("it-IT", {
-															weekday: "long",
-															year: "numeric",
-															month: "long",
-															day: "numeric",
-															hour: "2-digit",
-															minute: "2-digit",
-														})}
+														{formatScheduledAt(task.scheduledAt!, task.hasScheduledTime, "long")}
 													</Typography>
 												</Box>
 											</Box>

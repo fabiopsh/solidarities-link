@@ -125,25 +125,39 @@ export default function TaskWizardPage() {
 	const [options, setOptions] = useState<any[]>([]);
 	const [inputValue, setInputValue] = useState("");
 
-	const scheduledAtError = useMemo(() => {
+	// Compute the resolved scheduledAt: date only → date at midnight; date+time → full datetime; time only → null (requires date)
+	const resolvedScheduledAt = useMemo(() => {
 		if (scheduledDate && scheduledTime) {
-			const combined = scheduledDate.hour(scheduledTime.hour()).minute(scheduledTime.minute()).second(0).millisecond(0);
-			if (combined.isBefore(dayjs())) {
+			return scheduledDate.hour(scheduledTime.hour()).minute(scheduledTime.minute()).second(0).millisecond(0);
+		}
+		if (scheduledDate && !scheduledTime) {
+			// Only date set → send date at midnight
+			return scheduledDate.hour(0).minute(0).second(0).millisecond(0);
+		}
+		// Time-only or nothing → not sent
+		return null;
+	}, [scheduledDate, scheduledTime]);
+
+	// Warning: user set time but not date
+	const scheduledAtDateMissing = !!(scheduledTime && !scheduledDate);
+
+	const scheduledAtError = useMemo(() => {
+		if (resolvedScheduledAt) {
+			if (resolvedScheduledAt.isBefore(dayjs())) {
 				return "L'orario non può essere nel passato";
 			}
 		}
 		return null;
-	}, [scheduledDate, scheduledTime]);
+	}, [resolvedScheduledAt]);
 
 	const scheduledAtWarning = useMemo(() => {
-		if (scheduledDate && scheduledTime && !scheduledAtError) {
-			const combined = scheduledDate.hour(scheduledTime.hour()).minute(scheduledTime.minute()).second(0).millisecond(0);
-			if (combined.isBefore(dayjs().add(30, "minute"))) {
+		if (resolvedScheduledAt && !scheduledAtError) {
+			if (resolvedScheduledAt.isBefore(dayjs().add(30, "minute"))) {
 				return "Si consiglia di programmare il task almeno 30 minuti nel futuro per dare tempo ai volontari di organizzarsi.";
 			}
 		}
 		return null;
-	}, [scheduledDate, scheduledTime, scheduledAtError]);
+	}, [resolvedScheduledAt, scheduledAtError]);
 
 	// Get current position on mount
 	useEffect(() => {
@@ -305,9 +319,10 @@ export default function TaskWizardPage() {
 				description,
 				category,
 				urgencyLevel,
-				scheduledAt: (scheduledDate && scheduledTime)
-					? scheduledDate.hour(scheduledTime.hour()).minute(scheduledTime.minute()).toISOString()
+				scheduledAt: resolvedScheduledAt
+					? resolvedScheduledAt.format("YYYY-MM-DDTHH:mm:ss")
 					: null,
+				hasScheduledTime: !!(scheduledTime && scheduledDate),
 				targetAddress,
 				latitude,
 				longitude,
@@ -553,12 +568,17 @@ export default function TaskWizardPage() {
 										</Box>
 									</Grid>
 								</Grid>
-								{scheduledAtError && (
+								{scheduledAtDateMissing && (
+									<Typography color="error" variant="caption" sx={{ mt: 1, display: "block" }}>
+										⚠️ Hai inserito un orario, per favore seleziona anche una data.
+									</Typography>
+								)}
+								{scheduledAtError && !scheduledAtDateMissing && (
 									<Typography color="error" variant="caption" sx={{ mt: 1, display: "block" }}>
 										{scheduledAtError}
 									</Typography>
 								)}
-								{scheduledAtWarning && !scheduledAtError && (
+								{scheduledAtWarning && !scheduledAtError && !scheduledAtDateMissing && (
 									<Typography color="warning.main" variant="caption" sx={{ mt: 1, display: "block" }}>
 										⚠️ {scheduledAtWarning}
 									</Typography>
@@ -574,7 +594,7 @@ export default function TaskWizardPage() {
 								variant="contained"
 								size="large"
 								onClick={handleNext}
-								disabled={!title || !category || !urgencyLevel || !!scheduledAtError}
+								disabled={!title || !category || !urgencyLevel || !!scheduledAtError || scheduledAtDateMissing}
 								sx={{ px: 4, py: 1.5, fontSize: "1.1rem" }}
 							>
 								Avanti
@@ -717,13 +737,13 @@ export default function TaskWizardPage() {
 							</Typography>
 							<Typography variant="body1">{description || "Nessuna descrizione aggiuntiva"}</Typography>
 
-							{scheduledDate && scheduledTime && (
+							{resolvedScheduledAt && (
 								<>
 									<Typography variant="subtitle1" color="text.secondary" sx={{ mt: 2 }}>
 										Quando
 									</Typography>
 									<Typography variant="body1" gutterBottom>
-										{scheduledDate.hour(scheduledTime.hour()).minute(scheduledTime.minute()).locale("it").format("dddd D MMMM YYYY, HH:mm")}
+										{resolvedScheduledAt.locale("it").format(scheduledTime ? "dddd D MMMM YYYY, HH:mm" : "dddd D MMMM YYYY")}
 									</Typography>
 								</>
 							)}
