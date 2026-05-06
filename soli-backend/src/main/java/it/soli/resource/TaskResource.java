@@ -255,6 +255,7 @@ public class TaskResource {
 
     @POST
     @Path("/{id}/confirm-completion")
+    @Consumes(MediaType.WILDCARD)
     @Transactional
     public Response confirmCompletion(@PathParam("id") UUID id) {
         User currentUser = getAuthenticatedUser();
@@ -264,6 +265,22 @@ public class TaskResource {
             Task task = taskService.confirmCompletion(id, currentUser.id);
             return Response.ok(task).build();
         } catch (IllegalArgumentException e) {
+            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
+        }
+    }
+
+    @POST
+    @Path("/{id}/release")
+    @Consumes(MediaType.WILDCARD)
+    @Transactional
+    public Response releaseTask(@PathParam("id") UUID id) {
+        User currentUser = getAuthenticatedUser();
+        if (currentUser == null) return Response.status(Response.Status.UNAUTHORIZED).build();
+
+        try {
+            Task task = taskService.releaseTask(id, currentUser.id);
+            return Response.ok(task).build();
+        } catch (Exception e) {
             return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
         }
     }

@@ -286,11 +286,33 @@ export default function TaskDetailPage() {
 				severity: "success",
 			});
 			await fetchTaskAndUser(); // Refresh to see chat and new tokens
-		} catch (err) {
+		} catch (err: any) {
 			console.error("Error accepting task:", err);
-			setSnackbar({ open: true, message: "Errore durante la presa in carico. Riprova.", severity: "error" });
+			const errorMsg = err?.response?.data?.error || err?.response?.data || "";
+			let displayMsg = "Errore durante la presa in carico. Riprova.";
+			if (typeof errorMsg === 'string' && errorMsg.includes("già rinunciato")) {
+				displayMsg = "Attenzione. Impossibile prendere in carico un task rifiutato in precedenza.";
+			} else if (typeof errorMsg === 'string' && errorMsg.trim() !== "") {
+				displayMsg = errorMsg.split('\n')[0];
+			}
+			setSnackbar({ open: true, message: displayMsg, severity: "error" });
 		} finally {
 			setAccepting(false);
+		}
+	};
+
+	const handleReleaseTask = async () => {
+		if (!id) return;
+		try {
+			const url = `/api/tasks/${id}/release`;
+			console.log("RELEASE TASK: posting to", url, "id=", id);
+			await api.post(url);
+			setSnackbar({ open: true, message: "Hai rinunciato al task. È di nuovo disponibile.", severity: "success" });
+			await fetchTaskAndUser();
+		} catch (err: any) {
+			console.error("Error releasing task:", err);
+			const errorMsg = err?.response?.data?.error || err?.response?.data || "Errore durante la rinuncia del task.";
+			setSnackbar({ open: true, message: typeof errorMsg === 'string' ? errorMsg : "Errore durante la rinuncia del task.", severity: "error" });
 		}
 	};
 
@@ -425,6 +447,16 @@ export default function TaskDetailPage() {
 													sx={{ fontWeight: "bold", borderRadius: 2, flex: { xs: 1, sm: "none" } }}
 												>
 													Chat (Volontario)
+												</Button>
+											)}
+											{task.status === "ACCEPTED" && isVolunteer && (
+												<Button
+													variant="outlined"
+													color="error"
+													onClick={handleReleaseTask}
+													sx={{ fontWeight: "bold", borderRadius: 2, flex: { xs: 1, sm: "none" } }}
+												>
+													Rinuncia
 												</Button>
 											)}
 											{(task.status === "ACCEPTED" || task.status === "IN_PROGRESS") && isCreator && (
