@@ -5,7 +5,7 @@
 	"registrationEmailAsUsername": true,
 	"loginWithEmailAllowed": true,
 	"sslRequired": "none",
-	"internationalizationEnabled": true,
+	"internationalizationEnabled": false,
 	"supportedLocales": ["it", "en"],
 	"defaultLocale": "it",
 	"loginTheme": "soli",
