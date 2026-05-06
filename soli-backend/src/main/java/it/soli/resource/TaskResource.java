@@ -165,6 +165,7 @@ public class TaskResource {
         if (updatedTask.title != null) task.title = updatedTask.title;
         if (updatedTask.description != null) task.description = updatedTask.description;
         if (updatedTask.scheduledAt != null) task.scheduledAt = updatedTask.scheduledAt;
+        if (updatedTask.hasScheduledTime != null) task.hasScheduledTime = updatedTask.hasScheduledTime;
         if (updatedTask.category != null) task.category = updatedTask.category;
         if (updatedTask.targetAddress != null) task.targetAddress = updatedTask.targetAddress;
         if (updatedTask.targetLocation != null) task.targetLocation = updatedTask.targetLocation;

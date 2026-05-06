@@ -14,6 +14,7 @@ export interface Task {
 	description?: string;
 	urgencyLevel: UrgencyLevel;
 	scheduledAt?: string;
+	hasScheduledTime?: boolean;
 	targetLocation?: string;
 	targetAddress?: string;
 	latitude?: number;
