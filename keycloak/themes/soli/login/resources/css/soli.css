@@ -160,14 +160,19 @@ body {
 
 /* --- Page title (sottotitolo dentro la card, appare dopo emoji e "SoLi") --- */
 #kc-page-title,
-.login-pf .card-pf h1,
-.register-pf .card-pf h1 {
+.login-pf .card-pf h1 {
 	font-size: 0.9rem !important;
 	font-weight: 400 !important;
 	color: #757575 !important;
 	text-align: center !important;
 	margin: 0 0 20px 0 !important;
 	order: 3 !important;
+}
+
+/* Nascondi il titolo "Register" nella pagina di registrazione */
+body:has(#kc-register-form) #kc-page-title,
+body:has(#kc-register-form) .card-pf h1 {
+	display: none !important;
 }
 
 /* --- Form labels --- */
