@@ -19,7 +19,6 @@ body {
 	font-family: "Inter", "Roboto", "Helvetica", "Arial", sans-serif;
 	-webkit-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;
-	background-color: #f5f5f5;
 }
 
 ::-webkit-scrollbar {
@@ -37,4 +36,14 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
 	background: rgba(0, 0, 0, 0.25);
+}
+
+[data-mui-color-scheme="dark"] ::-webkit-scrollbar-thumb,
+html.dark ::-webkit-scrollbar-thumb {
+	background: rgba(255, 255, 255, 0.2);
+}
+
+[data-mui-color-scheme="dark"] ::-webkit-scrollbar-thumb:hover,
+html.dark ::-webkit-scrollbar-thumb:hover {
+	background: rgba(255, 255, 255, 0.35);
 }

@@ -94,7 +94,7 @@ export default function TaskCard({ task, currentUserId, onDetailsClick, onCancel
                 height: "100%",
                 display: "flex",
                 flexDirection: "column",
-                borderRadius: 4,
+                borderRadius: 3,
                 boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
                 transition: "all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)",
                 border: "1px solid",
@@ -235,7 +235,7 @@ export default function TaskCard({ task, currentUserId, onDetailsClick, onCancel
                 </Stack>
             </CardContent>
 
-            <Box sx={{ p: 2.5, pt: 0, bgcolor: "background.paper" }}>
+            <Box sx={{ p: 2.5, pt: 0 }}>
                 <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
                     <Button
                         size="large"
