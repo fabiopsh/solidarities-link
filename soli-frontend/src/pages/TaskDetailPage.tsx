@@ -49,6 +49,8 @@ import { useAuth } from "react-oidc-context";
 import api, { USER_BASIC_CACHE_TTL } from "../api";
 import type { Task } from "../types/models/Task";
 import type { User } from "../types/models/User";
+import { useUserLocation } from "../hooks/useUserLocation";
+import { formatDistance, haversineKm } from "../utils/location";
 
 interface ChatMessage {
 	id: string;
@@ -111,6 +113,7 @@ export default function TaskDetailPage() {
 	const [dbUser, setDbUser] = useState<User | null>(null);
 	const [creator, setCreator] = useState<BasicUser | null>(null);
 	const [volunteer, setVolunteer] = useState<BasicUser | null>(null);
+	const { coords: userCoords } = useUserLocation();
 
 	// Cancellation timer state (10 minutes)
 	const [cancelTimeLeft, setCancelTimeLeft] = useState<number | null>(null);
@@ -351,6 +354,8 @@ export default function TaskDetailPage() {
 
 	const isCreator = dbUser?.id === task.creatorId;
 	const isVolunteer = dbUser?.id === task.volunteerId;
+	const isAssignedVolunteer = Boolean(task.volunteerId && dbUser?.id === task.volunteerId);
+	const canShowExactLocation = isCreator || isAssignedVolunteer;
 	const canCancel = isCreator && (
 		task.status === "OPEN" ||
 		(task.status === "ACCEPTED" && cancelTimeLeft !== null && cancelTimeLeft > 0)
@@ -362,6 +367,10 @@ export default function TaskDetailPage() {
 		const s = (seconds % 60).toString().padStart(2, "0");
 		return `${m}:${s}`;
 	};
+
+	const distanceKm = (userCoords && task.latitude != null && task.longitude != null)
+		? haversineKm(userCoords[0], userCoords[1], task.latitude, task.longitude)
+		: null;
 
 	const isTokenVisible = task.status === "ACCEPTED" || task.status === "IN_PROGRESS";
 	const activeToken = task.status === "ACCEPTED" ? task.checkInToken : task.checkOutToken;
@@ -522,8 +531,20 @@ export default function TaskDetailPage() {
 													INDIRIZZO / LUOGO
 												</Typography>
 												<Typography variant="body1" fontWeight={500}>
-													{task.targetAddress || "Non specificato"}
+													{canShowExactLocation
+														? (task.targetAddress || "Non specificato")
+														: "Posizione approssimativa"}
 												</Typography>
+												{distanceKm !== null && (
+													<Typography variant="caption" color="text.secondary" sx={{ display: "block", fontWeight: 600, mt: 0.25 }}>
+														{canShowExactLocation ? formatDistance(distanceKm) : `~${formatDistance(distanceKm)} da te`}
+													</Typography>
+												)}
+												{!canShowExactLocation && task.status === "OPEN" && (
+													<Typography variant="caption" color="text.disabled" sx={{ display: "block", mt: 0.25 }}>
+														L'indirizzo esatto sarà visibile dopo aver preso in carico il task.
+													</Typography>
+												)}
 											</Box>
 										</Box>
 
