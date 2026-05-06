@@ -17,6 +17,8 @@ import type { ServiceCategory } from "../types/models/VolunteerProfile";
 import api, { USER_BASIC_CACHE_TTL } from "../api";
 import UserAvatar from "./UserAvatar";
 import { formatScheduledAt } from "../utils/dateFormat";
+import { useUserLocation } from "../hooks/useUserLocation";
+import { formatDistance, haversineKm } from "../utils/location";
 
 const CATEGORY_CONFIG: Record<ServiceCategory | string, { label: string; icon: any; color: string }> = {
     MOBILITY: { label: "Mobilità", icon: DirectionsCarIcon, color: "#2196f3" },
@@ -61,6 +63,13 @@ export default function TaskCard({ task, currentUserId, onDetailsClick, onCancel
     const getCategoryConfig = (cat: string) => CATEGORY_CONFIG[cat] || { label: cat, icon: CategoryIcon, color: "#grey" };
 
     const isCreator = task.creatorId === currentUserId;
+    const isAssignedVolunteer = Boolean(task.volunteerId && task.volunteerId === currentUserId);
+    const canShowExactLocation = isCreator || isAssignedVolunteer;
+
+    const { coords: userCoords } = useUserLocation();
+    const distanceKm = (userCoords && task.latitude != null && task.longitude != null)
+        ? haversineKm(userCoords[0], userCoords[1], task.latitude, task.longitude)
+        : null;
 
     const [creator, setCreator] = useState<{ firstName: string; lastName: string } | null>(null);
     const [volunteer, setVolunteer] = useState<{ firstName: string; lastName: string } | null>(null);
@@ -95,7 +104,7 @@ export default function TaskCard({ task, currentUserId, onDetailsClick, onCancel
                 height: "100%",
                 display: "flex",
                 flexDirection: "column",
-                borderRadius: 4,
+                borderRadius: 3,
                 boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
                 transition: "all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)",
                 border: "1px solid",
@@ -169,9 +178,18 @@ export default function TaskCard({ task, currentUserId, onDetailsClick, onCancel
                         <Box sx={{ p: 0.8, borderRadius: 1.5, bgcolor: "grey.100", display: "flex" }}>
                             <LocationOnIcon sx={{ fontSize: 18, color: "text.secondary" }} />
                         </Box>
-                        <Typography variant="body2" color="text.secondary" sx={{ flex: 1, pt: 0.5, fontSize: "0.85rem" }}>
-                            {task.targetAddress || "Indirizzo non specificato"}
-                        </Typography>
+                        <Box sx={{ flex: 1, pt: 0.5 }}>
+                            <Typography variant="body2" color="text.secondary" sx={{ fontSize: "0.85rem" }}>
+                                {canShowExactLocation
+                                    ? (task.targetAddress || "Indirizzo non specificato")
+                                    : "Posizione approssimativa"}
+                            </Typography>
+                            {distanceKm !== null && (
+                                <Typography variant="caption" color="text.secondary" sx={{ display: "block", fontWeight: 600, mt: 0.25 }}>
+                                    {canShowExactLocation ? formatDistance(distanceKm) : `~${formatDistance(distanceKm)} da te`}
+                                </Typography>
+                            )}
+                        </Box>
                     </Box>
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
                         <Box
@@ -230,7 +248,7 @@ export default function TaskCard({ task, currentUserId, onDetailsClick, onCancel
                 </Stack>
             </CardContent>
 
-            <Box sx={{ p: 2.5, pt: 0, bgcolor: "background.paper" }}>
+            <Box sx={{ p: 2.5, pt: 0 }}>
                 <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
                     <Button
                         size="large"

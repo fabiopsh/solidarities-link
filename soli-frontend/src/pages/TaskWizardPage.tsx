@@ -29,6 +29,7 @@ import EventIcon from "@mui/icons-material/Event";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import WarningIcon from "@mui/icons-material/Warning";
 import ReportIcon from "@mui/icons-material/Report";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { MobileDatePicker } from "@mui/x-date-pickers/MobileDatePicker";
 import { MobileTimePicker } from "@mui/x-date-pickers/MobileTimePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
@@ -773,9 +774,18 @@ export default function TaskWizardPage() {
 
 	return (
 		<Box sx={{ maxWidth: 800, mx: "auto", width: "100%" }}>
-			<Typography variant="h4" fontWeight="bold" gutterBottom sx={{ mb: 4, color: "primary.dark" }}>
-				Nuova Richiesta di Aiuto
-			</Typography>
+			<Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 4 }}>
+				<Typography variant="h4" fontWeight="bold" sx={{ color: "primary.dark" }}>
+					Nuova Richiesta di Aiuto
+				</Typography>
+				<Button
+					startIcon={<ArrowBackIcon />}
+					onClick={() => navigate(-1)}
+					sx={{ color: "text.secondary", fontWeight: 500 }}
+				>
+					Annulla
+				</Button>
+			</Box>
 
 			{error && (
 				<Alert severity="error" sx={{ mb: 3 }}>

@@ -32,7 +32,11 @@ import LogoutIcon from "@mui/icons-material/Logout";
 import PersonIcon from "@mui/icons-material/Person";
 import HandshakeIcon from "@mui/icons-material/Handshake";
 import GroupsIcon from "@mui/icons-material/Groups";
+import LightModeIcon from "@mui/icons-material/LightMode";
+import DarkModeIcon from "@mui/icons-material/DarkMode";
+import Tooltip from "@mui/material/Tooltip";
 import { useRole, type UserRole } from "../context/RoleContext";
+import { useThemeMode } from "../context/ThemeModeContext";
 import NotificationDropdown from "./NotificationDropdown";
 
 const DRAWER_WIDTH = 280;
@@ -68,6 +72,7 @@ export default function DashboardLayout() {
 	const location = useLocation();
 	const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 	const { role, setRole } = useRole();
+	const { mode, toggleMode } = useThemeMode();
 
 	useEffect(() => {
 		let urlToRevoke: string | null = null;
@@ -431,6 +436,22 @@ export default function DashboardLayout() {
 							Richiedente
 						</ToggleButton>
 					</ToggleButtonGroup>
+
+					<Tooltip title={mode === "light" ? "Passa alla modalità scura" : "Passa alla modalità chiara"}>
+						<IconButton
+							onClick={toggleMode}
+							size="small"
+							aria-label="toggle theme"
+							sx={{
+								mr: 1,
+								color: "text.secondary",
+								"&:hover": { color: "primary.main" },
+								transition: "color 0.2s",
+							}}
+						>
+							{mode === "light" ? <DarkModeIcon /> : <LightModeIcon />}
+						</IconButton>
+					</Tooltip>
 
 					<NotificationDropdown />
 

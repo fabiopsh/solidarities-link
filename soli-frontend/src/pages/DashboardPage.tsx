@@ -134,7 +134,9 @@ export default function DashboardPage() {
 	const availableTasks = tasks.filter((t) => t.status === "OPEN" && t.creatorId !== currentUserId);
 
 	// On dashboard overview, show up to 4 recent tasks from my activity
-	const recentMyTasks = [...myRequests, ...acceptedTasks].slice(0, 4);
+	const recentMyTasks = [...myRequests, ...acceptedTasks]
+		.filter((t) => t.status !== "CANCELLED" && t.status !== "COMPLETED")
+		.slice(0, 4);
 
 	if (loading) {
 		return (
