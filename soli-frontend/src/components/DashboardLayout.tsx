@@ -38,6 +38,7 @@ import Tooltip from "@mui/material/Tooltip";
 import { useRole, type UserRole } from "../context/RoleContext";
 import { useThemeMode } from "../context/ThemeModeContext";
 import NotificationDropdown from "./NotificationDropdown";
+import logoUrl from "../assets/logo.svg";
 
 const DRAWER_WIDTH = 280;
 const DRAWER_WIDTH_COLLAPSED = 72;
@@ -161,7 +162,7 @@ export default function DashboardLayout() {
 			>
 				{isExpanded && (
 					<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-						<HandshakeIcon color="primary" sx={{ fontSize: 32 }} />
+						<Box component="img" src={logoUrl} alt="SoLi Logo" sx={{ width: 32, height: 32, objectFit: "contain" }} />
 						<Typography
 							variant="h6"
 							noWrap

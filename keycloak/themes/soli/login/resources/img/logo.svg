@@ -1,0 +1,22 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="tealGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#48A999" />
+      <stop offset="100%" stop-color="#00796B" />
+    </linearGradient>
+    <linearGradient id="amberGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#FF6F00" />
+      <stop offset="100%" stop-color="#FFA040" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Left Loop (Teal) -->
+  <path d="M 256 256 C 180 120, 80 120, 80 256 C 80 392, 180 392, 256 256 Z" fill="none" stroke="url(#tealGrad)" stroke-width="56" stroke-linecap="round" stroke-linejoin="round" />
+  
+  <!-- Right Loop (Amber) -->
+  <path d="M 256 256 C 332 392, 432 392, 432 256 C 432 120, 332 120, 256 256 Z" fill="none" stroke="url(#amberGrad)" stroke-width="56" stroke-linecap="round" stroke-linejoin="round" />
+
+  <!-- Center Connection Dot -->
+  <circle cx="256" cy="256" r="38" fill="#FFFFFF" />
+  <circle cx="256" cy="256" r="20" fill="#00796B" />
+</svg>
