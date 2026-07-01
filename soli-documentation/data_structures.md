@@ -238,7 +238,23 @@ Blob memorizzati in tabella (`bytea`), relazione 1:1.
 
 **AssociationImage** (`soli_association_images`): `id` UUID; `associationId` UUID (Unique, NOT NULL); `data` bytea (NOT NULL); `contentType` String (NOT NULL).
 
-## 13. CaregiverRelation (Relazione Caregiver–Beneficiario)
+## 14. ApiToken (Token API Open Data)
+
+Token che abilita l'accesso esterno di sola lettura alle API Open (`/api/open/**`) per il contesto smart-city (FR-21). Tabella `soli_api_tokens`. La chiave in chiaro è mostrata una sola volta alla creazione; a DB è salvato solo l'hash.
+
+- `id`: UUID (Primary Key)
+- `label`: String (NOT NULL — nome descrittivo, es. "Comune di Pisa")
+- `tokenPrefix`: String (NOT NULL — primi caratteri della chiave, per display)
+- `tokenHash`: String (NOT NULL, Unique — SHA-256 hex della chiave completa)
+- `scope`: String (default `read:stats`)
+- `createdBy`: UUID (Foreign Key -> `User.id`, admin emittente)
+- `createdAt`: Timestamp
+- `expiresAt`: Timestamp (**NOT NULL** — scadenza obbligatoria)
+- `lastUsedAt`: Timestamp (Nullable)
+- `revoked`: Boolean (default false)
+- `callCount`: Long (default 0)
+
+## 15. CaregiverRelation (Relazione Caregiver–Beneficiario)
 
 Collega un caregiver a un beneficiario per conto del quale può creare/gestire task. Tabella `soli_caregiver_relations`.
 

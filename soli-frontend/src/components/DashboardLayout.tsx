@@ -117,8 +117,15 @@ export default function DashboardLayout() {
 		}
 	}, [role, location.pathname, navigate]);
 
-	// Check if user has admin role
-	const isAdmin = (auth.user?.profile?.realm_access as any)?.roles?.includes("admin") || false;
+	// Admin status comes from the backend DB role (authoritative source used by
+	// @RolesAllowed), not the Keycloak ID token — which does not carry realm roles.
+	const [isAdmin, setIsAdmin] = useState(false);
+	useEffect(() => {
+		if (!auth.isAuthenticated) return;
+		api.get("/api/users/me")
+			.then((r) => setIsAdmin(r.data?.role === "ADMIN"))
+			.catch(() => setIsAdmin(false));
+	}, [auth.isAuthenticated]);
 
 	const userName = auth.user?.profile?.given_name || auth.user?.profile?.name || "Utente";
 	const userEmail = auth.user?.profile?.email || "";

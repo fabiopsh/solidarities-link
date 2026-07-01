@@ -2,6 +2,15 @@
 
 Registro delle modifiche rilevanti che impattano requisiti funzionali e modello dati.
 
+## 2026-07-02 — Open Data API smart-city + token + cruscotto (FR-21)
+
+- Nuova entità **ApiToken** (`soli_api_tokens`): token API con hash SHA-256, scadenza obbligatoria, revoca, tracciamento uso. Gestione admin `/api/admin/tokens`.
+- **API Open** read-only aggregate su `/api/open/v1` (`AnalyticsService` + `OpenDataResource`): overview, task per categoria/urgenza/stato, timeseries, geo per città + heatmap (k-anonymity), crediti, volontariato, impatto, enti, meta/categorie. Gating via `OpenDataApiKeyFilter` (header `X-API-Key`, o JWT ADMIN per anteprima). Documentate in OpenAPI (tag *Open Data*, `/q/swagger-ui`).
+- **Privacy**: solo aggregati, nessun identificativo; geolocalizzazione a griglia con soppressione celle < 3; licenza CC-BY 4.0.
+- **Frontend**: `AdminDashboardPage` tabbed (Task · Statistiche con `@mui/x-charts` · API Token); nuovo portale pubblico `/developers` con catalogo endpoint, esempi e prova live.
+- Config: policy `permit` per `/api/open/*` + header CORS `x-api-key`.
+- Documentazione: `open_data_api.md`, `fr-21-open-data-api-smart-city.md`, entità `ApiToken` in `data_structures.md`.
+
 ## 2026-07-01 — Wallet/Crediti end-to-end, enti benefici, fix UX
 
 ### Crediti e completamento task (FR-11, FR-18)
