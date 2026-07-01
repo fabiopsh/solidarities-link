@@ -64,6 +64,12 @@ public class Task extends PanacheEntityBase {
     @Column(name = "check_out_token")
     public String checkOutToken;
 
+    @Column(name = "check_in_at")
+    public LocalDateTime checkInAt;
+
+    @Column(name = "check_out_at")
+    public LocalDateTime checkOutAt;
+
     @Column(name = "reward_credits")
     public Integer rewardCredits = 0;
 

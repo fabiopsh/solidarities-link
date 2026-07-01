@@ -160,13 +160,26 @@ export default function TaskWizardPage() {
 		return null;
 	}, [resolvedScheduledAt, scheduledAtError]);
 
-	// Get current position on mount
+	// Get current position on mount and prefill the address ("la mia posizione")
 	useEffect(() => {
 		if (navigator.geolocation) {
 			navigator.geolocation.getCurrentPosition(
-				(position) => {
-					setLatitude(position.coords.latitude);
-					setLongitude(position.coords.longitude);
+				async (position) => {
+					const lat = position.coords.latitude;
+					const lon = position.coords.longitude;
+					setLatitude(lat);
+					setLongitude(lon);
+					// Reverse-geocode immediately so the address field is compiled without extra clicks
+					try {
+						const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
+						const data = await res.json();
+						if (data && data.display_name) {
+							setTargetAddress(data.display_name);
+							setInputValue(data.display_name);
+						}
+					} catch (error) {
+						console.error("Error reverse geocoding on mount:", error);
+					}
 				},
 				(error) => {
 					console.error("Error getting default location:", error);
@@ -215,6 +228,7 @@ export default function TaskWizardPage() {
 			const data = await res.json();
 			if (data && data.display_name) {
 				setTargetAddress(data.display_name);
+				setInputValue(data.display_name);
 			}
 		} catch (error) {
 			console.error("Error reverse geocoding:", error);

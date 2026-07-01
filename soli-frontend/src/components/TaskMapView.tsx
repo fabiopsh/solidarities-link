@@ -278,7 +278,7 @@ function TaskDetailDrawer({ task, open, onClose }: { task: Task | null; open: bo
                                 borderRadius: 1.5,
                                 bgcolor: (theme: any) => {
                                     const color = urgConfig.color;
-                                    return color === "default" ? "grey.100" : `${theme.palette[color].main}20`;
+                                    return color === "default" ? "action.hover" : `${theme.palette[color].main}20`;
                                 },
                                 display: "flex",
                             }}
@@ -299,7 +299,7 @@ function TaskDetailDrawer({ task, open, onClose }: { task: Task | null; open: bo
 
                     {/* Address */}
                     <Box sx={{ display: "flex", alignItems: "flex-start", gap: 2 }}>
-                        <Box sx={{ p: 1, borderRadius: 1.5, bgcolor: "grey.100", display: "flex" }}>
+                        <Box sx={{ p: 1, borderRadius: 1.5, bgcolor: "action.hover", display: "flex" }}>
                             <LocationOnIcon color="action" />
                         </Box>
                         <Box>
@@ -311,7 +311,7 @@ function TaskDetailDrawer({ task, open, onClose }: { task: Task | null; open: bo
                     {/* Scheduled date */}
                     {task.scheduledAt && (
                         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                            <Box sx={{ p: 1, borderRadius: 1.5, bgcolor: "grey.100", display: "flex" }}>
+                            <Box sx={{ p: 1, borderRadius: 1.5, bgcolor: "action.hover", display: "flex" }}>
                                 <ScheduleIcon color="action" />
                             </Box>
                             <Box>
@@ -367,7 +367,7 @@ function TaskDetailDrawer({ task, open, onClose }: { task: Task | null; open: bo
                 </Stack>
 
                 {/* Session details */}
-                <Box sx={{ mt: 3, p: 2, bgcolor: "grey.50", borderRadius: 2 }}>
+                <Box sx={{ mt: 3, p: 2, bgcolor: "action.hover", borderRadius: 2 }}>
                     <Typography variant="caption" color="text.secondary" display="block">
                         Creato il: {new Date(task.createdAt).toLocaleString("it-IT")}
                     </Typography>
@@ -555,7 +555,7 @@ export default function TaskMapView({ tasks }: { tasks: Task[] }) {
 
                                                 {/* Address row */}
                                                 <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1 }}>
-                                                    <Box sx={{ p: 0.5, borderRadius: 1, bgcolor: "grey.100", display: "flex" }}>
+                                                    <Box sx={{ p: 0.5, borderRadius: 1, bgcolor: "action.hover", display: "flex" }}>
                                                         <LocationOnIcon sx={{ fontSize: 16, color: "text.secondary" }} />
                                                     </Box>
                                                     <Typography variant="body2" color="text.secondary" sx={{ flex: 1, wordWrap: "break-word", fontSize: "0.82rem" }}>
@@ -566,7 +566,7 @@ export default function TaskMapView({ tasks }: { tasks: Task[] }) {
                                                 {/* Date row */}
                                                 {task.scheduledAt && (
                                                     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                                                        <Box sx={{ p: 0.5, borderRadius: 1, bgcolor: "grey.100", display: "flex" }}>
+                                                        <Box sx={{ p: 0.5, borderRadius: 1, bgcolor: "action.hover", display: "flex" }}>
                                                             <ScheduleIcon sx={{ fontSize: 16, color: "text.secondary" }} />
                                                         </Box>
                                                         <Typography variant="body2" color="text.secondary" fontWeight={600} sx={{ fontSize: "0.82rem" }}>
