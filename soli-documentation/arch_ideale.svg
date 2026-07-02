@@ -1,0 +1,136 @@
+<svg viewBox="0 0 1160 800" xmlns="http://www.w3.org/2000/svg" font-family="'Segoe UI', Arial, sans-serif" role="img">
+<title>Architettura ideale SOLI</title>
+<desc>Diagramma C4-container dell'architettura target di Solidarities Link, 4 livelli: client, gateway, applicativo, infrastruttura, con connettori ortogonali e icone tecnologia.</desc>
+<defs>
+  <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#333"/>
+  </marker>
+  <symbol id="icon-phone" viewBox="0 0 16 16"><rect x="4" y="1" width="8" height="14" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.3"/><circle cx="8" cy="12.4" r="0.9" fill="currentColor"/></symbol>
+  <symbol id="icon-browser" viewBox="0 0 16 16"><rect x="1" y="2" width="14" height="11" rx="1.2" fill="none" stroke="currentColor" stroke-width="1.3"/><line x1="1" y1="5.2" x2="15" y2="5.2" stroke="currentColor" stroke-width="1.1"/><circle cx="3.2" cy="3.6" r="0.6" fill="currentColor"/><circle cx="5.2" cy="3.6" r="0.6" fill="currentColor"/></symbol>
+  <symbol id="icon-router" viewBox="0 0 16 16"><rect x="2" y="9" width="12" height="5" rx="1" fill="none" stroke="currentColor" stroke-width="1.3"/><line x1="8" y1="9" x2="4" y2="2" stroke="currentColor" stroke-width="1.2"/><line x1="8" y1="9" x2="12" y2="2" stroke="currentColor" stroke-width="1.2"/><circle cx="4" cy="2" r="1" fill="currentColor"/><circle cx="12" cy="2" r="1" fill="currentColor"/></symbol>
+  <symbol id="icon-key" viewBox="0 0 16 16"><circle cx="5" cy="5" r="3.2" fill="none" stroke="currentColor" stroke-width="1.3"/><line x1="7.3" y1="7.3" x2="14" y2="14" stroke="currentColor" stroke-width="1.3"/><line x1="10.5" y1="10.5" x2="12.7" y2="8.3" stroke="currentColor" stroke-width="1.3"/><line x1="12.2" y1="12.2" x2="14.2" y2="10.2" stroke="currentColor" stroke-width="1.3"/></symbol>
+  <symbol id="icon-chip" viewBox="0 0 16 16"><rect x="4" y="4" width="8" height="8" rx="1" fill="none" stroke="currentColor" stroke-width="1.3"/><line x1="6" y1="1" x2="6" y2="4" stroke="currentColor" stroke-width="1.1"/><line x1="10" y1="1" x2="10" y2="4" stroke="currentColor" stroke-width="1.1"/><line x1="6" y1="12" x2="6" y2="15" stroke="currentColor" stroke-width="1.1"/><line x1="10" y1="12" x2="10" y2="15" stroke="currentColor" stroke-width="1.1"/><line x1="1" y1="6" x2="4" y2="6" stroke="currentColor" stroke-width="1.1"/><line x1="1" y1="10" x2="4" y2="10" stroke="currentColor" stroke-width="1.1"/><line x1="12" y1="6" x2="15" y2="6" stroke="currentColor" stroke-width="1.1"/><line x1="12" y1="10" x2="15" y2="10" stroke="currentColor" stroke-width="1.1"/></symbol>
+  <symbol id="icon-spark" viewBox="0 0 16 16"><path d="M8,1 L9.5,6.5 L15,8 L9.5,9.5 L8,15 L6.5,9.5 L1,8 L6.5,6.5 Z" fill="currentColor"/></symbol>
+  <symbol id="icon-bolt" viewBox="0 0 16 16"><path d="M9,1 L3,9 L7,9 L6,15 L13,7 L9,7 Z" fill="currentColor"/></symbol>
+  <symbol id="icon-db" viewBox="0 0 16 16"><ellipse cx="8" cy="3.2" rx="6" ry="2.2" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M2,3.2 L2,12.8 A6,2.2 0 0,0 14,12.8 L14,3.2" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M2,8 A6,2.2 0 0,0 14,8" fill="none" stroke="currentColor" stroke-width="1.1"/></symbol>
+  <symbol id="icon-doc" viewBox="0 0 16 16"><path d="M6,1 C3,1 3,4 3,8 C3,12 3,15 6,15" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M10,1 C13,1 13,4 13,8 C13,12 13,15 10,15" fill="none" stroke="currentColor" stroke-width="1.3"/></symbol>
+</defs>
+
+<rect x="0" y="0" width="1160" height="800" fill="#FFFFFF"/>
+<rect x="0" y="20" width="1160" height="110" fill="#F7FAF9"/>
+<rect x="0" y="150" width="1160" height="110" fill="#FFFFFF"/>
+<rect x="0" y="280" width="1160" height="260" fill="#F7FAF9"/>
+<rect x="0" y="560" width="1160" height="150" fill="#FFFFFF"/>
+
+<text x="18" y="45" font-size="12" font-weight="700" fill="#1E3A5F" letter-spacing="1">LIVELLO CLIENT</text>
+<text x="18" y="175" font-size="12" font-weight="700" fill="#1E3A5F" letter-spacing="1">LIVELLO GATEWAY</text>
+<text x="18" y="305" font-size="12" font-weight="700" fill="#1E3A5F" letter-spacing="1">LIVELLO APPLICATIVO</text>
+<text x="18" y="585" font-size="12" font-weight="700" fill="#1E3A5F" letter-spacing="1">LIVELLO INFRASTRUTTURA</text>
+
+<!-- ===== CLIENT TIER ===== -->
+<rect x="330" y="50" width="220" height="66" rx="8" fill="#48A999"/>
+<text x="440" y="74" text-anchor="middle" font-size="15" font-weight="700" fill="#fff">Client Mobile</text>
+<use href="#icon-phone" x="394" y="86" width="12" height="12" style="color:#EAF6F3"/>
+<text x="410" y="94" font-size="11.5" fill="#EAF6F3">React Native</text>
+<text x="440" y="108" text-anchor="middle" font-size="10" fill="#DFF2ED">[app, non containerizzata]</text>
+
+<rect x="610" y="50" width="220" height="66" rx="8" fill="#48A999"/>
+<text x="720" y="74" text-anchor="middle" font-size="15" font-weight="700" fill="#fff">Client Web</text>
+<use href="#icon-browser" x="682" y="86" width="12" height="12" style="color:#EAF6F3"/>
+<text x="698" y="94" font-size="11.5" fill="#EAF6F3">React SPA</text>
+<text x="720" y="108" text-anchor="middle" font-size="10" fill="#DFF2ED">[browser]</text>
+
+<!-- ===== GATEWAY TIER ===== -->
+<rect x="330" y="180" width="220" height="66" rx="8" fill="#FF6F00"/>
+<text x="440" y="204" text-anchor="middle" font-size="15" font-weight="700" fill="#fff">Proxy</text>
+<use href="#icon-router" x="411" y="216" width="12" height="12" style="color:#FFE9D6"/>
+<text x="427" y="224" font-size="11.5" fill="#FFE9D6">Nginx</text>
+<text x="440" y="238" text-anchor="middle" font-size="10" fill="#FFDFC2">[routing, TLS, rate limit, CORS]</text>
+
+<rect x="610" y="180" width="220" height="66" rx="8" fill="#1E3A5F"/>
+<text x="720" y="200" text-anchor="middle" font-size="15" font-weight="700" fill="#fff">Auth Server</text>
+<use href="#icon-key" x="651" y="211" width="12" height="12" style="color:#D7DFEA"/>
+<text x="667" y="219" font-size="11.5" fill="#D7DFEA">Keycloak &#183; OIDC/JWT</text>
+<text x="720" y="234" text-anchor="middle" font-size="10" fill="#C6D1E1">[integrazione SPID/CIEid]</text>
+
+<!-- ===== APPLICATION TIER ===== -->
+<rect x="120" y="310" width="640" height="200" rx="10" fill="#00796B"/>
+<text x="440" y="336" text-anchor="middle" font-size="16" font-weight="700" fill="#fff">Backend</text>
+<text x="440" y="354" text-anchor="middle" font-size="11.5" fill="#CFEDE6">REST API &#183; OpenAPI 3.0</text>
+
+<rect x="145" y="375" width="140" height="66" rx="6" fill="#00594F"/>
+<text x="215" y="402" text-anchor="middle" font-size="12" font-weight="600" fill="#fff">User &amp; Auth</text>
+<text x="215" y="418" text-anchor="middle" font-size="9.5" fill="#BFE3DB">profili, ruoli</text>
+
+<rect x="300" y="375" width="140" height="66" rx="6" fill="#00594F"/>
+<text x="370" y="396" text-anchor="middle" font-size="12" font-weight="600" fill="#fff">Task</text>
+<text x="370" y="411" text-anchor="middle" font-size="12" font-weight="600" fill="#fff">Manager</text>
+<text x="370" y="429" text-anchor="middle" font-size="9.5" fill="#BFE3DB">ciclo di vita task</text>
+
+<rect x="455" y="375" width="140" height="66" rx="6" fill="#00594F"/>
+<text x="525" y="402" text-anchor="middle" font-size="12" font-weight="600" fill="#fff">Matching</text>
+<text x="525" y="418" text-anchor="middle" font-size="9.5" fill="#BFE3DB">prossimit&#224;, equit&#224;</text>
+
+<rect x="610" y="375" width="135" height="66" rx="6" fill="#00594F"/>
+<text x="677" y="396" text-anchor="middle" font-size="11.5" font-weight="600" fill="#fff">Reward, Audit,</text>
+<text x="677" y="411" text-anchor="middle" font-size="11.5" font-weight="600" fill="#fff">Chat</text>
+<text x="677" y="429" text-anchor="middle" font-size="9.5" fill="#BFE3DB">crediti, log, msg</text>
+
+<use href="#icon-chip" x="145" y="462" width="12" height="12" style="color:#CFEDE6"/>
+<text x="161" y="470" font-size="10" fill="#CFEDE6">Quarkus (Java 21)</text>
+
+<rect x="800" y="310" width="200" height="70" rx="8" fill="#7A7A7A"/>
+<text x="900" y="334" text-anchor="middle" font-size="14" font-weight="700" fill="#fff">Modulo AI</text>
+<use href="#icon-spark" x="849" y="344" width="12" height="12" style="color:#EDEDED"/>
+<text x="865" y="352" font-size="11" fill="#EDEDED">Ollama / Llama</text>
+<text x="900" y="368" text-anchor="middle" font-size="9.5" fill="#DADADA">[interno, non esposto]</text>
+
+<rect x="800" y="440" width="200" height="70" rx="8" fill="#A85300"/>
+<text x="900" y="464" text-anchor="middle" font-size="14" font-weight="700" fill="#fff">Notification</text>
+<text x="900" y="480" text-anchor="middle" font-size="14" font-weight="700" fill="#fff">Service</text>
+<text x="900" y="500" text-anchor="middle" font-size="9.5" fill="#F0D3B4">[worker, consumer eventi]</text>
+
+<!-- ===== INFRA TIER ===== -->
+<rect x="120" y="600" width="220" height="80" rx="8" fill="#FF8F1F"/>
+<text x="230" y="626" text-anchor="middle" font-size="14" font-weight="700" fill="#fff">Geo-store &amp; Broker</text>
+<use href="#icon-bolt" x="204" y="636" width="12" height="12" style="color:#FFE7CE"/>
+<text x="220" y="644" font-size="11.5" fill="#FFE7CE">Redis</text>
+<text x="230" y="660" text-anchor="middle" font-size="9.5" fill="#FFDBB3">[posizioni volontari, pub/sub]</text>
+
+<rect x="400" y="600" width="220" height="80" rx="8" fill="#B32424"/>
+<text x="510" y="626" text-anchor="middle" font-size="14" font-weight="700" fill="#fff">DB Relazionale</text>
+<use href="#icon-db" x="467" y="636" width="12" height="12" style="color:#F6D3D3"/>
+<text x="483" y="644" font-size="11.5" fill="#F6D3D3">PostgreSQL</text>
+<text x="510" y="660" text-anchor="middle" font-size="9.5" fill="#F0BFBF">[utenti, task, crediti, audit]</text>
+
+<rect x="680" y="600" width="220" height="80" rx="8" fill="#FFA64D"/>
+<text x="790" y="626" text-anchor="middle" font-size="14" font-weight="700" fill="#fff">DB non Relazionale</text>
+<use href="#icon-doc" x="750" y="636" width="12" height="12" style="color:#FFEBD9"/>
+<text x="766" y="644" font-size="11.5" fill="#FFEBD9">MongoDB</text>
+<text x="790" y="660" text-anchor="middle" font-size="9.5" fill="#FFDDB8">[messaggi chat, TTL auto-delete]</text>
+
+<!-- ===== EDGES: tutte ortogonali (90 gradi), instradate in corridoi liberi, nessun box sovrastato ===== -->
+<path d="M440,116 L440,180" stroke="#333" stroke-width="1.6" fill="none" marker-end="url(#arrow)"/>
+<path d="M720,116 L720,148 L545,148 L545,180" stroke="#333" stroke-width="1.6" fill="none" marker-end="url(#arrow)"/>
+<path d="M550,213 L610,213" stroke="#333" stroke-width="1.6" fill="none" marker-end="url(#arrow)"/>
+<path d="M440,246 L440,310" stroke="#333" stroke-width="1.6" fill="none" marker-end="url(#arrow)"/>
+<path d="M760,310 L760,246" stroke="#333" stroke-width="1.6" fill="none" marker-end="url(#arrow)"/>
+<text x="768" y="280" font-size="9.5" fill="#555">valida token</text>
+<path d="M760,345 L800,345" stroke="#333" stroke-width="1.6" fill="none" marker-end="url(#arrow)"/>
+<path d="M760,475 L800,475" stroke="#333" stroke-width="1.6" stroke-dasharray="6,4" fill="none" marker-end="url(#arrow)"/>
+<path d="M215,510 L215,600" stroke="#333" stroke-width="1.6" fill="none" marker-end="url(#arrow)"/>
+<text x="150" y="565" font-size="9.5" fill="#555">query geo</text>
+<path d="M510,510 L510,600" stroke="#333" stroke-width="1.6" fill="none" marker-end="url(#arrow)"/>
+<path d="M745,510 L745,560 L830,560 L830,600" stroke="#333" stroke-width="1.6" fill="none" marker-end="url(#arrow)"/>
+<path d="M800,345 L780,345 L780,600" stroke="#333" stroke-width="1.6" fill="none" marker-end="url(#arrow)"/>
+<path d="M340,615 L340,545 L900,545 L900,510" stroke="#333" stroke-width="1.4" stroke-dasharray="6,4" fill="none" marker-end="url(#arrow)"/>
+
+<!-- ===== LEGEND ===== -->
+<rect x="960" y="600" width="185" height="80" rx="6" fill="#F2F5F8" stroke="#BFBFBF"/>
+<text x="975" y="618" font-size="10.5" font-weight="700" fill="#1E3A5F">Legenda frecce</text>
+<line x1="975" y1="635" x2="1010" y2="635" stroke="#333" stroke-width="1.6" marker-end="url(#arrow)"/>
+<text x="1017" y="639" font-size="9.5" fill="#333">sincrono (REST)</text>
+<line x1="975" y1="655" x2="1010" y2="655" stroke="#333" stroke-width="1.4" stroke-dasharray="6,4" marker-end="url(#arrow)"/>
+<text x="1017" y="659" font-size="9.5" fill="#333">asincrono (evento)</text>
+
+</svg>

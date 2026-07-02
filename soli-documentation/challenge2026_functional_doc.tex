@@ -325,60 +325,7 @@ Di seguito si riportano \textbf{due viste} dell'architettura: la versione \emph{
 % ---------- DIAGRAMMA 1: ARCHITETTURA IDEALE ----------
 \begin{figure}[htbp]
 \centering
-\begin{tikzpicture}[
-  font=\scriptsize,
-  node distance=6mm,
-  box/.style={rectangle,rounded corners=3pt,draw=black!30,thick,align=center,
-              text=white,minimum height=8mm,inner sep=3pt},
-  client/.style={box,fill=soliTealL},
-  proxy/.style={box,fill=soliAmber},
-  auth/.style={box,fill=soliBlue},
-  backend/.style={box,fill=soliTeal},
-  mod/.style={rectangle,rounded corners=2pt,fill=soliTeal!80!black,text=white,
-              align=center,minimum height=6mm,minimum width=15mm,inner sep=2pt},
-  ai/.style={box,fill=gray!60},
-  notif/.style={box,fill=orange!70!black},
-  store/.style={box,fill=soliAmber!85},
-  dbrel/.style={box,fill=red!70!black},
-  dbdoc/.style={box,fill=soliAmber!70},
-  syn/.style={-{Latex[length=2mm]},thick},
-  asy/.style={-{Latex[length=2mm]},thick,dashed},
-  ]
-  % clients
-  \node[client] (cm) {Client Mobile\\{\tiny React Native}};
-  \node[client,right=18mm of cm] (cw) {Client Web\\{\tiny React SPA}};
-  % proxy
-  \coordinate (mid) at ($(cm)!0.5!(cw)$);
-  \node[proxy,below=8mm of mid] (px) {Proxy\\{\tiny Nginx}};
-  % auth
-  \node[auth,right=16mm of px] (auth) {Auth Server\\{\tiny Keycloak}\\{\tiny SPID/CIEid}};
-  % backend box with modules
-  \node[backend,below=9mm of px,minimum width=74mm,minimum height=21mm] (be) {};
-  \node[anchor=north,text=white,font=\bfseries] at ([yshift=-1mm]be.north) {Backend (server)};
-  \node[anchor=north,text=white,font=\tiny] at ([yshift=-5mm]be.north) {espone API REST -- OpenAPI 3.0};
-  \node[mod] at ([yshift=-2mm,xshift=-27mm]be.center) {User \&\\Auth};
-  \node[mod] at ([yshift=-2mm,xshift=-9mm]be.center) {Task\\Manager};
-  \node[mod] at ([yshift=-2mm,xshift=9mm]be.center) {Matching};
-  \node[mod] at ([yshift=-2mm,xshift=27mm]be.center) {Reward,\\Audit, Chat};
-  % ai + notification
-  \node[ai,below=9mm of be.west,anchor=north] (ai) {Modulo AI\\{\tiny Ollama / Llama}};
-  \node[notif,below=9mm of be.east,anchor=north] (nt) {Notification\\Service};
-  % infra
-  \node[dbdoc,below=12mm of ai.south,anchor=north] (mongo) {DB non Relazionale\\{\tiny MongoDB -- chat}};
-  \node[store,right=8mm of mongo] (redis) {Message Broker \&\\Geo Store\\{\tiny Redis}};
-  \node[dbrel,right=8mm of redis] (pg) {DB Relazionale\\{\tiny PostgreSQL}};
-  % edges
-  \draw[syn] (cm) -- (px);  \draw[syn] (cw) -- (px);
-  \draw[syn] (px) -- (be);
-  \draw[syn] (be.east) -- (auth);
-  \draw[syn] (be.south west) -- (ai.north);
-  \draw[asy] (be.south east) -- (nt.north);
-  \draw[syn] (be) -- (pg.north);
-  \draw[syn] (be.south) -- (redis.north) node[midway,fill=white,inner sep=1pt]{\tiny geo};
-  \draw[asy] (redis.north) -- (nt.south);
-  \draw[syn] (ai.south) -- (mongo.north);
-  \draw[syn] (be.west) to[out=180,in=90] (mongo.north west);
-\end{tikzpicture}
+\includegraphics[width=\linewidth]{arch_ideale}
 \caption{Architettura \textbf{ideale} (target): microservizi containerizzati, geo-store/broker in memoria (Redis), chat su database documentale (MongoDB), Notification Service e Modulo AI dedicati. Frecce piene = sincrono, tratteggiate = asincrono.}
 \label{fig:arch-ideale}
 \end{figure}
@@ -386,36 +333,7 @@ Di seguito si riportano \textbf{due viste} dell'architettura: la versione \emph{
 % ---------- DIAGRAMMA 2: ARCHITETTURA POC ----------
 \begin{figure}[htbp]
 \centering
-\begin{tikzpicture}[
-  font=\scriptsize,
-  box/.style={rectangle,rounded corners=3pt,draw=black!30,thick,align=center,
-              text=white,minimum height=9mm,inner sep=4pt},
-  client/.style={box,fill=soliTealL},
-  auth/.style={box,fill=soliBlue},
-  backend/.style={box,fill=soliTeal},
-  dbrel/.style={box,fill=red!70!black},
-  ext/.style={rectangle,rounded corners=3pt,draw=gray,dashed,align=center,minimum height=9mm,inner sep=4pt},
-  syn/.style={-{Latex[length=2mm]},thick},
-  ]
-  \node[client] (cw) {Client Web\\{\tiny React SPA + Nginx}};
-  \node[ext,left=12mm of cw] (cm) {Client Mobile\\{\tiny React Native}\\{\tiny (non containerizzato)}};
-  \node[backend,below=12mm of cw,minimum width=74mm,minimum height=22mm] (be) {};
-  \node[anchor=north,text=white,font=\bfseries] at ([yshift=-1mm]be.north) {Backend Quarkus (Java 21)};
-  \node[text=white,align=center,font=\tiny] at ([yshift=-2mm]be.center)
-      {REST API + WebSocket chat\\Matching Haversine (in-memory)\\Reward/Audit + MockAIService (LLM placeholder)};
-  \node[auth,right=14mm of be] (kc) {Keycloak 26\\{\tiny OIDC / JWT}};
-  \node[dbrel,below=12mm of be] (pg) {PostgreSQL 16\\{\tiny utenti, task, crediti, audit,}\\{\tiny chat, geolocalizzazione}};
-  \draw[syn] (cw) -- (be);
-  \draw[syn] (cm) to[out=-90,in=180] (be.west);
-  \draw[syn] (be) -- (pg);
-  \draw[syn] (be.east) -- (kc);
-  \draw[syn] (kc.south) to[out=-90,in=0] (pg.east);
-  % docker boundary
-  \begin{scope}[on background layer]
-    \node[draw=soliBlue,dashed,rounded corners,fit=(cw)(be)(kc)(pg),
-          inner sep=6mm,label={[soliBlue,font=\tiny\bfseries]below:Docker Compose --- 4 container: postgres, keycloak, soli-backend, soli-frontend}] {};
-  \end{scope}
-\end{tikzpicture}
+\includegraphics[width=\linewidth]{arch_poc}
 \caption{Architettura \textbf{POC realizzata}. Rispetto al target: chat e geolocalizzazione sono su PostgreSQL (non MongoDB/Redis), il matching di prossimit\`a usa la formula di Haversine calcolata in memoria, il modulo LLM \`e un placeholder (\texttt{MockAIService}) e il Notification Service non \`e dispiegato. L'app mobile esiste ma non \`e containerizzata.}
 \label{fig:arch-poc}
 \end{figure}
