@@ -15,6 +15,13 @@
 \usepackage[italian]{babel}
 \usepackage[a4paper,margin=2.4cm]{geometry}
 \usepackage{lmodern}
+\usepackage{fontspec}
+\newfontfamily\montserratfamily{Montserrat}[ % font Montserrat per il titolo
+  Path = ,
+  Extension = .otf,
+  UprightFont = *-Regular,
+  BoldFont = *-Bold,
+  ItalicFont = *-Italic ]
 \usepackage{graphicx}
 \graphicspath{{logos/}{screenshot_interfaces/}}
 \usepackage[table]{xcolor}
@@ -163,14 +170,12 @@ Diagrammi di sequenza e interazioni & #6\\\hline
 {\large\itshape co-located with I-Cities 2026\par}
 \vspace{1.4cm}
 
-\soliLogo{0.017}\par
-\vspace{0.8cm}
+\includegraphics[height=3.2cm]{logo}\par
+\vspace{0.7cm}
 
-{\Huge\bfseries\color{soliTeal} Solidarities Link\par}
+{\montserratfamily\Huge\bfseries\color{soliTeal} Solidarities Link\par}
 \vspace{0.3cm}
 {\large\color{soliAmber}\bfseries mutuo aiuto di quartiere per la citt\`a solidale\par}
-\vspace{0.5cm}
-{\large\bfseries Documento funzionale\par}
 \vspace{1.0cm}
 {\large Supervisore: Professor Stefano Chessa\par}
 \vspace{0.7cm}
