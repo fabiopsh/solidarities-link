@@ -968,7 +968,7 @@ export default function TaskDetailPage() {
 						width: { xs: "100%", sm: 400 },
 						display: "flex",
 						flexDirection: "column",
-						bgcolor: "#F8FAFC",
+						bgcolor: "background.default",
 					},
 				}}
 			>
@@ -1053,8 +1053,8 @@ export default function TaskDetailPage() {
 										elevation={1}
 										sx={{
 											p: 1.5,
-											backgroundColor: isMe ? "primary.main" : "white",
-											color: isMe ? "white" : "text.primary",
+											backgroundColor: isMe ? "primary.main" : "background.paper",
+											color: isMe ? "primary.contrastText" : "text.primary",
 											borderRadius: isMe ? "16px 16px 4px 16px" : "16px 16px 16px 4px",
 										}}
 									>
@@ -1090,7 +1090,7 @@ export default function TaskDetailPage() {
 					onSubmit={handleSendMessage}
 					sx={{
 						p: 2,
-						bgcolor: "white",
+						bgcolor: "background.paper",
 						borderTop: "1px solid",
 						borderColor: "divider",
 						display: "flex",

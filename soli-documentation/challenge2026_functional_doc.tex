@@ -200,23 +200,19 @@ Andrei Micker Victorino   & Laurea Triennale, Informatica  & a.victorino@student
 
 % -----------------------------------------------------------------
 \subsection{Acronimi e abbreviazioni}
-\begin{description}[leftmargin=3.2cm,style=nextline,font=\bfseries\color{soliTeal}]
-  \item[SOLI] Solidarities Link, il sistema descritto in questo documento.
-  \item[LV1, LV2, LV3] Livelli di certificazione dell'utente (registrazione SPID; volontario formato; partnership con associazione).
-  \item[SPID] Sistema Pubblico di Identit\`a Digitale.
-  \item[CIEid] Identit\`a digitale basata sulla Carta di Identit\`a Elettronica.
-  \item[PA] Pubblica Amministrazione.
-  \item[FR] Functional Requirement (requisito funzionale).
-  \item[NFR] Non-Functional Requirement (requisito non funzionale).
-  \item[WCAG] Web Content Accessibility Guidelines.
-  \item[GDPR] General Data Protection Regulation.
-  \item[API] Application Programming Interface.
-  \item[REST] Representational State Transfer.
-  \item[JWT] JSON Web Token.
-  \item[OIDC] OpenID Connect.
-  \item[LLM] Large Language Model.
-  \item[QR] Quick Response (code).
-\end{description}
+Si riportano i termini specifici del progetto e le sigle ricorrenti nel documento; gli acronimi tecnici di uso comune sono glossati alla prima occorrenza nel testo.
+\par\smallskip
+{\small\begin{description}[leftmargin=3.2cm,style=sameline,labelwidth=3.0cm,labelsep=0.2cm,font=\bfseries\color{soliTeal},itemsep=3pt,topsep=3pt]
+  \item[SOLI] Solidarities Link: il sistema descritto in questo documento.
+  \item[Crediti SOLI] Unit\`a di \emph{time banking} accumulate in proporzione al tempo donato; riscattabili solo in donazione.
+  \item[SOLI Assistant] Interfaccia vocale/chatbot basata su LLM per utenti con bassa alfabetizzazione digitale.
+  \item[LV1--LV3] Livelli di fiducia dell'utente: registrazione SPID; volontario formato; partnership con associazione.
+  \item[SPID / CIEid] Sistemi di identit\`a digitale pubblica usati per l'onboarding certificato.
+  \item[Open Data API] Interfaccia REST pubblica smart-city (\texttt{/api/open/v1}) protetta da chiave \texttt{X-API-Key}.
+  \item[QR] Token anti-frode scambiato dai due attori alla conferma dell'incontro fisico.
+  \item[FR / NFR] Requisito funzionale / non funzionale.
+  \item[WCAG / GDPR] Linee guida di accessibilit\`a web / regolamento europeo sulla protezione dei dati.
+\end{description}}
 
 % -----------------------------------------------------------------
 \subsection{Descrizione del sistema}
