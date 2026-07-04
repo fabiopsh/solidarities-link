@@ -68,7 +68,12 @@ export default function DevelopersPortalPage() {
 				setResult(text);
 			}
 		} catch (e: any) {
-			setResult(String(e));
+			// fetch() throws (TypeError: Failed to fetch) on network/CORS failures.
+			// Leave status null so the misleading red HTTP chip isn't shown.
+			setStatus(null);
+			setResult(
+				`Errore di rete o CORS: backend non raggiungibile o origine non permessa.\n(${String(e)})`,
+			);
 		} finally {
 			setLoading(false);
 		}
@@ -139,11 +144,15 @@ export default function DevelopersPortalPage() {
 					<Button variant="contained" onClick={run} disabled={loading || !apiKey}>
 						{loading ? <CircularProgress size={18} color="inherit" /> : "Esegui richiesta"}
 					</Button>
-					{status !== null && (
+					{(status !== null || result) && (
 						<>
 							<Divider sx={{ my: 2 }} />
 							<Typography variant="body2" sx={{ mb: 1 }}>
-								Risposta HTTP <Chip size="small" label={status} color={status < 300 ? "success" : "error"} />
+								{status !== null ? (
+									<>Risposta HTTP <Chip size="small" label={status} color={status < 300 ? "success" : "error"} /></>
+								) : (
+									<Chip size="small" label="Errore" color="error" />
+								)}
 							</Typography>
 							<Box component="pre" sx={{ p: 2, bgcolor: "action.hover", borderRadius: 2, overflowX: "auto", maxHeight: 400, fontSize: "0.8rem" }}>
 								{result}

@@ -33,6 +33,10 @@ public class OpenDataApiKeyFilter implements ContainerRequestFilter {
             return; // not an Open Data endpoint
         }
 
+        if ("OPTIONS".equalsIgnoreCase(ctx.getMethod())) {
+            return; // CORS preflight: never gate it behind the API key
+        }
+
         String apiKey = ctx.getHeaderString("X-API-Key");
         if (apiKey != null && apiTokenService.validateAndRecord(apiKey)) {
             return; // valid API key

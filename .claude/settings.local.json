@@ -23,7 +23,11 @@
       "Read(//c/Users/fabio/AppData/Local/Temp/claude/C--Users-fabio-Documents-Unipi---Project-solidarities-link/907736bd-a9b2-4e48-8dd2-c6441827fd34/scratchpad/**)",
       "Bash(find \"/c/Users/fabio/AppData/Local/Temp/claude/C--Users-fabio-Documents-Unipi---Project-solidarities-link/907736bd-a9b2-4e48-8dd2-c6441827fd34/scratchpad\" -name \"docx_text.txt\")",
       "Bash(tectonic --version)",
-      "Bash(xargs grep -l \"tectonic\")"
+      "Bash(xargs grep -l \"tectonic\")",
+      "Bash(xargs grep -l \"main\\\\|Application\\\\|Security\")",
+      "Bash(curl -s -i -X OPTIONS \"http://localhost:8080/api/open/v1/stats/overview\" -H \"Origin: http://localhost:5173\" -H \"Access-Control-Request-Method: GET\" -H \"Access-Control-Request-Headers: x-api-key\")",
+      "Bash(curl -s -i \"http://localhost:8080/api/open/v1/stats/overview\" -H \"Origin: http://localhost:5173\")",
+      "Bash(curl -s -i \"http://localhost:8080/api/health\" -H \"Origin: http://localhost:5173\")"
     ]
   }
 }
