@@ -23,6 +23,7 @@
   BoldFont = *-Bold,
   ItalicFont = *-Italic ]
 \usepackage{graphicx}
+\usepackage{float}
 \graphicspath{{logos/}{screenshot_interfaces/}}
 \usepackage[table]{xcolor}
 \usepackage{tikz}
@@ -188,7 +189,7 @@ Diagrammi di sequenza e interazioni & #6\\\hline
 \hline
 \rowcolor{rowGray}\bfseries Nome e Cognome & \bfseries Corso di studio & \bfseries Indirizzo email\\\hline
 Francesco Polperio        & Laurea Magistrale, Informatica & f.polperio@studenti.unipi.it\\\hline
-Fabio Piscitelli          & Laurea Magistrale, Informatica & fabiopiscitelli01@gmail.com\\\hline
+Fabio Piscitelli          & Laurea Magistrale, Informatica & f.piscitelli4@studenti.unipi.it\\\hline
 Federico Lombardi         & Laurea Magistrale, Informatica & f.lombardi26@studenti.unipi.it\\\hline
 Andrei Micker Victorino   & Laurea Triennale, Informatica  & a.victorino@studenti.unipi.it\\\hline
 \end{tabularx}
@@ -264,13 +265,13 @@ Ogni requisito \`e caratterizzato da un nome seguito da una breve descrizione.
 
 \newcommand{\fr}[3]{\item[\textbf{FR-#1}] \textbf{[#2]}\quad #3}
 \begin{description}[leftmargin=1.6cm,style=nextline]
-\fr{01}{Autenticazione tramite Identit\`a Digitale}{Il sistema deve permettere la registrazione e l'accesso degli utenti (volontari e richiedenti) esclusivamente tramite integrazione con sistemi di identit\`a digitale pubblica (SPID/CIEid o servizi di emulazione della registrazione) per garantire la certificazione dell'identit\`a (livello di fiducia LV1).}
+\fr{01}{Autenticazione tramite Identit\`a Digitale}{Il sistema deve permettere la registrazione e l'accesso degli utenti (volontari e richiedenti) esclusivamente tramite integrazione con sistemi di identit\`a digitale pubblica (SPID/CIEid) per garantire la certificazione dell'identit\`a (livello di fiducia LV1).}
 \fr{02}{Profilazione Volontario e Gestione Preferenze}{Il sistema deve consentire al Volontario Civico di configurare il proprio profilo operativo, selezionando gli ambiti di intervento preferiti, impostando vincoli specifici (es. limitazioni fisiche, allergie) e definendo la propria disponibilit\`a oraria.}
 \fr{03}{Wizard di Creazione Richiesta Guidata}{Il sistema deve fornire un'interfaccia semplificata che guidi il Richiedente nella selezione della macro-categoria di servizio (Mobilit\`a, Supporto Fisico, Socialit\`a, Pet Support, Inclusione Digitale) e nell'inserimento dei dettagli necessari.}
 \fr{04}{Richieste Massime Giornaliere}{Il sistema deve imporre un limite massimo di 5 task richiedibili al giorno per ciascun Richiedente (conteggio dalla mezzanotte alla mezzanotte, indipendentemente dallo stato dei task), per evitare l'intasamento del sistema; al raggiungimento del limite blocca la creazione di nuove richieste mostrando un messaggio informativo.}
 \fr{05}{Input Conversazionale e Vocale (Soli Assistant)}{Il sistema deve integrare un modulo LLM che permetta all'utente di formulare richieste in linguaggio naturale o vocale, estraendo automaticamente le entit\`a (tipo di servizio, data, luogo) per pre-compilare il form di richiesta (modalit\`a ``No-UI'').}
 \fr{06}{Classificazione Automatica dell'Urgenza}{Il sistema deve analizzare la richiesta per assegnare automaticamente un livello di priorit\`a e urgenza, sulla base della tipologia di servizio e delle tempistiche indicate.}
-\fr{07}{Algoritmo di Matching}{Il sistema deve elaborare le richieste incrociando i dati della domanda con i profili dei volontari sulla base di quattro parametri: prossimit\`a geografica, compatibilit\`a delle competenze/certificazioni, disponibilit\`a oraria e principio di rotazione equa.}
+\fr{07}{Algoritmo di Matching}{Il sistema deve elaborare le richieste incrociando i dati della domanda con i profili dei volontari sulla base di quattro parametri: prossimit\`a geografica, compatibilit\`a delle competenze/certificazioni, principio di rotazione equa.}
 \fr{08}{Geolocalizzazione e Geofencing}{Il sistema deve tracciare la posizione degli utenti (previa autorizzazione) per calcolare le distanze e filtrare le notifiche di task disponibili solo ai volontari nel raggio d'azione utile.}
 \fr{09}{Sistema di Notifiche Push Mirate}{Il sistema deve inviare notifiche push in tempo reale solo ai volontari selezionati dall'algoritmo di matching, evitando la diffusione indiscriminata (broadcast) per ridurre il rumore informativo.}
 \fr{10}{Messaggistica Interna Anonimizzata}{La chat \`e disponibile esclusivamente per la durata del task attivo e viene disattivata al completamento; i contenuti sono monitorati tramite un modulo LLM-in-the-middle per finalit\`a di prevenzione e moderazione.}
@@ -284,7 +285,7 @@ Ogni requisito \`e caratterizzato da un nome seguito da una breve descrizione.
 \fr{18}{Gestione Conferma del Task}{Il sistema deve prevedere una doppia conferma per il completamento: il task \`e marcato completato solo quando sia Richiedente sia Volontario hanno confermato; in caso di conferma singola mostra lo stato parziale. La conferma \`e irreversibile.}
 \fr{19}{Gestione Rilascio del Task}{Il sistema deve permettere al volontario di abbandonare una richiesta accettata tramite ``Rilascio Task'' per imprevisti post-accettazione, innescando una ri-assegnazione prioritaria e senza penalit\`a.}
 \fr{20}{Gestione Annullamento del Task}{Il sistema deve permettere al Richiedente di annullare una richiesta: liberamente se il task non \`e ancora accettato (notificando i volontari coinvolti); entro 10 minuti dall'accettazione se il task \`e gi\`a stato preso in carico. Oltre tale finestra il task va portato a completamento.}
-\fr{21}{Open Data API (Smart-City)}{Il sistema deve esporre API pubbliche di sola lettura su dati aggregati e anonimizzati del volontariato civico, per l'integrazione smart-city (cruscotti comunali, portali open-data, ricerca). L'accesso avviene tramite token API con scadenza; nessun dato personale \`e restituito (aggregazione e k-anonymity).}
+\fr{21}{Open Data API (Smart-City)}{Il sistema deve esporre API pubbliche di sola lettura su dati aggregati e anonimizzati del volontariato civico, per l'integrazione smart-city (dashboard comunali, portali open-data, ricerca). L'accesso avviene tramite token API con scadenza; nessun dato personale \`e restituito (aggregazione e k-anonymity).}
 \end{description}
 
 % =====================================================================
@@ -294,7 +295,7 @@ Ogni requisito \`e caratterizzato da un nome seguito da una breve descrizione.
 \newcommand{\nfr}[3]{\item[\textbf{NFR-#1}] \textbf{[#2]}\quad #3}
 \begin{description}[leftmargin=1.8cm,style=nextline]
 \nfr{01}{Accessibilit\`a e Usabilit\`a (Inclusivit\`a)}{Interfaccia accessibile secondo gli standard WCAG, con attenzione a utenti con disabilit\`a motorie o bassa alfabetizzazione digitale; deve essere possibile interagire anche tramite modalit\`a semplificate alternative alla UI tradizionale.}
-\nfr{02}{Sicurezza e Autenticazione Forte}{L'accesso ai servizi critici deve avvenire tramite identit\`a digitale certificata (SPID/CIEid o sistemi emulati per la demo); il sistema previene accessi non autorizzati e garantisce l'integrit\`a delle transazioni di token/QR code.}
+\nfr{02}{Sicurezza e Autenticazione Forte}{L'accesso ai servizi critici deve avvenire tramite identit\`a digitale certificata (SPID/CIEid); il sistema previene accessi non autorizzati e garantisce l'integrit\`a delle transazioni di token/QR code.}
 \nfr{03}{Privacy e Protezione dei Dati (GDPR Compliance)}{Riservatezza dei dati di utenti fragili e volontari; comunicazioni tramite chat interne anonimizzate; cancellazione dei dati di chat al termine del task.}
 \nfr{04}{Prestazioni e Reattivit\`a (Real-time)}{Bassa latenza nelle notifiche push e nel matching geografico; l'algoritmo deve elaborare posizione e competenze entro pochi secondi dall'inserimento della richiesta.}
 \nfr{05}{Fairness Algoritmica}{L'algoritmo di assegnazione deve includere meccanismi di rotazione equa per evitare il sovraccarico dei singoli volontari, senza imporre limiti rigidi di ore.}
@@ -323,7 +324,7 @@ Il sistema SOLI \`e organizzato in \textbf{quattro livelli} sovrapposti che comu
 Di seguito si riportano \textbf{due viste} dell'architettura: la versione \emph{ideale} (target progettuale) e la versione \emph{POC} effettivamente realizzata e dispiegata.
 
 % ---------- DIAGRAMMA 1: ARCHITETTURA IDEALE ----------
-\begin{figure}[htbp]
+\begin{figure}[H]
 \centering
 \includegraphics[width=\linewidth]{arch_ideale}
 \caption{Architettura \textbf{ideale} (target): microservizi containerizzati, geo-store/broker in memoria (Redis), chat su database documentale (MongoDB), Notification Service e Modulo AI dedicati. Frecce piene = sincrono, tratteggiate = asincrono.}
@@ -331,7 +332,7 @@ Di seguito si riportano \textbf{due viste} dell'architettura: la versione \emph{
 \end{figure}
 
 % ---------- DIAGRAMMA 2: ARCHITETTURA POC ----------
-\begin{figure}[htbp]
+\begin{figure}[H]
 \centering
 \includegraphics[width=\linewidth]{arch_poc}
 \caption{Architettura \textbf{POC realizzata}. Rispetto al target: chat e geolocalizzazione sono su PostgreSQL (non MongoDB/Redis), il matching di prossimit\`a usa la formula di Haversine calcolata in memoria, il modulo LLM \`e un placeholder (\texttt{MockAIService}) e il Notification Service non \`e dispiegato. L'app mobile esiste ma non \`e containerizzata.}
