@@ -79,11 +79,15 @@ body {
 
 .card-pf .login-pf-header::before,
 .card-pf header::before {
-	content: "🤝" !important;
+	content: "" !important;
 	display: block !important;
-	font-size: 48px !important;
-	line-height: 1.2 !important;
-	margin-bottom: 4px !important;
+	width: 64px !important;
+	height: 64px !important;
+	background-image: url('../img/logo.svg') !important;
+	background-size: contain !important;
+	background-repeat: no-repeat !important;
+	background-position: center !important;
+	margin: 0 auto 8px auto !important;
 	order: 1 !important;
 }
 

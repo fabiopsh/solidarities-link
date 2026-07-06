@@ -38,6 +38,7 @@ import Tooltip from "@mui/material/Tooltip";
 import { useRole, type UserRole } from "../context/RoleContext";
 import { useThemeMode } from "../context/ThemeModeContext";
 import NotificationDropdown from "./NotificationDropdown";
+import logoUrl from "../assets/logo.svg";
 
 const DRAWER_WIDTH = 280;
 const DRAWER_WIDTH_COLLAPSED = 72;
@@ -116,8 +117,15 @@ export default function DashboardLayout() {
 		}
 	}, [role, location.pathname, navigate]);
 
-	// Check if user has admin role
-	const isAdmin = (auth.user?.profile?.realm_access as any)?.roles?.includes("admin") || false;
+	// Admin status comes from the backend DB role (authoritative source used by
+	// @RolesAllowed), not the Keycloak ID token — which does not carry realm roles.
+	const [isAdmin, setIsAdmin] = useState(false);
+	useEffect(() => {
+		if (!auth.isAuthenticated) return;
+		api.get("/api/users/me")
+			.then((r) => setIsAdmin(r.data?.role === "ADMIN"))
+			.catch(() => setIsAdmin(false));
+	}, [auth.isAuthenticated]);
 
 	const userName = auth.user?.profile?.given_name || auth.user?.profile?.name || "Utente";
 	const userEmail = auth.user?.profile?.email || "";
@@ -161,7 +169,7 @@ export default function DashboardLayout() {
 			>
 				{isExpanded && (
 					<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-						<HandshakeIcon color="primary" sx={{ fontSize: 32 }} />
+						<Box component="img" src={logoUrl} alt="SoLi Logo" sx={{ width: 32, height: 32, objectFit: "contain" }} />
 						<Typography
 							variant="h6"
 							noWrap

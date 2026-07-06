@@ -34,6 +34,14 @@ export const ThemeModeProvider: React.FC<{ children: ReactNode }> = ({ children 
 		setMode(mode === "light" ? "dark" : "light");
 	};
 
+	// Expose the active mode to CSS (Leaflet popups, scrollbars, etc.).
+	// createTheme applies dark mode only in JS, so plain CSS selectors need a DOM hook.
+	useEffect(() => {
+		const root = document.documentElement;
+		root.setAttribute("data-mui-color-scheme", mode);
+		root.classList.toggle("dark", mode === "dark");
+	}, [mode]);
+
 	// Sync across tabs
 	useEffect(() => {
 		const handleStorageChange = (e: StorageEvent) => {

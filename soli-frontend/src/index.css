@@ -56,6 +56,15 @@ body {
 .leaflet-popup-tip {
 	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
 }
+
+/* Dark mode: Leaflet popups keep a light background by default, making the
+   MUI Typography (light text) unreadable. Force a dark surface + light text. */
+[data-mui-color-scheme="dark"] .leaflet-popup-content-wrapper,
+[data-mui-color-scheme="dark"] .leaflet-popup-tip {
+	background: #1e1e1e !important;
+	color: rgba(255, 255, 255, 0.87) !important;
+}
+
 [data-mui-color-scheme="dark"] ::-webkit-scrollbar-thumb,
 html.dark ::-webkit-scrollbar-thumb {
 	background: rgba(255, 255, 255, 0.2);

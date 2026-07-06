@@ -147,6 +147,7 @@ public class TaskService {
 
         TaskStatus oldStatus = task.status;
         task.status = TaskStatus.IN_PROGRESS;
+        task.checkInAt = LocalDateTime.now(); // Record actual start time for credit calculation
         task.checkOutToken = generateToken(); // Generate token for check-out
 
         logStateChange(task, oldStatus, task.status, getCurrentUserId());
@@ -179,13 +180,13 @@ public class TaskService {
 
         TaskStatus oldStatus = task.status;
         task.status = TaskStatus.COMPLETED;
+        task.checkOutAt = LocalDateTime.now(); // Record actual end time for credit calculation
 
         logStateChange(task, oldStatus, task.status, getCurrentUserId());
-        
-        // Asynchronously assign credits to the volunteer
-        managedExecutor.execute(() -> {
-            walletService.assignCreditsForTask(task);
-        });
+
+        // Assign credits synchronously within this transaction: atomic and consistent,
+        // and any failure surfaces instead of being silently swallowed by an async task.
+        walletService.assignCreditsForTask(task);
 
         return task;
     }
@@ -290,12 +291,21 @@ public class TaskService {
         if (Boolean.TRUE.equals(task.creatorConfirmed) && Boolean.TRUE.equals(task.volunteerConfirmed)) {
             TaskStatus oldStatus = task.status;
             task.status = TaskStatus.COMPLETED;
+
+            // The double-confirmation flow completes the task without the token-based
+            // check-in/check-out. Populate the timestamps so credits can be computed from
+            // the effective duration (WalletService caps it to a sane maximum).
+            if (task.checkInAt == null) {
+                task.checkInAt = task.acceptedAt != null ? task.acceptedAt : LocalDateTime.now();
+            }
+            if (task.checkOutAt == null) {
+                task.checkOutAt = LocalDateTime.now();
+            }
+
             logStateChange(task, oldStatus, task.status, userId);
 
-            // Asynchronously assign credits
-            managedExecutor.execute(() -> {
-                walletService.assignCreditsForTask(task);
-            });
+            // Assign credits synchronously within this transaction (atomic, errors visible).
+            walletService.assignCreditsForTask(task);
         }
 
         return task;

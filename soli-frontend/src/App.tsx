@@ -14,6 +14,7 @@ import WalletPage from "./pages/WalletPage";
 import AdminDashboardPage from "./pages/AdminDashboardPage";
 import AssociationsPage from "./pages/AssociationsPage";
 import AssociationDetailPage from "./pages/AssociationDetailPage";
+import DevelopersPortalPage from "./pages/DevelopersPortalPage";
 
 export default function App() {
 	return (
@@ -26,6 +27,9 @@ export default function App() {
 
 						{/* OIDC callback handler */}
 						<Route path="/callback" element={<CallbackPage />} />
+
+						{/* Public Open Data developer portal */}
+						<Route path="/developers" element={<DevelopersPortalPage />} />
 
 						<Route
 							path="/dashboard"

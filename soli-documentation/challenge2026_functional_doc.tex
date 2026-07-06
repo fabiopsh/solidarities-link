@@ -1,0 +1,791 @@
+% =====================================================================
+%  Solidarities Link (SOLI) - Documento funzionale
+%  CINI Smart City University Challenge 2026 (co-located con I-Cities 2026)
+%
+%  COMPILAZIONE (serve una distribuzione LaTeX, es. TeX Live / MiKTeX):
+%      pdflatex challenge2026_functional_doc.tex
+%      pdflatex challenge2026_functional_doc.tex   (2a passata per l'indice)
+%
+%  Nessuna dipendenza esterna: logo e diagrammi sono disegnati in TikZ.
+% =====================================================================
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[italian]{babel}
+\usepackage[a4paper,margin=2.4cm]{geometry}
+\usepackage{lmodern}
+\usepackage{fontspec}
+\newfontfamily\montserratfamily{Montserrat}[ % font Montserrat per il titolo
+  Path = ,
+  Extension = .otf,
+  UprightFont = *-Regular,
+  BoldFont = *-Bold,
+  ItalicFont = *-Italic ]
+\usepackage{graphicx}
+\graphicspath{{logos/}{screenshot_interfaces/}}
+\usepackage[table]{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{positioning,shapes.geometric,arrows.meta,fit,backgrounds,calc}
+\usepackage{tabularx}
+\usepackage{longtable}
+\usepackage{xltabular}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{caption}
+\usepackage{listings}
+\usepackage{fancyhdr}
+\usepackage[hidelinks]{hyperref}
+
+% ---- Palette SOLI -----------------------------------------------------
+\definecolor{soliTeal}{RGB}{0,121,107}
+\definecolor{soliTealL}{RGB}{72,169,153}
+\definecolor{soliAmber}{RGB}{255,111,0}
+\definecolor{soliAmberL}{RGB}{255,160,64}
+\definecolor{soliBlue}{RGB}{30,58,95}
+\definecolor{headBg}{RGB}{0,32,96}
+\definecolor{rowGray}{RGB}{242,245,248}
+\definecolor{lineGray}{RGB}{191,191,191}
+
+% ---- Colonne tabularx ------------------------------------------------
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+
+% ---- Padding coerente per tutte le tabelle ---------------------------
+\setlength{\tabcolsep}{9pt}        % respiro orizzontale (default 6pt)
+\renewcommand{\arraystretch}{1.3}  % respiro verticale (altezza righe)
+\setlength{\extrarowheight}{2.5pt} % spazio extra sopra il testo di ogni riga
+
+% ---- Header / footer -------------------------------------------------
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0.4pt}
+\fancyhead[L]{\footnotesize Solidarities Link (SOLI)}
+\fancyhead[R]{\footnotesize Smart City Challenge 2026}
+\fancyfoot[C]{\thepage}
+
+% ---- Stile listings (JSON / bash) ------------------------------------
+\lstdefinestyle{soli}{
+  basicstyle=\ttfamily\scriptsize,
+  breaklines=true,
+  frame=single,
+  rulecolor=\color{lineGray},
+  backgroundcolor=\color{rowGray},
+  columns=fullflexible,
+  keepspaces=true,
+  showstringspaces=false,
+  aboveskip=6pt,belowskip=6pt
+}
+\lstset{style=soli}
+
+% ---- Titoli sezione colorati -----------------------------------------
+\usepackage{titlesec}
+\titleformat{\section}{\Large\bfseries\color{soliBlue}}{\thesection}{0.6em}{}
+\titleformat{\subsection}{\large\bfseries\color{soliTeal}}{\thesubsection}{0.6em}{}
+\titleformat{\subsubsection}{\normalsize\bfseries\color{soliBlue}}{\thesubsubsection}{0.6em}{}
+
+% ---- Logo SOLI in TikZ (ricostruzione di logo.svg) -------------------
+\newcommand{\soliLogo}[1]{%
+\begin{tikzpicture}[scale=#1, yscale=-1, line cap=round, line join=round]
+  \draw[line width=13pt, soliTeal] (256,256)
+       .. controls (180,120) and (80,120) .. (80,256)
+       .. controls (80,392)  and (180,392) .. (256,256);
+  \draw[line width=13pt, soliAmber] (256,256)
+       .. controls (332,392) and (432,392) .. (432,256)
+       .. controls (432,120) and (332,120) .. (256,256);
+  \fill[white]    (256,256) circle (40);
+  \fill[soliTeal] (256,256) circle (20);
+\end{tikzpicture}}
+
+% ---- Macro scheda RESTful (9 argomenti) ------------------------------
+% #1 Nome  #2 Descrizione  #3 URI  #4 Metodo  #5 Content-Type richiesta
+% #6 Request body  #7 Path params  #8 Query params  #9 Response body
+% Layout compatto: griglia a 2 coppie label/valore per riga; i campi lunghi
+% (descrizione, request/response body) occupano la riga intera (span su 3 col).
+\newcolumntype{S}{>{\bfseries\color{soliBlue}}m{2.9cm}}
+\newcommand{\schedaspan}[1]{\multicolumn{3}{@{}>{\hsize=\dimexpr2\hsize+2.9cm+4\tabcolsep+2\arrayrulewidth\relax}X|}{#1}}
+\newcommand{\scheda}[9]{%
+\par\vspace{4pt}\noindent
+{\small
+\begin{tabularx}{\linewidth}{|S|X|S|X|}
+\hline
+Nome & #1 & Metodo HTTP & #4\\\hline
+Resource URI & \schedaspan{\texttt{#3}}\\\hline
+Content-Type & \schedaspan{richiesta: #5 \quad\textbar\quad risposta: application/json}\\\hline
+Descrizione & \schedaspan{#2}\\\hline
+Request body & \schedaspan{#6}\\\hline
+Path param. & #7 & Query param. & #8\\\hline
+Response body & \schedaspan{#9}\\\hline
+\end{tabularx}}\par\vspace{6pt}}
+
+% ---- Schede "Interfacce dei servizi esposti" (template docx) ----------
+% Sotto-tabella parametri di input (Nome parametro | Descrizione del parametro)
+\newenvironment{inparams}{%
+  \setlength{\extrarowheight}{1.5pt}%
+  \begin{tabular}{|>{\ttfamily}p{2.5cm}|p{7.0cm}|}\hline
+  \normalfont\bfseries\color{soliBlue}Nome parametro & \bfseries\color{soliBlue}Descrizione del parametro\\\hline
+}{%
+  \end{tabular}\newline{\footnotesize (*) = parametro obbligatorio}%
+}
+% Sotto-tabella output (Descrizione dell'output)
+\newcommand{\outbox}[1]{%
+  \setlength{\extrarowheight}{1.5pt}%
+  \begin{tabular}{|p{10.2cm}|}\hline
+  \bfseries\color{soliBlue}Descrizione dell'output\\\hline
+  #1\\\hline
+  \end{tabular}%
+}
+% Card operazione esposta: #1 Nome #2 Requisiti #3 Descrizione #4 Input #5 Output #6 Sequenza
+\newcommand{\ifacecard}[6]{%
+\par\medskip\noindent{\small
+\begin{tabularx}{\linewidth}{|>{\bfseries\color{soliBlue}}m{3.7cm}|X|}
+\hline
+Nome & #1\\\hline
+Requisiti di riferimento & #2\\\hline
+Descrizione & #3\\\hline
+Input & #4\\\hline
+Output & #5\\\hline
+Diagrammi di sequenza e interazioni & #6\\\hline
+\end{tabularx}}\par\medskip}
+
+% =====================================================================
+\begin{document}
+
+% ============================ COPERTINA ==============================
+\begin{titlepage}
+\thispagestyle{empty}
+\centering
+\vspace*{0.2cm}
+
+% --- Loghi organizzatori / challenge ---
+\noindent
+\begin{minipage}[c]{0.40\linewidth}\centering\includegraphics[height=1.25cm]{logo_cini}\end{minipage}\hfill
+\begin{minipage}[c]{0.30\linewidth}\centering\includegraphics[height=0.95cm]{logo_salento}\end{minipage}\hfill
+\begin{minipage}[c]{0.26\linewidth}\centering\includegraphics[height=1.35cm]{logo_salerno}\end{minipage}
+\par\vspace{1.0cm}
+
+{\Large\bfseries\color{soliBlue} CINI Smart City University Challenge 2026\par}
+\vspace{2pt}
+{\large\itshape co-located with I-Cities 2026\par}
+\vspace{1.4cm}
+
+\includegraphics[height=3.2cm]{logo}\par
+\vspace{0.7cm}
+
+{\montserratfamily\Huge\bfseries\color{soliTeal} Solidarities Link\par}
+\vspace{0.3cm}
+{\large\color{soliAmber}\bfseries mutuo aiuto di quartiere per la citt\`a solidale\par}
+\vspace{1.0cm}
+{\large Supervisore: Professor Stefano Chessa\par}
+\vspace{0.7cm}
+
+\includegraphics[height=1.7cm]{logo_unipi}\par
+\vspace{1.2cm}
+
+{\bfseries\color{soliBlue} Team}\par\vspace{4pt}
+\begin{tabularx}{0.92\linewidth}{|Y|L{4.2cm}|L{5.0cm}|}
+\hline
+\rowcolor{rowGray}\bfseries Nome e Cognome & \bfseries Corso di studio & \bfseries Indirizzo email\\\hline
+Francesco Polperio        & Laurea Magistrale, Informatica & f.polperio@studenti.unipi.it\\\hline
+Fabio Piscitelli          & Laurea Magistrale, Informatica & fabiopiscitelli01@gmail.com\\\hline
+Federico Lombardi         & Laurea Magistrale, Informatica & f.lombardi26@studenti.unipi.it\\\hline
+Andrei Micker Victorino   & Laurea Triennale, Informatica  & a.victorino@studenti.unipi.it\\\hline
+\end{tabularx}
+
+\vfill
+\end{titlepage}
+
+% ============================= INDICE ===============================
+\tableofcontents
+\newpage
+
+% =====================================================================
+\section{Definizione del sistema}
+
+% -----------------------------------------------------------------
+\subsection{Acronimi e abbreviazioni}
+Si riportano i termini specifici del progetto e le sigle ricorrenti nel documento; gli acronimi tecnici di uso comune sono glossati alla prima occorrenza nel testo.
+\par\smallskip
+{\small\begin{description}[leftmargin=3.2cm,style=sameline,labelwidth=3.0cm,labelsep=0.2cm,font=\bfseries\color{soliTeal},itemsep=3pt,topsep=3pt]
+  \item[SOLI] Solidarities Link: il sistema descritto in questo documento.
+  \item[Crediti SOLI] Unit\`a di \emph{time banking} accumulate in proporzione al tempo donato; riscattabili solo in donazione.
+  \item[SOLI Assistant] Interfaccia vocale/chatbot basata su LLM per utenti con bassa alfabetizzazione digitale.
+  \item[LV1--LV3] Livelli di fiducia dell'utente: registrazione SPID; volontario formato; partnership con associazione.
+  \item[SPID / CIEid] Sistemi di identit\`a digitale pubblica usati per l'onboarding certificato.
+  \item[Open Data API] Interfaccia REST pubblica smart-city (\texttt{/api/open/v1}) protetta da chiave \texttt{X-API-Key}.
+  \item[QR] Token anti-frode scambiato dai due attori alla conferma dell'incontro fisico.
+  \item[FR / NFR] Requisito funzionale / non funzionale.
+  \item[WCAG / GDPR] Linee guida di accessibilit\`a web / regolamento europeo sulla protezione dei dati.
+\end{description}}
+
+% -----------------------------------------------------------------
+\subsection{Descrizione del sistema}
+
+Il progetto \textbf{Solidarities Link (SOLI)} nasce dalla necessit\`a di rispondere alle sfide della transizione sociale, con l'obiettivo di rafforzare e aumentare l'efficienza delle associazioni di volontariato preesistenti, fornendo un servizio puntuale che permetta di diminuire il divario tra chi aiuta e chi ha bisogno.
+
+L'idea fondante \`e la creazione di un \textbf{ecosistema digitale di ``mutuo aiuto di quartiere''} che sfrutta la tecnologia per ricostruire il tessuto sociale urbano e favorire il volontariato, ponendo il cittadino non pi\`u come un atomo isolato ma come parte di una \textbf{rete sociale} partecipata, dove la tecnologia abbatte le barriere della diffidenza e facilita l'incontro tra generazioni e culture diverse, riducendo il divario sociale e tecnologico.
+
+Il sistema supera la rigidit\`a delle strutture fisiche, consentendo che il desiderio di aiutare incontri il bisogno in \textbf{tempo reale}: una notifica sul telefono sostituisce lo sportello dell'ufficio, garantendo che nessuna richiesta di supporto resti inascoltata e restituendo al volontariato la sua dimensione pi\`u pura di relazione umana diretta e tempestiva.
+
+Il sistema si propone come intermediario fiduciario tra due attori principali: il \textbf{Richiedente} (soggetti fragili, anziani, persone con disabilit\`a o cittadini con necessit\`a temporanee) e il \textbf{Volontario Civico Certificato} (cittadini attivi disposti a offrire il proprio tempo). Il Richiedente inserisce una richiesta di aiuto specifica (ad es. ``supporto per la spesa pesante'', ``accompagnamento a visita medica'', ``configurazione dello smartphone''); il sistema classifica la richiesta in base all'urgenza e alla tipologia di competenza necessaria.
+
+Il cuore pulsante di SOLI risiede in un \textbf{algoritmo di matching} che ottimizza l'incontro tra domanda e offerta di aiuto secondo principi di efficienza ed equit\`a: analizza la vicinanza geografica per ridurre l'impatto ambientale, verifica la compatibilit\`a delle competenze e applica una rotazione equa tra i volontari per evitarne il sovraccarico. La sicurezza \`e garantita da una profilazione rigorosa dei volontari, che certificano la propria identit\`a tramite sistemi pubblici come SPID o CIEid. Non sono previsti limiti massimi di ore: ogni utente dedica al servizio il tempo che ritiene opportuno, favorendo massima flessibilit\`a e partecipazione.
+
+Per alimentare la partecipazione senza scivolare nella mercificazione dell'aiuto, il sistema integra una struttura di \textbf{gamification} basata sui Crediti SOLI. Questi punti, accumulati in proporzione al tempo dedicato, sono gestiti tramite un wallet digitale e possono essere convertiti in premialit\`a concrete. Fedele alla vocazione altruistica del progetto, il modello impedisce l'arricchimento personale: i benefici ottenuti (buoni spesa, accessi culturali, agevolazioni) sono destinati \textbf{esclusivamente alla donazione} verso terzi o nuclei in difficolt\`a. Il progetto adotta cos\`i un modello ibrido di \textbf{Time Banking e Gamification}, orientato alla valorizzazione del capitale umano e del tessuto sociale urbano.
+
+\subsubsection{Funzionalit\`a attese del sistema}
+\begin{enumerate}[leftmargin=1.4em]
+  \item \textbf{Gestione dell'identit\`a e sicurezza.} Onboarding certificato via SPID/CIEid (obbligatorio per i volontari) per garantire fiducia ed evitare profili falsi; mappatura di competenze e bisogni; verifica anti-frode dell'incontro fisico tramite QR Code.
+  \item \textbf{Matching e logistica intelligente.} Notifiche push basate sulla posizione (geofencing e prossimit\`a) per minimizzare tempi di intervento e impatto ambientale; assegnazione basata su distanza \emph{e} urgenza della richiesta.
+  \item \textbf{Integrazione AI e accessibilit\`a.} SOLI Assistant (NLP/LLM) come interfaccia vocale e chatbot per utenti con scarsa alfabetizzazione digitale o disabilit\`a motorie; moderazione automatica delle chat interne per rilevare comportamenti abusivi o tentativi di truffa.
+  \item \textbf{Incentivazione e Time Banking.} Wallet di Crediti SOLI proporzionali al tempo donato; marketplace di benefit in collaborazione con partner locali; badge e livelli di ``Cittadino Attivo''.
+\end{enumerate}
+
+\subsubsection{Collocazione nelle aree tematiche della challenge}
+Il progetto si inserisce direttamente in pi\`u aree di intervento previste dalla challenge:
+\begin{itemize}[leftmargin=1.4em]
+  \item \textbf{Salute e assistenza territoriale (Area 8):} migliora i servizi di supporto domiciliare e l'accompagnamento a visite mediche.
+  \item \textbf{Inclusione digitale (Area 10):} riduce il divario tecnologico con assistenza diretta all'uso di dispositivi e servizi online della PA.
+  \item \textbf{Sostenibilit\`a sociale e pari opportunit\`a (Area 11):} contrasta la solitudine e le disuguaglianze rafforzando la coesione territoriale.
+  \item \textbf{Mobilit\`a sostenibile e ambiente (Area 5):} il matching per prossimit\`a geografica riduce gli spostamenti veicolari, ottimizzando gli interventi a chilometro zero.
+\end{itemize}
+
+\subsubsection{Scenari d'uso}
+\paragraph{Scenario A --- Accessibilit\`a via AI.} Maria, 82 anni, ha difficolt\`a motorie e ha bisogno di qualcuno che porti fuori il suo cane. Apre l'app e dice: ``Soli Assistant, ho bisogno di qualcuno che possa portare fuori Kim, il mio cucciolo''. L'LLM estrae i dati e pubblica il task. Luca, studente di informatica che abita a 200 metri, riceve la notifica, accetta e svolge il compito; la sicurezza \`e garantita dallo scambio del token digitale (QR Code).
+
+\paragraph{Scenario B --- Reward vincolato alla donazione.} Marco, volontario attivo, accumula molti Crediti SOLI aiutando i vicini con la spesa. Decide di convertirli in un ``Buono Cultura''. Il sistema, per statuto, non gli permette di usarlo per s\'e: Marco seleziona un ente partner che si occupa di giovani in difficolt\`a e dona il beneficio. Con SOLI il tempo di un cittadino si trasforma in cultura per un altro.
+
+\paragraph{Scenario C --- Contrasto alla solitudine.} Stefano, 79 anni, soffre la solitudine e desidera conversare con qualcuno. Effettua una richiesta di categoria ``Socialit\`a e compagnia''. Luigi, volontario sensibile al tema, accetta il task e va a trovarlo.
+
+% =====================================================================
+\subsection{Requisiti Funzionali}
+Ogni requisito \`e caratterizzato da un nome seguito da una breve descrizione.
+
+\newcommand{\fr}[3]{\item[\textbf{FR-#1}] \textbf{[#2]}\quad #3}
+\begin{description}[leftmargin=1.6cm,style=nextline]
+\fr{01}{Autenticazione tramite Identit\`a Digitale}{Il sistema deve permettere la registrazione e l'accesso degli utenti (volontari e richiedenti) esclusivamente tramite integrazione con sistemi di identit\`a digitale pubblica (SPID/CIEid o servizi di emulazione della registrazione) per garantire la certificazione dell'identit\`a (livello di fiducia LV1).}
+\fr{02}{Profilazione Volontario e Gestione Preferenze}{Il sistema deve consentire al Volontario Civico di configurare il proprio profilo operativo, selezionando gli ambiti di intervento preferiti, impostando vincoli specifici (es. limitazioni fisiche, allergie) e definendo la propria disponibilit\`a oraria.}
+\fr{03}{Wizard di Creazione Richiesta Guidata}{Il sistema deve fornire un'interfaccia semplificata che guidi il Richiedente nella selezione della macro-categoria di servizio (Mobilit\`a, Supporto Fisico, Socialit\`a, Pet Support, Inclusione Digitale) e nell'inserimento dei dettagli necessari.}
+\fr{04}{Richieste Massime Giornaliere}{Il sistema deve imporre un limite massimo di 5 task richiedibili al giorno per ciascun Richiedente (conteggio dalla mezzanotte alla mezzanotte, indipendentemente dallo stato dei task), per evitare l'intasamento del sistema; al raggiungimento del limite blocca la creazione di nuove richieste mostrando un messaggio informativo.}
+\fr{05}{Input Conversazionale e Vocale (Soli Assistant)}{Il sistema deve integrare un modulo LLM che permetta all'utente di formulare richieste in linguaggio naturale o vocale, estraendo automaticamente le entit\`a (tipo di servizio, data, luogo) per pre-compilare il form di richiesta (modalit\`a ``No-UI'').}
+\fr{06}{Classificazione Automatica dell'Urgenza}{Il sistema deve analizzare la richiesta per assegnare automaticamente un livello di priorit\`a e urgenza, sulla base della tipologia di servizio e delle tempistiche indicate.}
+\fr{07}{Algoritmo di Matching}{Il sistema deve elaborare le richieste incrociando i dati della domanda con i profili dei volontari sulla base di quattro parametri: prossimit\`a geografica, compatibilit\`a delle competenze/certificazioni, disponibilit\`a oraria e principio di rotazione equa.}
+\fr{08}{Geolocalizzazione e Geofencing}{Il sistema deve tracciare la posizione degli utenti (previa autorizzazione) per calcolare le distanze e filtrare le notifiche di task disponibili solo ai volontari nel raggio d'azione utile.}
+\fr{09}{Sistema di Notifiche Push Mirate}{Il sistema deve inviare notifiche push in tempo reale solo ai volontari selezionati dall'algoritmo di matching, evitando la diffusione indiscriminata (broadcast) per ridurre il rumore informativo.}
+\fr{10}{Messaggistica Interna Anonimizzata}{La chat \`e disponibile esclusivamente per la durata del task attivo e viene disattivata al completamento; i contenuti sono monitorati tramite un modulo LLM-in-the-middle per finalit\`a di prevenzione e moderazione.}
+\fr{11}{Calcolo e Assegnazione Crediti SOLI}{Il sistema deve calcolare automaticamente i Crediti SOLI spettanti al volontario al termine di ogni task validato, sulla base della durata effettiva dell'intervento.}
+\fr{12}{Wallet Digitale}{Il sistema deve fornire un'interfaccia per la visualizzazione del saldo punti accumulato e dello storico delle attivit\`a svolte.}
+\fr{13}{Marketplace di Conversione Premi}{Il sistema deve permettere la conversione dei Crediti SOLI in premialit\`a vincolate alla donazione (sconti trasporti, buoni spesa, accessi culturali) tramite un catalogo gestito in collaborazione con enti/sponsor.}
+\fr{14}{Gestione Dispute e Segnalazioni}{Il sistema deve permettere agli utenti di segnalare comportamenti inappropriati tramite un form dedicato, sospendendo cautelativamente l'utente segnalato fino a verifica.}
+\fr{15}{Gestione Storico e Audit}{Il sistema deve memorizzare lo storico dei task completati e delle transazioni di crediti per la consultazione del Wallet e la risoluzione di dispute.}
+\fr{16}{Gestione Stato del Task}{Il sistema deve gestire lo stato interno di ogni task (creata, notificata, accettata, in esecuzione, completata, rilasciata, annullata) impedendo transizioni non valide; un task accettato deve essere portato a completamento e non pu\`o restare indefinitamente nello stato ``accettato'' o ``in esecuzione''.}
+\fr{17}{Validazione tramite Token/QR Code}{Il sistema deve generare codici univoci (QR Code o token digitale) che le parti scansionano o scambiano per certificare digitalmente l'inizio (check-in) e la conclusione (check-out) del task.}
+\fr{18}{Gestione Conferma del Task}{Il sistema deve prevedere una doppia conferma per il completamento: il task \`e marcato completato solo quando sia Richiedente sia Volontario hanno confermato; in caso di conferma singola mostra lo stato parziale. La conferma \`e irreversibile.}
+\fr{19}{Gestione Rilascio del Task}{Il sistema deve permettere al volontario di abbandonare una richiesta accettata tramite ``Rilascio Task'' per imprevisti post-accettazione, innescando una ri-assegnazione prioritaria e senza penalit\`a.}
+\fr{20}{Gestione Annullamento del Task}{Il sistema deve permettere al Richiedente di annullare una richiesta: liberamente se il task non \`e ancora accettato (notificando i volontari coinvolti); entro 10 minuti dall'accettazione se il task \`e gi\`a stato preso in carico. Oltre tale finestra il task va portato a completamento.}
+\fr{21}{Open Data API (Smart-City)}{Il sistema deve esporre API pubbliche di sola lettura su dati aggregati e anonimizzati del volontariato civico, per l'integrazione smart-city (cruscotti comunali, portali open-data, ricerca). L'accesso avviene tramite token API con scadenza; nessun dato personale \`e restituito (aggregazione e k-anonymity).}
+\end{description}
+
+% =====================================================================
+\subsection{Requisiti non Funzionali}
+Ogni requisito \`e caratterizzato da un nome seguito da una breve descrizione.
+
+\newcommand{\nfr}[3]{\item[\textbf{NFR-#1}] \textbf{[#2]}\quad #3}
+\begin{description}[leftmargin=1.8cm,style=nextline]
+\nfr{01}{Accessibilit\`a e Usabilit\`a (Inclusivit\`a)}{Interfaccia accessibile secondo gli standard WCAG, con attenzione a utenti con disabilit\`a motorie o bassa alfabetizzazione digitale; deve essere possibile interagire anche tramite modalit\`a semplificate alternative alla UI tradizionale.}
+\nfr{02}{Sicurezza e Autenticazione Forte}{L'accesso ai servizi critici deve avvenire tramite identit\`a digitale certificata (SPID/CIEid o sistemi emulati per la demo); il sistema previene accessi non autorizzati e garantisce l'integrit\`a delle transazioni di token/QR code.}
+\nfr{03}{Privacy e Protezione dei Dati (GDPR Compliance)}{Riservatezza dei dati di utenti fragili e volontari; comunicazioni tramite chat interne anonimizzate; cancellazione dei dati di chat al termine del task.}
+\nfr{04}{Prestazioni e Reattivit\`a (Real-time)}{Bassa latenza nelle notifiche push e nel matching geografico; l'algoritmo deve elaborare posizione e competenze entro pochi secondi dall'inserimento della richiesta.}
+\nfr{05}{Fairness Algoritmica}{L'algoritmo di assegnazione deve includere meccanismi di rotazione equa per evitare il sovraccarico dei singoli volontari, senza imporre limiti rigidi di ore.}
+\nfr{06}{Moderazione dei Contenuti (AI Safety)}{Meccanismi automatici (LLM/NLP) per analizzare in tempo reale i testi di richieste e chat, filtrando contenuti offensivi, inappropriati o tentativi di truffa prima che raggiungano l'interlocutore.}
+\nfr{07}{Scalabilit\`a Orizzontale}{Architettura progettata per supportare un numero crescente di utenti e richieste simultanee a livello di quartiere o citt\`a, sfruttando la natura distribuita dei container.}
+\nfr{08}{Disponibilit\`a del Servizio (Availability)}{Uptime del 99,9\% durante le ore diurne (07:00--22:00), fascia critica per assistenza domiciliare e mobilit\`a.}
+\nfr{09}{Portabilit\`a e Containerizzazione}{Ogni componente pacchettizzato in container Docker; l'intero stack avviabile con un unico comando di orchestrazione (es. \texttt{docker compose up}).}
+\nfr{10}{Interoperabilit\`a RESTful (API First)}{Tutte le comunicazioni client-server e tra servizi avvengono tramite API REST documentate secondo OpenAPI 3.0 (Swagger); payload in formato JSON.}
+\nfr{11}{Tracciabilit\`a delle Operazioni (Audit Log)}{Ogni cambio di stato di un task e ogni transazione di Crediti SOLI genera un record di log immutabile, consultabile dagli amministratori.}
+\nfr{12}{Affidabilit\`a e Recupero da Errore}{Gestione degli errori applicativi senza perdita di dati critici (task, crediti, audit log).}
+\nfr{13}{Contestualizzazione Territoriale}{Configurazione locale dei servizi (categorie, raggio geografico, disponibilit\`a) per adattarsi a contesti di quartiere o citt\`a differenti.}
+\end{description}
+
+% =====================================================================
+\subsection{Descrizione dell'architettura}
+
+Il sistema SOLI \`e organizzato in \textbf{quattro livelli} sovrapposti che comunicano tramite API REST.
+
+\begin{itemize}[leftmargin=1.4em]
+  \item \textbf{Livello client.} I punti di accesso sono il client mobile e il client web. Entrambi non comunicano mai direttamente con i servizi interni, ma esclusivamente attraverso il Proxy.
+  \item \textbf{Livello gateway.} Porta d'ingresso unica: il Proxy riceve tutto il traffico in entrata, lo smista verso il servizio corretto e applica le policy di sicurezza (autenticazione, rate limiting, CORS). L'Auth Server gestisce le identit\`a: emette e valida i token di sessione e si integra con i sistemi di identit\`a digitale nazionale (SPID/CIEid).
+  \item \textbf{Livello applicativo.} \`E il cuore del sistema. Il Backend centralizza la logica: profili utente, ciclo di vita dei task, algoritmo di matching, reward, audit log e chat. Il Modulo AI, interno e non esposto, viene richiamato per assistenza conversazionale, moderazione dei contenuti e classificazione dell'urgenza. Il Notification Service \`e un worker che ascolta gli eventi pubblicati dal Backend e invia notifiche push mirate.
+  \item \textbf{Livello infrastruttura.} Comprende persistenza e comunicazione asincrona: un geo-store in memoria mantiene le posizioni dei volontari per query di prossimit\`a in tempo reale e funge da message broker; il database relazionale gestisce i dati strutturati e transazionali; il database documentale gestisce i messaggi di chat con cancellazione automatica.
+\end{itemize}
+
+Di seguito si riportano \textbf{due viste} dell'architettura: la versione \emph{ideale} (target progettuale) e la versione \emph{POC} effettivamente realizzata e dispiegata.
+
+% ---------- DIAGRAMMA 1: ARCHITETTURA IDEALE ----------
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth]{arch_ideale}
+\caption{Architettura \textbf{ideale} (target): microservizi containerizzati, geo-store/broker in memoria (Redis), chat su database documentale (MongoDB), Notification Service e Modulo AI dedicati. Frecce piene = sincrono, tratteggiate = asincrono.}
+\label{fig:arch-ideale}
+\end{figure}
+
+% ---------- DIAGRAMMA 2: ARCHITETTURA POC ----------
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth]{arch_poc}
+\caption{Architettura \textbf{POC realizzata}. Rispetto al target: chat e geolocalizzazione sono su PostgreSQL (non MongoDB/Redis), il matching di prossimit\`a usa la formula di Haversine calcolata in memoria, il modulo LLM \`e un placeholder (\texttt{MockAIService}) e il Notification Service non \`e dispiegato. L'app mobile esiste ma non \`e containerizzata.}
+\label{fig:arch-poc}
+\end{figure}
+
+% =====================================================================
+\subsection{Interfacce dei servizi esposti dal sistema}
+
+Coerentemente con la vocazione smart-city del progetto (FR-21), le interfacce esposte \textbf{verso l'esterno} --- fruibili da enti pubblici, ricercatori e dagli altri gruppi della challenge --- sono le \textbf{Open Data API} di sola lettura su dati aggregati e anonimizzati.
+
+\begin{itemize}[leftmargin=1.4em]
+  \item \textbf{Base URI:} \texttt{/api/open/v1} \qquad \textbf{Formato:} JSON \qquad \textbf{Licenza dati:} CC-BY 4.0.
+  \item \textbf{Autenticazione:} header \texttt{X-API-Key} con token emesso da un amministratore (scadenza obbligatoria, revocabile; a sistema \`e salvato solo l'hash SHA-256 della chiave). In assenza di token valido: \texttt{401}.
+  \item \textbf{Privacy:} nessun dato personale; solo conteggi, medie e serie temporali. La geolocalizzazione \`e aggregata e le celle con meno di 3 elementi sono soppresse (k-anonymity).
+\end{itemize}
+
+Tutte le operazioni condividono lo stesso flusso di interazione tra le componenti, illustrato nel diagramma di sequenza di Figura~\ref{fig:seq-open}. Di seguito ciascuna operazione \`e descritta secondo il template richiesto (nome, requisiti di riferimento, descrizione, input, output, interazioni). Per input e output si riportano nome e descrizione dei parametri/campi. La codifica RESTful di dettaglio (URI, metodo, header, codici) \`e nella Sezione~\ref{sec:rest}.
+
+\begin{figure}[htbp]\centering
+\begin{tikzpicture}[font=\scriptsize,
+  actor/.style={rectangle,rounded corners=2pt,draw=black!45,fill=soliTeal,text=white,align=center,minimum width=2.6cm,minimum height=8mm,inner sep=2pt},
+  note/.style={rectangle,draw=black!35,fill=yellow!18,align=left,inner sep=2.5pt,font=\tiny},
+  msg/.style={-{Latex[length=2mm]},thick},
+  ret/.style={-{Latex[length=2mm]},semithick,dashed}]
+  \def\yb{-6.5}
+  \node[actor] (c) at (0,0)    {Client esterno\\{\tiny Ente / Portale}};
+  \node[actor] (f) at (4.6,0)  {API Key Filter\\{\tiny gateway}};
+  \node[actor] (r) at (9.2,0)  {OpenDataResource};
+  \node[actor] (a) at (13.6,0) {AnalyticsService\\{\tiny + PostgreSQL}};
+  \foreach \n in {c,f,r,a}{\draw[dashed,black!35] (\n.south) -- (\n |- 0,\yb);}
+  \draw[msg] (c |- 0,-1.1) -- (f |- 0,-1.1) node[midway,above,font=\tiny]{\texttt{GET} /api/open/v1/\ldots{} + \texttt{X-API-Key}};
+  \node[note,anchor=west] at (f |- 0,-1.9) {valida token:\\hash SHA-256, scadenza, revoca};
+  \draw[msg] (f |- 0,-2.7) -- (r |- 0,-2.7) node[midway,above,font=\tiny]{richiesta autorizzata};
+  \draw[msg] (r |- 0,-3.4) -- (a |- 0,-3.4) node[midway,above,font=\tiny]{invoca metodo analitico};
+  \node[note,anchor=east] at (a |- 0,-4.2) {query SQL aggregata\\GROUP BY $\cdot$ HAVING count $\ge$ 3};
+  \draw[ret] (a |- 0,-5.0) -- (r |- 0,-5.0) node[midway,above,font=\tiny]{righe aggregate};
+  \draw[ret] (r |- 0,-5.6) -- (c |- 0,-5.6) node[midway,above,font=\tiny]{\texttt{200} --- JSON aggregato};
+  \draw[ret,red!70!black] (f |- 0,-6.3) -- (c |- 0,-6.3) node[midway,above,font=\tiny]{\texttt{401} se token assente / scaduto / revocato};
+\end{tikzpicture}
+\caption{Diagramma di sequenza del flusso comune a tutte le operazioni Open Data: autenticazione via \texttt{X-API-Key}, validazione del token, esecuzione di query SQL aggregate (con soppressione k-anonymity) e restituzione di JSON privo di dati personali.}
+\label{fig:seq-open}
+\end{figure}
+
+\ifacecard{Metadati del dataset}{FR-21}
+{Restituisce le informazioni descrittive del dataset aperto: versione, licenza d'uso, data dell'ultimo aggiornamento e citt\`a coperte. \`E l'operazione da interrogare per prima, per scoprire cosa il dataset offre e con quali vincoli di licenza.}
+{Nessun parametro di input.}
+{\outbox{Oggetto con: \texttt{dataset} (nome), \texttt{version}, \texttt{license} (CC-BY 4.0), \texttt{privacy} (nota sull'anonimizzazione), \texttt{lastUpdated} (data ultimo task), \texttt{cities} (elenco citt\`a coperte), \texttt{auth} (modalit\`a di autenticazione).}}
+{Fig.~\ref{fig:seq-open}. \texttt{AnalyticsService.meta()}: costanti del dataset pi\`u la data pi\`u recente letta da \texttt{soli\_tasks}.}
+
+\ifacecard{Categorie e moltiplicatori}{FR-21, FR-11}
+{Espone il riferimento delle categorie di servizio e dei moltiplicatori usati nel calcolo dei Crediti SOLI. Permette a un consumatore esterno di interpretare correttamente i valori economici restituiti dalle altre operazioni.}
+{Nessun parametro di input.}
+{\outbox{Oggetto con: \texttt{categories} (mappa categoria $\to$ moltiplicatore), \texttt{urgencyLevels} (mappa livello $\to$ moltiplicatore), \texttt{baseCreditsPerHour} (crediti base per ora, pari a 6).}}
+{Fig.~\ref{fig:seq-open}. \texttt{AnalyticsService.categories()}: valori costanti di dominio, nessuna query.}
+
+\ifacecard{Panoramica generale}{FR-21}
+{Fornisce in un unico oggetto i totali aggregati del sistema: quanti utenti e volontari, quanti task in ciascuno stato, i crediti in gioco e i riscatti effettuati. \`E il punto d'ingresso per un cruscotto sintetico.}
+{Nessun parametro di input.}
+{\outbox{Oggetto con: \texttt{users}, \texttt{volunteers}, \texttt{tasksTotal}, \texttt{tasksCompleted}, \texttt{tasksOpen}, \texttt{tasksInProgress}, \texttt{creditsEarned}, \texttt{creditsSpent}, \texttt{creditsInCirculation}, \texttt{charitiesActive}, \texttt{redemptions}, \texttt{associations}, \texttt{reports}.}}
+{Fig.~\ref{fig:seq-open}. \texttt{AnalyticsService.overview()}: \texttt{count(*)} e somme su pi\`u tabelle \texttt{soli\_*}.}
+
+\ifacecard{Task per categoria}{FR-21}
+{Ripartisce i task per categoria di servizio (mobilit\`a, supporto fisico, socialit\`a, animali, digitale), indicando per ciascuna il volume, i completati, il tasso di completamento e i crediti medi generati. Mostra dove si concentra il bisogno.}
+{Nessun parametro di input.}
+{\outbox{Array di oggetti \{ \texttt{category}, \texttt{total}, \texttt{completed}, \texttt{completionRate} (\%), \texttt{avgCredits} \}, uno per categoria.}}
+{Fig.~\ref{fig:seq-open}. \texttt{AnalyticsService.tasksByCategory()}: \texttt{GROUP BY category} su \texttt{soli\_tasks}.}
+
+\ifacecard{Task per urgenza}{FR-21, FR-06}
+{Distribuisce i task per livello di criticit\`a assegnato in fase di classificazione (basso, medio, alto, critico), con i relativi completati. Utile per valutare la pressione delle richieste urgenti sul territorio.}
+{Nessun parametro di input.}
+{\outbox{Array di oggetti \{ \texttt{urgency}, \texttt{total}, \texttt{completed} \}, uno per livello di urgenza.}}
+{Fig.~\ref{fig:seq-open}. \texttt{AnalyticsService.tasksByUrgency()}: \texttt{GROUP BY urgency\_level} su \texttt{soli\_tasks}.}
+
+\ifacecard{Task per stato}{FR-21, FR-16}
+{Conteggia i task per stato del ciclo di vita (aperto, notificato, accettato, in corso, completato, rilasciato, annullato). D\`a una fotografia istantanea del carico operativo del sistema.}
+{Nessun parametro di input.}
+{\outbox{Array di oggetti \{ \texttt{status}, \texttt{count} \}, uno per stato del task.}}
+{Fig.~\ref{fig:seq-open}. \texttt{AnalyticsService.tasksByStatus()}: \texttt{GROUP BY status} su \texttt{soli\_tasks}.}
+
+\ifacecard{Serie temporale dei task}{FR-21, NFR-13}
+{Numero di task creati e completati in ciascun intervallo di tempo, per osservare stagionalit\`a, picchi e crescita del servizio nel periodo scelto.}
+{\begin{inparams}
+from & Data di inizio dell'intervallo, formato \texttt{YYYY-MM-DD}. Opzionale (se assente si parte dal primo dato).\\\hline
+to & Data di fine dell'intervallo, formato \texttt{YYYY-MM-DD}. Opzionale.\\\hline
+granularity & Ampiezza del bucket temporale: \texttt{day} $|$ \texttt{week} $|$ \texttt{month}. Opzionale, default \texttt{day}.\\\hline
+\end{inparams}}
+{\outbox{Array di oggetti \{ \texttt{period} (etichetta dell'intervallo), \texttt{created}, \texttt{completed} \}, ordinati nel tempo.}}
+{Fig.~\ref{fig:seq-open}. \texttt{AnalyticsService.tasksTimeseries()}: aggregazione per bucket temporale su \texttt{created\_at} e \texttt{check\_out\_at}.}
+
+\ifacecard{Distribuzione per citt\`a}{FR-21, FR-08, NFR-13}
+{Ripartisce i task per citt\`a, con volume, completati e crediti medi. Consente a un comune di misurare la domanda sociale sul proprio territorio rispetto ad altri.}
+{Nessun parametro di input.}
+{\outbox{Array di oggetti \{ \texttt{city}, \texttt{tasks}, \texttt{completed}, \texttt{avgCredits} \}, uno per citt\`a.}}
+{Fig.~\ref{fig:seq-open}. \texttt{AnalyticsService.geoByCity()}: \texttt{GROUP BY target\_location} su \texttt{soli\_tasks}.}
+
+\ifacecard{Heatmap geografica}{FR-21, FR-08, NFR-03}
+{Restituisce una griglia di densit\`a: conteggi di task per cella di coordinate (latitudine/longitudine arrotondate). A tutela della privacy, le celle con meno di 3 elementi sono soppresse (k-anonymity), impedendo la ri-identificazione.}
+{\begin{inparams}
+precision & Numero di decimali di arrotondamento delle coordinate, cio\`e la finezza della griglia: \texttt{1}--\texttt{4}. Opzionale, default \texttt{2}.\\\hline
+\end{inparams}}
+{\outbox{Array di celle \{ \texttt{lat}, \texttt{lon}, \texttt{count} \}; sono restituite solo le celle con \texttt{count} $\ge$ 3.}}
+{Fig.~\ref{fig:seq-open}. \texttt{AnalyticsService.geoGrid()}: \texttt{GROUP BY} coordinate arrotondate, \texttt{HAVING count $\ge$ 3}.}
+
+\ifacecard{Statistiche crediti}{FR-21, FR-11}
+{Sintetizza l'economia circolare dei Crediti SOLI: quanti crediti sono stati guadagnati, quanti spesi in donazioni, quanti in circolazione e il valore medio per task completato.}
+{Nessun parametro di input.}
+{\outbox{Oggetto con: \texttt{totalEarned}, \texttt{totalSpent}, \texttt{inCirculation}, \texttt{avgPerCompletedTask}, \texttt{transactions} (numero totale di movimenti).}}
+{Fig.~\ref{fig:seq-open}. \texttt{AnalyticsService.credits()}: somme su \texttt{soli\_transactions} e \texttt{soli\_wallets}.}
+
+\ifacecard{Serie temporale dei crediti}{FR-21, FR-11}
+{Crediti guadagnati e spesi in ciascun intervallo di tempo, per seguire l'andamento del valore del volontariato scambiato.}
+{\begin{inparams}
+from & Data di inizio, formato \texttt{YYYY-MM-DD}. Opzionale.\\\hline
+to & Data di fine, formato \texttt{YYYY-MM-DD}. Opzionale.\\\hline
+granularity & Ampiezza del bucket: \texttt{day} $|$ \texttt{week} $|$ \texttt{month}. Opzionale, default \texttt{month}.\\\hline
+\end{inparams}}
+{\outbox{Array di oggetti \{ \texttt{period}, \texttt{earned}, \texttt{spent} \}, ordinati nel tempo.}}
+{Fig.~\ref{fig:seq-open}. \texttt{AnalyticsService.creditsTimeseries()}: aggregazione temporale su \texttt{soli\_transactions}.}
+
+\ifacecard{Partecipazione dei volontari}{FR-21, FR-07}
+{Misura l'attivit\`a dei volontari: quanti attivi rispetto ai registrati, task medi per volontario attivo, tempo medio di risposta alle notifiche e copertura delle categorie di servizio.}
+{Nessun parametro di input.}
+{\outbox{Oggetto con: \texttt{activeVolunteers}, \texttt{registeredVolunteers}, \texttt{avgTasksPerActiveVolunteer}, \texttt{avgResponseMinutes}, \texttt{categoriesCoverage} (array \{ \texttt{category}, \texttt{volunteers} \}).}}
+{Fig.~\ref{fig:seq-open}. \texttt{AnalyticsService.volunteering()}: conteggi sui profili volontario e medie sui tempi di accettazione.}
+
+\ifacecard{Impatto sociale}{FR-21, FR-13}
+{Quantifica l'impatto del servizio sulla comunit\`a: ore di volontariato erogate, beneficiari distinti raggiunti, crediti donati agli enti e ripartizione delle donazioni per causa.}
+{Nessun parametro di input.}
+{\outbox{Oggetto con: \texttt{volunteerHours}, \texttt{beneficiariesHelped}, \texttt{tasksCompleted}, \texttt{creditsDonated}, \texttt{byCause} (array \{ \texttt{cause}, \texttt{redemptions}, \texttt{creditsDonated} \}).}}
+{Fig.~\ref{fig:seq-open}. \texttt{AnalyticsService.impact()}: durate dei task, beneficiari distinti e somma dei riscatti per causa.}
+
+\ifacecard{Enti benefici}{FR-21, FR-13}
+{Elenca gli enti benefici convenzionati con le relative statistiche di riscatto: causa, costo del buono, disponibilit\`a residua e crediti raccolti. Rende trasparente la destinazione delle donazioni.}
+{Nessun parametro di input.}
+{\outbox{Array di oggetti \{ \texttt{name}, \texttt{cause}, \texttt{costInCredits}, \texttt{stockRemaining}, \texttt{redemptions}, \texttt{creditsCollected} \}, uno per ente.}}
+{Fig.~\ref{fig:seq-open}. \texttt{AnalyticsService.charitiesStats()}: join tra \texttt{soli\_charities} e \texttt{soli\_redemptions}.}
+
+\ifacecard{Confronto tra citt\`a}{FR-21, NFR-13}
+{Tabella comparativa dei KPI per citt\`a (ranking): volume task, completamento, tempo di risposta, volontari attivi e crediti. Abilita il benchmarking tra comuni.}
+{Nessun parametro di input.}
+{\outbox{Array di oggetti \{ \texttt{city}, \texttt{tasks}, \texttt{completed}, \texttt{completionRate}, \texttt{avgCredits}, \texttt{avgResponseMinutes}, \texttt{activeVolunteers}, \texttt{creditsEarned}, \texttt{openTasks} \}, uno per citt\`a.}}
+{Fig.~\ref{fig:seq-open}. \texttt{AnalyticsService.cities()}: KPI aggregati raggruppati per \texttt{target\_location}.}
+
+\ifacecard{Report di una citt\`a}{FR-21, NFR-13}
+{Report analitico completo per una singola citt\`a (drill-down): totali, completamento, tempi medi, volontari e beneficiari, con ripartizione per categoria e per urgenza. Alimenta la vista di dettaglio del cruscotto comunale.}
+{\begin{inparams}
+city (*) & Nome della citt\`a su cui produrre il report (confronto case-insensitive). Obbligatorio; passato nel path dell'URI.\\\hline
+\end{inparams}}
+{\outbox{Oggetto con: \texttt{city}, \texttt{tasksTotal}, \texttt{completed}, \texttt{completionRate}, \texttt{openTasks}, \texttt{activeVolunteers}, \texttt{beneficiariesHelped}, \texttt{creditsEarned}, \texttt{avgResponseMinutes}, \texttt{avgDurationMinutes}, \texttt{byCategory} (array), \texttt{byUrgency} (array).}}
+{Fig.~\ref{fig:seq-open}. \texttt{AnalyticsService.cityReport(city)}: query filtrate per citt\`a su \texttt{soli\_tasks}.}
+
+\ifacecard{Domanda vs offerta}{FR-21, FR-07}
+{Confronta, per categoria, i task aperti (domanda) con i volontari disponibili (offerta), evidenziando le carenze di copertura dove il bisogno supera la capacit\`a di risposta.}
+{Nessun parametro di input.}
+{\outbox{Array di oggetti \{ \texttt{category}, \texttt{openTasks}, \texttt{volunteers}, \texttt{openPerVolunteer} (rapporto domanda/offerta) \}, uno per categoria.}}
+{Fig.~\ref{fig:seq-open}. \texttt{AnalyticsService.demandSupply()}: conteggi di task aperti e volontari per categoria.}
+
+\ifacecard{Imbuto del ciclo di vita}{FR-21, FR-16}
+{Rappresenta l'imbuto (funnel) dei task: creati $\to$ accettati $\to$ in corso $\to$ completati, con i relativi tassi di accettazione e completamento e i conteggi di annullamenti e rilasci. Individua i punti di abbandono del processo.}
+{Nessun parametro di input.}
+{\outbox{Oggetto con: \texttt{created}, \texttt{accepted}, \texttt{inProgress}, \texttt{completed}, \texttt{cancelled}, \texttt{released}, \texttt{acceptanceRate}, \texttt{completionRate}.}}
+{Fig.~\ref{fig:seq-open}. \texttt{AnalyticsService.funnel()}: conteggi per stato e calcolo dei tassi su \texttt{soli\_tasks}.}
+
+\ifacecard{Task per giorno della settimana}{FR-21}
+{Distribuisce i task per giorno della settimana (domenica--sabato), utile a individuare i giorni di maggiore richiesta e a pianificare la disponibilit\`a dei volontari.}
+{Nessun parametro di input.}
+{\outbox{Array di oggetti \{ \texttt{weekday} (nome del giorno), \texttt{count} \}, uno per i 7 giorni.}}
+{Fig.~\ref{fig:seq-open}. \texttt{AnalyticsService.tasksByWeekday()}: \texttt{GROUP BY EXTRACT(DOW ...)} su \texttt{created\_at}.}
+
+\ifacecard{Task per ora del giorno}{FR-21}
+{Distribuisce i task per ora del giorno (0--23), per individuare le fasce orarie di picco della domanda di aiuto.}
+{Nessun parametro di input.}
+{\outbox{Array di oggetti \{ \texttt{hour} (0--23), \texttt{count} \}, uno per fascia oraria.}}
+{Fig.~\ref{fig:seq-open}. \texttt{AnalyticsService.tasksByHour()}: \texttt{GROUP BY EXTRACT(HOUR ...)} su \texttt{created\_at}.}
+
+Le operazioni interne (autenticazione, ciclo di vita del task, chat, wallet, riscatti) non sono esposte pubblicamente: sono raggiungibili dai soli client autenticati tramite Bearer JWT e sono documentate --- insieme alle Open Data API --- nella Sezione~\ref{sec:rest}.
+
+% =====================================================================
+\section{Progettazione di dettaglio del sistema}
+
+% -----------------------------------------------------------------
+\subsection{Dizionario e modello dati}
+
+Il modello \`e persistito su \textbf{PostgreSQL} tramite Hibernate ORM Panache (18 entit\`a con prefisso \texttt{soli\_}). Non sono dichiarati vincoli di foreign key a livello DB: le associazioni sono gestite via UUID applicativi e l'integrit\`a \`e garantita a livello di servizio. \texttt{AuditLog} e \texttt{Transaction} sono append-only.
+
+\begin{xltabular}{\linewidth}{|L{4.0cm}|Y|}
+\hline
+\rowcolor{headBg}\color{white}\bfseries Entit\`a & \color{white}\bfseries Descrizione e campi principali\\\hline
+\endfirsthead
+\hline
+\rowcolor{headBg}\color{white}\bfseries Entit\`a & \color{white}\bfseries Descrizione e campi principali\\\hline
+\endhead
+\texttt{User} & Attore primario. \texttt{id}, \texttt{keycloakId} (=claim \texttt{sub}), \texttt{email}, \texttt{firstName}, \texttt{lastName}, \texttt{fiscalCode}, \texttt{role} [USER, ADMIN], \texttt{certificationLevel}, \texttt{status} [ACTIVE, SUSPENDED], \texttt{lastKnownLocation} (``lat,lon''). Volontario/Richiedente \`e una modalit\`a UI, non un ruolo persistito.\\\hline
+\texttt{VolunteerProfile} & Preferenze operative del volontario. \texttt{userId}, \texttt{availabilitySchedule} (JSONB), \texttt{serviceCategories} (enum), \texttt{constraints} (JSONB), \texttt{maxTaskDistanceMeters} (def. 5000), \texttt{latitude}, \texttt{longitude}.\\\hline
+\texttt{Task} & Richiesta di aiuto e suo ciclo di vita. \texttt{creatorId}, \texttt{beneficiaryId}, \texttt{volunteerId}, \texttt{category}, \texttt{title}, \texttt{description}, \texttt{urgencyLevel}, \texttt{scheduledAt}, \texttt{targetAddress}, \texttt{latitude}, \texttt{longitude}, \texttt{status}, \texttt{checkInToken/checkOutToken}, \texttt{checkInAt/checkOutAt}, \texttt{rewardCredits}, \texttt{creatorConfirmed}, \texttt{volunteerConfirmed}.\\\hline
+\texttt{TaskNotification} & Notifica di matching (evita broadcast, base per rotazione equa). \texttt{taskId}, \texttt{volunteerId}, \texttt{status} [PENDING, ACCEPTED, IGNORED, REJECTED], \texttt{notifiedAt}, \texttt{respondedAt}.\\\hline
+\texttt{ChatSession} / \texttt{ChatMessage} & Messaggistica anonimizzata per la durata del task. Sessione: \texttt{taskId} (unico), \texttt{isActive}. Messaggio: \texttt{senderId}, \texttt{content}, \texttt{isFlagged} (LLM-in-the-middle), \texttt{sentAt}. Real-time via WebSocket \texttt{/chat/\{taskId\}}.\\\hline
+\texttt{Wallet} / \texttt{Transaction} & Crediti SOLI (Time Banking). Wallet: \texttt{userId} (unico), \texttt{balance}. Transazione: \texttt{amount}, \texttt{transactionType} [EARN\_TASK\_REWARD, SPEND\_DONATION, ADJUSTMENT], \texttt{referenceId}.\\\hline
+\texttt{Charity} & Ente benefico che eroga buoni. \texttt{name}, \texttt{description}, \texttt{cause}, \texttt{voucherLabel}, \texttt{costInCredits}, \texttt{stockRemaining}, \texttt{isActive}. Seeding di 4 enti reali all'avvio.\\\hline
+\texttt{Redemption} & Buono riscattato. \texttt{userId}, \texttt{charityId}, \texttt{voucherCode} (univoco), \texttt{creditsSpent}. Riscatto atomico con lock pessimistico sul wallet.\\\hline
+\texttt{Reward} & Catalogo premialit\`a generico (\texttt{title}, \texttt{costInCredits}, \texttt{partnerName}, \texttt{stockLimit}). Non \`e il percorso di riscatto attivo.\\\hline
+\texttt{Report} & Segnalazioni/dispute post-task. \texttt{taskId}, \texttt{reporterId}, \texttt{reportedUserId}, \texttt{reason}, \texttt{status} [OPEN, INVESTIGATING, RESOLVED, DISMISSED].\\\hline
+\texttt{AuditLog} & Log immutabile. \texttt{entityType} [TASK, WALLET, USER], \texttt{entityId}, \texttt{action}, \texttt{oldValue/newValue} (JSONB), \texttt{actorId}, \texttt{timestamp}.\\\hline
+\texttt{Association} / \texttt{AssociationMembership} & Associazioni di volontariato e adesioni. Membership: \texttt{role} [ADMIN, MODERATOR, MEMBER], \texttt{status} [PENDING, APPROVED].\\\hline
+\texttt{ProfileImage} / \texttt{AssociationImage} & Blob binari (\texttt{bytea}) 1:1 con utente/associazione (\texttt{data}, \texttt{contentType}).\\\hline
+\texttt{ApiToken} & Token per le Open Data API (FR-21). \texttt{label}, \texttt{tokenPrefix}, \texttt{tokenHash} (SHA-256), \texttt{scope}, \texttt{expiresAt} (obbligatorio), \texttt{revoked}, \texttt{callCount}.\\\hline
+\texttt{CaregiverRelation} & Relazione caregiver--beneficiario. \texttt{caregiverId}, \texttt{beneficiaryId}, \texttt{relationshipType}.\\\hline
+\end{xltabular}
+
+\paragraph{Enumerazioni principali.}
+\begin{xltabular}{\linewidth}{|L{4.2cm}|Y|}
+\hline
+\rowcolor{headBg}\color{white}\bfseries Enum & \color{white}\bfseries Valori\\\hline
+\endhead
+\texttt{UserRole} & USER, ADMIN\\\hline
+\texttt{UserStatus} & ACTIVE, SUSPENDED\\\hline
+\texttt{CertificationLevel} & LV1\_SPID, LV2\_TRAINED, LV3\_PARTNER\\\hline
+\texttt{ServiceCategory} & MOBILITY, PHYSICAL\_SUPPORT, SOCIAL, PET\_SUPPORT, DIGITAL\\\hline
+\texttt{UrgencyLevel} & LOW, MEDIUM, HIGH, CRITICAL\\\hline
+\texttt{TaskStatus} & OPEN, NOTIFIED, ACCEPTED, IN\_PROGRESS, COMPLETED, RELEASED, CANCELLED\\\hline
+\texttt{NotificationStatus} & PENDING, ACCEPTED, IGNORED, REJECTED\\\hline
+\texttt{TransactionType} & EARN\_TASK\_REWARD, SPEND\_DONATION, ADJUSTMENT\\\hline
+\texttt{ReportStatus} & OPEN, INVESTIGATING, RESOLVED, DISMISSED\\\hline
+\end{xltabular}
+
+\paragraph{Calcolo dei crediti.} Crediti $=$ durata reale ($6$ crediti/ora) $\times$ moltiplicatore di criticit\`a $\times$ moltiplicatore di categoria, con minimo 1 credito e cap a 8 ore. Moltiplicatori criticit\`a: LOW 1,0 / MEDIUM 1,25 / HIGH 1,5 / CRITICAL 2,0. Moltiplicatori categoria: SOCIAL 1,0 / DIGITAL 1,1 / PET\_SUPPORT 1,1 / MOBILITY 1,2 / PHYSICAL\_SUPPORT 1,5. L'accredito \`e sincrono e atomico con il completamento del task.
+
+% -----------------------------------------------------------------
+\subsection{Motivazioni delle scelte tecnologiche}
+
+\paragraph{Frontend web.}
+\begin{xltabular}{\linewidth}{|L{3.2cm}|L{3.2cm}|Y|}
+\hline
+\rowcolor{headBg}\color{white}\bfseries Componente & \color{white}\bfseries Scelta & \color{white}\bfseries Motivazione\\\hline
+\endhead
+Framework SPA & React 19 & Standard per UI complesse e reattive; condivide logica col mobile. MIT.\\\hline
+Build tool & Vite & Dev server con HMR istantaneo, build ottimizzate (Rollup). MIT.\\\hline
+Linguaggio & TypeScript & Tipizzazione statica, meno errori a runtime.\\\hline
+UI Kit & MUI (Material UI) & Componenti Material Design 3, themizzabili.\\\hline
+Auth & oidc-client-ts & Integrazione OIDC con Keycloak (Authorization Code + PKCE).\\\hline
+Proxy (prod) & Nginx & Reverse proxy, CORS, terminazione HTTPS; leggero. BSD.\\\hline
+\end{xltabular}
+
+\paragraph{Applicazione mobile.} Approccio cross-platform con \textbf{React Native CLI} (pieno controllo nativo per SPID/CIEid e push), TypeScript, \texttt{expo-router}, \texttt{expo-auth-session} (OAuth2/OIDC), \texttt{expo-secure-store} (Keychain/Keystore per i token).
+
+\paragraph{Backend e Data layer.}
+\begin{xltabular}{\linewidth}{|L{3.2cm}|L{3.2cm}|Y|}
+\hline
+\rowcolor{headBg}\color{white}\bfseries Componente & \color{white}\bfseries Scelta & \color{white}\bfseries Motivazione\\\hline
+\endhead
+Runtime & Java 21 (LTS) & Virtual thread per migliaia di connessioni senza codice reattivo.\\\hline
+Framework & Quarkus & Ottimizzato per container (avvio in ms, footprint ridotto); genera OpenAPI 3.0 dalle annotazioni. Apache 2.0.\\\hline
+ORM & Hibernate ORM Panache & Active record pattern.\\\hline
+Identity Provider & Keycloak 26 & Evita di sviluppare da zero una componente critica; abilita SPID/CIEid via identity brokering. Apache 2.0.\\\hline
+Database & PostgreSQL 16 & Dati transazionali con ACID compliance (utenti, task, crediti, audit). Chat e geolocalizzazione nel POC.\\\hline
+Documentazione & OpenAPI 3.0 + Swagger UI & Generata da Quarkus; UI su \texttt{/q/swagger-ui}. Apache 2.0.\\\hline
+\end{xltabular}
+
+\paragraph{Divergenze design $\to$ realizzazione (POC).} Nel prototipo alcune scelte del target non sono state dispiegate per semplificare l'esecuzione a container ridotti: \emph{chat} e \emph{geolocalizzazione} risiedono su PostgreSQL (non MongoDB/Redis); il matching di prossimit\`a usa la formula di \textbf{Haversine} calcolata in memoria (\texttt{MatchingService}); il modulo LLM \`e un placeholder (\texttt{MockAIService}); il Notification Service dedicato non \`e attivo. Le soluzioni del target restano valide come indirizzo evolutivo.
+
+% -----------------------------------------------------------------
+\subsection{Componenti (HW/SW) e connettori}
+\begin{itemize}[leftmargin=1.4em]
+  \item \textbf{Client web} (SW): React SPA servita da Nginx; connettore HTTPS/REST verso il backend, OIDC verso Keycloak.
+  \item \textbf{Client mobile} (SW): app React Native; connettore REST + OIDC (browser di sistema), push FCM/APNS (target).
+  \item \textbf{Backend} (SW): Quarkus; connettori JDBC verso PostgreSQL, OIDC verso Keycloak, WebSocket per la chat.
+  \item \textbf{Identity Provider} (SW): Keycloak; connettore OIDC/JWT verso client e backend, JDBC verso PostgreSQL.
+  \item \textbf{Database relazionale} (SW): PostgreSQL; connettore JDBC.
+  \item \textbf{Host} (HW): qualunque host con Docker Engine; nel POC tutti i container condividono la rete \texttt{soli-network}.
+\end{itemize}
+
+% -----------------------------------------------------------------
+\subsection{Dispiegamento delle componenti}
+Il dispiegamento del POC \`e descritto in \texttt{docker-compose.yml} e avviabile con \texttt{docker compose up} (NFR-09). Quattro servizi containerizzati sulla rete bridge \texttt{soli-network}:
+
+\begin{xltabular}{\linewidth}{|L{3.0cm}|L{3.6cm}|Y|}
+\hline
+\rowcolor{headBg}\color{white}\bfseries Servizio & \color{white}\bfseries Immagine & \color{white}\bfseries Porta / ruolo\\\hline
+\endhead
+\texttt{soli-postgres} & postgres:16-alpine & 5433$\to$5432; persistenza dati (volume \texttt{postgres\_data}).\\\hline
+\texttt{soli-keycloak} & keycloak:26.0 & 8180$\to$8080; realm \texttt{soli}, import automatico.\\\hline
+\texttt{soli-backend} & build \texttt{./soli-backend} & 8080; API REST + WebSocket, profilo \texttt{prod}, OIDC verso Keycloak.\\\hline
+\texttt{soli-frontend} & build \texttt{./soli-frontend} & 5173$\to$80; SPA React servita da Nginx.\\\hline
+\end{xltabular}
+
+% -----------------------------------------------------------------
+\subsection{Componenti e servizi esterni}
+\begin{itemize}[leftmargin=1.4em]
+  \item \textbf{Keycloak} --- gestione identit\`a e token (OIDC/JWT); punto di integrazione per \textbf{SPID/CIEid} tramite identity brokering (simulato nel POC).
+  \item \textbf{FCM / APNS} --- notifiche push per Android e iOS (previste dal target, tramite Notification Service).
+  \item \textbf{Ollama + Llama 3} --- LLM open-weight in locale per SOLI Assistant e moderazione (target; nel POC sostituito da \texttt{MockAIService}).
+\end{itemize}
+
+% =====================================================================
+\section{Codifica RESTful delle interfacce dei servizi}
+\label{sec:rest}
+
+Le operazioni sono descritte secondo la scheda richiesta. Gli URI sono indicati come \textbf{estensione del base URI}. Le API interne usano il base URI \texttt{/api} e richiedono \textbf{Bearer JWT} (header \texttt{Authorization: Bearer <token>}); le Open Data API usano il base URI \texttt{/api/open/v1} e richiedono l'header \texttt{X-API-Key}.
+
+% -------------------- OPEN DATA API --------------------
+\subsection{Open Data API (\texttt{/api/open/v1})}
+Autenticazione: header \texttt{X-API-Key} su ogni richiesta. Codici comuni: \texttt{200 OK}; \texttt{401} token assente/scaduto/revocato; \texttt{404} risorsa inesistente.
+
+\scheda{Metadati dataset}{Metadati del dataset: versione, licenza, ultimo aggiornamento, citt\`a coperte.}{/meta}{GET}{---}{--- (nessuno)}{---}{---}{\texttt{200}: oggetto con \texttt{version}, \texttt{license}, \texttt{lastUpdated}, \texttt{cities}.}
+
+\scheda{Categorie servizio}{Elenco delle categorie di servizio e relativi moltiplicatori crediti.}{/categories}{GET}{---}{--- (nessuno)}{---}{---}{\texttt{200}: array di categorie con moltiplicatori.}
+
+\scheda{Panoramica}{Riepilogo generale: utenti, volontari, task per stato, crediti, riscatti, enti, segnalazioni.}{/stats/overview}{GET}{---}{--- (nessuno)}{---}{---}{\texttt{200}: oggetto riepilogo (es. \texttt{users}, \texttt{volunteers}, \texttt{tasksTotal}, \texttt{creditsEarned}...).}
+
+\scheda{Task per categoria}{Per ogni categoria: totale, completati, tasso di completamento, crediti medi.}{/stats/tasks/by-category}{GET}{---}{--- (nessuno)}{---}{---}{\texttt{200}: array \{\texttt{category}, \texttt{total}, \texttt{completed}, \texttt{completionRate}, \texttt{avgCredits}\}.}
+
+\scheda{Task per urgenza}{Distribuzione dei task per livello di criticit\`a.}{/stats/tasks/by-urgency}{GET}{---}{--- (nessuno)}{---}{---}{\texttt{200}: array per livello di urgenza.}
+
+\scheda{Task per stato}{Conteggi dei task per stato del ciclo di vita.}{/stats/tasks/by-status}{GET}{---}{--- (nessuno)}{---}{---}{\texttt{200}: array \{\texttt{status}, \texttt{count}\}.}
+
+\scheda{Serie temporale task}{Task creati e completati nel tempo.}{/stats/tasks/timeseries}{GET}{---}{--- (nessuno)}{---}{\texttt{from} (data), \texttt{to} (data), \texttt{granularity} = \texttt{day}$|$\texttt{week}$|$\texttt{month}.}{\texttt{200}: serie temporale creati/completati.}
+
+\scheda{Distribuzione per citt\`a}{Per ogni citt\`a: task, completati, crediti medi.}{/stats/geo/by-city}{GET}{---}{--- (nessuno)}{---}{---}{\texttt{200}: array per citt\`a.}
+
+\scheda{Heatmap geografica}{Griglia aggregata per cella lat/lon; celle con meno di 3 elementi soppresse (k-anonymity).}{/stats/geo/grid}{GET}{---}{--- (nessuno)}{---}{\texttt{precision} = 1..4 (dimensione cella).}{\texttt{200}: array di celle \{lat, lon, count\}.}
+
+\scheda{Crediti}{Crediti guadagnati, spesi, in circolazione e media per task.}{/stats/credits}{GET}{---}{--- (nessuno)}{---}{---}{\texttt{200}: oggetto crediti.}
+
+\scheda{Serie temporale crediti}{Crediti guadagnati e spesi nel tempo.}{/stats/credits/timeseries}{GET}{---}{--- (nessuno)}{---}{\texttt{from}, \texttt{to}, \texttt{granularity} = \texttt{day}$|$\texttt{week}$|$\texttt{month}.}{\texttt{200}: serie temporale guadagnati/spesi.}
+
+\scheda{Volontariato}{Volontari attivi, task medi, copertura categorie, tempo medio di risposta.}{/stats/volunteering}{GET}{---}{--- (nessuno)}{---}{---}{\texttt{200}: oggetto volontariato.}
+
+\scheda{Impatto sociale}{Ore di volontariato, beneficiari, crediti donati, ripartizione per causa.}{/stats/impact}{GET}{---}{--- (nessuno)}{---}{---}{\texttt{200}: oggetto \{\texttt{volunteerHours}, \texttt{beneficiariesHelped}, \texttt{creditsDonated}, \texttt{byCause}[]\}.}
+
+\scheda{Enti benefici}{Enti benefici e relative statistiche di riscatto.}{/stats/charities}{GET}{---}{--- (nessuno)}{---}{---}{\texttt{200}: array enti con statistiche.}
+
+\scheda{Confronto citt\`a}{KPI a confronto tra citt\`a (task, completamento, tempo di risposta, volontari, crediti).}{/stats/cities}{GET}{---}{--- (nessuno)}{---}{---}{\texttt{200}: array di KPI per citt\`a.}
+
+\scheda{Report per citt\`a}{Report analitico completo di una singola citt\`a (drill-down).}{/city/\{city\}}{GET}{---}{--- (nessuno)}{\texttt{city} (String): nome della citt\`a.}{---}{\texttt{200}: report citt\`a; \texttt{404} se citt\`a assente.}
+
+\scheda{Domanda vs offerta}{Task aperti (domanda) contro volontari (offerta) per categoria: carenze di copertura.}{/stats/demand-supply}{GET}{---}{--- (nessuno)}{---}{---}{\texttt{200}: array per categoria \{domanda, offerta, gap\}.}
+
+\scheda{Imbuto ciclo di vita}{Funnel: creati $\to$ accettati $\to$ in corso $\to$ completati, con relativi tassi.}{/stats/funnel}{GET}{---}{--- (nessuno)}{---}{---}{\texttt{200}: oggetto funnel con conteggi e tassi.}
+
+\scheda{Task per giorno}{Distribuzione dei task per giorno della settimana.}{/stats/tasks/by-weekday}{GET}{---}{--- (nessuno)}{---}{---}{\texttt{200}: array per giorno (0--6).}
+
+\scheda{Task per ora}{Distribuzione dei task per ora del giorno.}{/stats/tasks/by-hour}{GET}{---}{--- (nessuno)}{---}{---}{\texttt{200}: array per ora (0--23).}
+
+\paragraph{Esempio di richiesta e risposta.}
+\begin{lstlisting}
+curl -H "X-API-Key: soli_xxxxxxxxxxxxxxxxxxxxxxxx" \
+  http://localhost:8080/api/open/v1/stats/overview
+\end{lstlisting}
+\begin{lstlisting}
+{
+  "users": 50, "volunteers": 32, "tasksTotal": 300, "tasksCompleted": 155,
+  "tasksOpen": 83, "tasksInProgress": 40, "creditsEarned": 2522,
+  "creditsSpent": 660, "creditsInCirculation": 1862, "charitiesActive": 4,
+  "redemptions": 17, "associations": 3, "reports": 8
+}
+\end{lstlisting}
+
+% -------------------- CORE INTERNE --------------------
+\subsection{Operazioni core interne (\texttt{/api})}
+Autenticazione: \texttt{Bearer JWT}. Codici comuni: \texttt{200/201} successo; \texttt{400} richiesta non valida; \texttt{401} non autenticato; \texttt{403} non autorizzato; \texttt{404} risorsa assente.
+
+\scheda{Profilo corrente}{Restituisce l'utente autenticato (creato al primo accesso dai claim del token).}{/users/me}{GET}{---}{--- (nessuno)}{---}{---}{\texttt{200}: oggetto \texttt{User} (id, email, ruolo, livello certificazione, stato).}
+
+\scheda{Aggiorna posizione}{Aggiorna l'ultima posizione nota dell'utente (FR-08).}{/users/me/location}{PUT}{application/json}{\{ \texttt{latitude}, \texttt{longitude} \}}{---}{---}{\texttt{200}: utente aggiornato.}
+
+\scheda{Crea task}{Crea una richiesta di aiuto (FR-03, FR-04, FR-06).}{/tasks}{POST}{application/json}{\{ \texttt{category}, \texttt{title}, \texttt{description}, \texttt{urgencyLevel}, \texttt{scheduledAt}?, \texttt{targetAddress}, \texttt{latitude}, \texttt{longitude}, \texttt{beneficiaryId}? \}}{---}{---}{\texttt{201}: task creato; \texttt{400} se superato il limite giornaliero (FR-04).}
+
+\scheda{Elenca task}{Elenca i task filtrabili per stato/categoria/prossimit\`a.}{/tasks}{GET}{---}{--- (nessuno)}{---}{\texttt{status}?, \texttt{category}?, \texttt{lat}?, \texttt{lon}?, \texttt{radius}? (opzionali)}{\texttt{200}: array di task.}
+
+\scheda{Dettaglio task}{Restituisce un singolo task.}{/tasks/\{id\}}{GET}{---}{--- (nessuno)}{\texttt{id} (UUID): identificativo del task.}{---}{\texttt{200}: task; \texttt{404} se assente.}
+
+\scheda{Check-in}{Validazione di inizio intervento tramite token/QR (FR-17).}{/tasks/\{id\}/checkin}{POST}{application/json}{\{ \texttt{token} \} (checkInToken)}{\texttt{id} (UUID)}{---}{\texttt{200}: task in stato IN\_PROGRESS; \texttt{400} token errato.}
+
+\scheda{Check-out}{Validazione di fine intervento e accredito crediti (FR-11, FR-17).}{/tasks/\{id\}/checkout}{POST}{application/json}{\{ \texttt{token} \} (checkOutToken)}{\texttt{id} (UUID)}{---}{\texttt{200}: task COMPLETED con \texttt{rewardCredits} accreditati.}
+
+\scheda{Conferma completamento}{Doppia conferma di completamento (FR-18).}{/tasks/\{id\}/confirm-completion}{POST}{---}{--- (nessuno)}{\texttt{id} (UUID)}{---}{\texttt{200}: stato di conferma (parziale o COMPLETED).}
+
+\scheda{Rilascia task}{Il volontario abbandona un task accettato; ri-assegnazione prioritaria (FR-19).}{/tasks/\{id\}/release}{POST}{---}{--- (nessuno)}{\texttt{id} (UUID)}{---}{\texttt{200}: task RELEASED e rimesso in circolo.}
+
+\scheda{Annulla task}{Il Richiedente annulla la richiesta secondo le regole di FR-20.}{/tasks/\{id\}}{DELETE}{---}{--- (nessuno)}{\texttt{id} (UUID)}{---}{\texttt{200}: task CANCELLED; \texttt{400} se fuori finestra dei 10 minuti.}
+
+\scheda{Rispondi a notifica}{Il volontario accetta o ignora una notifica di matching (FR-09, FR-10).}{/task-notifications/\{id\}/respond}{PUT}{application/json}{\{ \texttt{status}: ACCEPTED $|$ IGNORED $|$ REJECTED \}}{\texttt{id} (UUID) della notifica}{---}{\texttt{200}: notifica aggiornata; se ACCEPTED assegna il task.}
+
+\scheda{Wallet corrente}{Saldo Crediti SOLI dell'utente autenticato (FR-12).}{/wallets/my}{GET}{---}{--- (nessuno)}{---}{---}{\texttt{200}: \{ \texttt{balance}, \texttt{updatedAt} \}.}
+
+\scheda{Storico transazioni}{Storico movimenti crediti dell'utente (FR-15).}{/wallets/my/transactions}{GET}{---}{--- (nessuno)}{---}{---}{\texttt{200}: array di transazioni.}
+
+\scheda{Riscatta presso ente}{Riscatta crediti presso un ente benefico; operazione atomica (FR-13).}{/charities/\{id\}/redeem}{POST}{---}{--- (nessuno)}{\texttt{id} (UUID) dell'ente}{---}{\texttt{200}: \texttt{Redemption} con \texttt{voucherCode}; \texttt{400} crediti/stock insufficienti.}
+
+\scheda{Crea segnalazione}{Segnala un comportamento inappropriato (FR-14).}{/reports}{POST}{application/json}{\{ \texttt{taskId}, \texttt{reportedUserId}, \texttt{reason} \}}{---}{---}{\texttt{201}: segnalazione creata (stato OPEN).}
+
+\scheda{Estrazione entit\`a (Soli Assistant)}{Estrae le entit\`a da una richiesta in linguaggio naturale per pre-compilare il form (FR-05).}{/assistant/extract}{POST}{application/json}{\{ \texttt{text} \}: richiesta in linguaggio naturale}{---}{---}{\texttt{200}: \{ categoria, data, luogo, titolo... \} estratti.}
+
+\scheda{Sessione chat per task}{Recupera la sessione di chat associata a un task (FR-10).}{/chat/sessions/task/\{taskId\}}{GET}{---}{--- (nessuno)}{\texttt{taskId} (UUID)}{---}{\texttt{200}: sessione; \texttt{404} se non attiva.}
+
+\scheda{Invia messaggio}{Invia un messaggio in una sessione (moderato da LLM-in-the-middle).}{/chat/sessions/\{sessionId\}/messages}{POST}{application/json}{\{ \texttt{content} \}}{\texttt{sessionId} (UUID)}{---}{\texttt{201}: messaggio creato (\texttt{isFlagged} se sospetto).}
+
+\scheda{Crea token API}{Un amministratore genera un token per le Open Data API (FR-21). La chiave in chiaro \`e mostrata una sola volta.}{/admin/tokens}{POST}{application/json}{\{ \texttt{label}, \texttt{expiresAt}, \texttt{scope}? \}}{---}{---}{\texttt{201}: token con chiave in chiaro (una tantum) + prefisso.}
+
+% -------------------- OVERVIEW CRUD --------------------
+\subsection{Panoramica delle restanti operazioni CRUD}
+Le seguenti operazioni seguono lo stesso schema (autenticazione Bearer JWT, richiesta/risposta \texttt{application/json}, codici standard). Sono riassunte per compattezza.
+
+{\scriptsize
+\begin{xltabular}{\linewidth}{|>{\raggedright\arraybackslash}p{2.7cm}|>{\ttfamily\raggedright\arraybackslash}p{5.0cm}|Y|}
+\hline
+\rowcolor{headBg}\color{white}\bfseries Metodi & \color{white}\bfseries URI & \color{white}\bfseries Descrizione\\\hline
+\endhead
+GET & /tasks/my-accepted & \normalfont Task accettati dall'utente.\\\hline
+GET & /tasks/daily-count & \normalfont Conteggio task creati oggi (FR-04).\\\hline
+PUT & /tasks/\{id\} & \normalfont Aggiorna un task.\\\hline
+GET & /users\newline /users/\{id\}\newline /users/\{id\}/basic & \normalfont Elenco e dettaglio utenti.\\\hline
+POST PUT DELETE & /users\newline /users/\{id\} & \normalfont Gestione amministrativa utenti.\\\hline
+GET PUT & /users/me/profile-picture & \normalfont Lettura/aggiornamento immagine profilo.\\\hline
+PUT & /users/me/notifications-read & \normalfont Segna notifiche come lette.\\\hline
+GET POST PUT DELETE & /volunteer-profiles\newline /volunteer-profiles/my\newline /volunteer-profiles/\{id\} & \normalfont Gestione profilo volontario (FR-02).\\\hline
+GET & /task-notifications & \normalfont Notifiche dell'utente.\\\hline
+GET POST PUT DELETE & /associations\newline /associations/\{id\}\newline /associations/\{id\}/members\ldots & \normalfont Associazioni e adesioni.\\\hline
+GET POST PUT DELETE & /charities\newline /charities/\{id\} & \normalfont Catalogo enti benefici (CRUD admin).\\\hline
+GET & /charities/my/redemptions & \normalfont Buoni riscattati dall'utente.\\\hline
+GET POST PUT DELETE & /rewards\newline /rewards/\{id\} & \normalfont Catalogo premialit\`a generico.\\\hline
+GET & /transactions\newline /transactions/\{walletId\} & \normalfont Transazioni crediti.\\\hline
+GET PUT & /reports\newline /reports/\{id\}\newline /reports/\{id\}/status & \normalfont Gestione segnalazioni (FR-14).\\\hline
+GET & /audit-logs & \normalfont Consultazione audit log (admin, NFR-11).\\\hline
+GET POST DELETE & /caregiver-relations\newline /caregiver-relations/\{id\} & \normalfont Relazioni caregiver--beneficiario.\\\hline
+GET POST DELETE & /admin/tokens\newline /admin/tokens/\{id\}\newline /admin/tokens/\{id\}/revoke & \normalfont Gestione token Open Data (admin).\\\hline
+\end{xltabular}}
+
+% =====================================================================
+\section{Il sistema realizzato}
+
+Questa sezione raccoglie gli screenshot delle interfacce utente reali del sistema, con esempi d'uso che riflettono gli scenari descritti nella Sezione~1.
+
+\newcommand{\shot}[2]{%
+\begin{figure}[htbp]\centering
+\fbox{\includegraphics[width=0.95\linewidth]{#1}}
+\caption{#2}
+\end{figure}}
+
+\shot{shot1}{\textbf{Onboarding e accesso.} Schermata di login: l'utente accede con la propria identit\`a (nella demo credenziali locali via Keycloak, in produzione SPID/CIEid) ottenendo il livello di fiducia LV1 (FR-01, NFR-02).}
+
+\shot{shot2}{\textbf{Scenario A --- richiesta guidata con Soli Assistant.} Wizard di creazione della richiesta: l'utente descrive il bisogno in linguaggio naturale e l'assistente IA pre-compila titolo e categoria (FR-03, FR-05, NFR-01).}
+
+\shot{shot3}{\textbf{Scenario A --- matching per prossimit\`a.} Vista mappa dei task disponibili: il volontario vede il task ``Trasporto animale dal veterinario'' geolocalizzato nelle vicinanze, con categoria, indirizzo e urgenza (FR-07, FR-08, FR-09).}
+
+\shot{shot4}{\textbf{Scenario A --- validazione via Token/QR.} Dettaglio del task accettato con il Token Check-In (QR + codice manuale) per certificare l'inizio dell'intervento e la card di doppia conferma di completamento (FR-16, FR-17, FR-18).}
+
+\shot{shot5}{\textbf{Scenario B --- Wallet e donazione.} Portafoglio digitale con saldo Crediti SOLI, storico transazioni ed enti benefici (Emergency, Banco Alimentare) presso cui convertire i crediti in buoni vincolati alla donazione (FR-11, FR-12, FR-13).}
+
+\shot{shot6}{\textbf{Coordinamento --- chat interna anonimizzata.} Chat di supporto per la durata del task: messaggi resi anonimi, monitorati e disattivati al completamento; richiedente e volontario si coordinano senza scambiare recapiti personali (FR-10, NFR-03, NFR-06).}
+
+\shot{shot7}{\textbf{Smart-city --- cruscotto Open Data.} Pannello amministrativo con analitiche aggregate: confronto tra citt\`a, drill-down su Pisa (KPI, distribuzione per categoria) alimentato dalle stesse Open Data API esposte pubblicamente (FR-21, NFR-10).}
+
+\shot{shot8}{\textbf{Smart-city --- portale sviluppatori.} Pagina pubblica \texttt{/developers} con la documentazione delle Open Data API: istruzioni di autenticazione via \texttt{X-API-Key} (esempio \texttt{curl}), link a Swagger UI e catalogo degli endpoint disponibili con metodo, path e descrizione (FR-21, NFR-10).}
+
+\end{document}

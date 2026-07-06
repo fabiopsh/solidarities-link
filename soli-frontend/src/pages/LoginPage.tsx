@@ -2,7 +2,7 @@ import { useAuth } from "react-oidc-context";
 import { UserManager } from "oidc-client-ts";
 import { Navigate } from "react-router-dom";
 import { Box, Button, Card, CardContent, Typography, CircularProgress } from "@mui/material";
-import HandshakeIcon from "@mui/icons-material/Handshake";
+import logoUrl from "../assets/logo.svg";
 import LoginIcon from "@mui/icons-material/Login";
 import { oidcConfig } from "../config/auth";
 
@@ -73,11 +73,15 @@ export default function LoginPage() {
 				<CardContent sx={{ p: 0 }}>
 					{/* Logo */}
 					<Box sx={{ mb: 3 }}>
-						<HandshakeIcon
+						<Box
+							component="img"
+							src={logoUrl}
+							alt="SoLi Logo"
 							sx={{
-								fontSize: 64,
-								color: "primary.main",
+								width: 64,
+								height: 64,
 								mb: 1,
+								objectFit: "contain",
 							}}
 						/>
 						<Typography

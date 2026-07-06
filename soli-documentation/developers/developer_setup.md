@@ -146,7 +146,7 @@ echo $env:JAVA_HOME    # Windows PowerShell
 ## 3. Avviare l'Infrastruttura (PostgreSQL + Keycloak)
 
 ```bash
-docker-compose up postgres keycloak
+docker compose up postgres keycloak
 ```
 
 Questo comando avvia:

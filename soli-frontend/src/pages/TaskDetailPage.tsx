@@ -43,6 +43,8 @@ import PetsIcon from "@mui/icons-material/Pets";
 import ComputerIcon from "@mui/icons-material/Computer";
 import WarningIcon from "@mui/icons-material/Warning";
 import ReportIcon from "@mui/icons-material/Report";
+import FlagIcon from "@mui/icons-material/Flag";
+import StarsIcon from "@mui/icons-material/Stars";
 import ScheduleIcon from "@mui/icons-material/Schedule";
 import EventIcon from "@mui/icons-material/Event";
 import { useAuth } from "react-oidc-context";
@@ -119,6 +121,11 @@ export default function TaskDetailPage() {
 	// Cancellation timer state (10 minutes)
 	const [cancelTimeLeft, setCancelTimeLeft] = useState<number | null>(null);
 	const [confirming, setConfirming] = useState(false);
+
+	// Report ("Segnala comportamento") state
+	const [reportDialogOpen, setReportDialogOpen] = useState(false);
+	const [reportText, setReportText] = useState("");
+	const [submittingReport, setSubmittingReport] = useState(false);
 
 	// Chat states
 	const [chatOpen, setChatOpen] = useState(false);
@@ -271,6 +278,28 @@ export default function TaskDetailPage() {
 			setSnackbar({ open: true, message: errorMsg, severity: "error" });
 		} finally {
 			setConfirming(false);
+		}
+	};
+
+	const handleSubmitReport = async () => {
+		if (!id || !task || !reportText.trim()) return;
+		setSubmittingReport(true);
+		try {
+			// Report the other party involved in the task
+			const reportedUserId = dbUser?.id === task.creatorId ? task.volunteerId : task.creatorId;
+			await api.post(`/api/reports`, {
+				taskId: id,
+				reportedUserId,
+				reason: reportText.trim(),
+			});
+			setSnackbar({ open: true, message: "Segnalazione inviata. Sarà valutata da un operatore.", severity: "success" });
+			setReportDialogOpen(false);
+			setReportText("");
+		} catch (err: any) {
+			const errorMsg = err?.response?.data?.error || "Errore durante l'invio della segnalazione.";
+			setSnackbar({ open: true, message: errorMsg, severity: "error" });
+		} finally {
+			setSubmittingReport(false);
 		}
 	};
 
@@ -434,6 +463,9 @@ export default function TaskDetailPage() {
 											{getCategoryConfig(task.category).label}
 										</Typography>
 									</Box>
+									<Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.75 }}>
+										Creato il {new Date(task.createdAt).toLocaleDateString()}
+									</Typography>
 								</Grid>
 								{(task.status === "OPEN" || task.status === "ACCEPTED" || task.status === "IN_PROGRESS") && (
 									<Grid size={{ xs: 12, md: "auto" }}>
@@ -498,6 +530,19 @@ export default function TaskDetailPage() {
 										</Box>
 									</Grid>
 								)}
+								{task.status === "COMPLETED" && (isCreator || isVolunteer) && (
+									<Grid size={{ xs: 12, md: "auto" }}>
+										<Button
+											variant="outlined"
+											color="error"
+											startIcon={<FlagIcon />}
+											onClick={() => setReportDialogOpen(true)}
+											sx={{ fontWeight: "bold", borderRadius: 2 }}
+										>
+											Segnala comportamento
+										</Button>
+									</Grid>
+								)}
 							</Grid>							<Typography variant="body1" color="text.secondary" sx={{ mb: 4, whiteSpace: "pre-wrap", fontSize: "1.1rem", lineHeight: 1.6 }}>
 								{task.description || "Nessuna descrizione fornita."}
 							</Typography>
@@ -528,7 +573,7 @@ export default function TaskDetailPage() {
 													borderRadius: 1.5,
 													bgcolor: (theme: any) => {
 														const color = getUrgencyConfig(task.urgencyLevel).color;
-														if (color === "default") return "grey.100";
+														if (color === "default") return "action.hover";
 														return `${theme.palette[color].main}20`; // Hex alpha approach
 													},
 													display: "flex"
@@ -556,7 +601,7 @@ export default function TaskDetailPage() {
 										</Box>
 
 										<Box sx={{ display: "flex", alignItems: "flex-start", gap: 2 }}>
-											<Box sx={{ p: 1, borderRadius: 1.5, bgcolor: "grey.100", display: "flex" }}>
+											<Box sx={{ p: 1, borderRadius: 1.5, bgcolor: "action.hover", display: "flex" }}>
 												<LocationOnIcon color="action" />
 											</Box>
 											<Box>
@@ -583,7 +628,7 @@ export default function TaskDetailPage() {
 
 										{task.scheduledAt && (
 											<Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-												<Box sx={{ p: 1, borderRadius: 1.5, bgcolor: "grey.100", display: "flex" }}>
+												<Box sx={{ p: 1, borderRadius: 1.5, bgcolor: "action.hover", display: "flex" }}>
 													<ScheduleIcon color="action" />
 												</Box>
 												<Box>
@@ -592,6 +637,22 @@ export default function TaskDetailPage() {
 													</Typography>
 													<Typography variant="body1" fontWeight={700}>
 														{formatScheduledAt(task.scheduledAt!, task.hasScheduledTime, "long")}
+													</Typography>
+												</Box>
+											</Box>
+										)}
+
+										{task.status === "COMPLETED" && task.rewardCredits > 0 && (
+											<Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+												<Box sx={{ p: 1, borderRadius: 1.5, bgcolor: "success.main", display: "flex", color: "#fff" }}>
+													<StarsIcon fontSize="small" />
+												</Box>
+												<Box>
+													<Typography variant="caption" color="text.secondary" display="block" fontWeight={600}>
+														CREDITI ASSEGNATI
+													</Typography>
+													<Typography variant="body1" fontWeight={700} color="success.main">
+														{task.rewardCredits} crediti
 													</Typography>
 												</Box>
 											</Box>
@@ -821,19 +882,6 @@ export default function TaskDetailPage() {
 							</Card>
 						)}
 
-						<Card sx={{ borderRadius: 3 }}>
-							<CardContent>
-								<Typography variant="h6" fontWeight={600} gutterBottom>
-									Dettagli Sessione
-								</Typography>
-								<Typography variant="body2" color="text.secondary">
-									Creato il: {new Date(task.createdAt).toLocaleString()}
-								</Typography>
-								<Typography variant="body2" color="text.secondary">
-									Ultimo aggiornamento: {new Date(task.updatedAt).toLocaleString()}
-								</Typography>
-							</CardContent>
-						</Card>
 					</Stack>
 				</Grid>
 			</Grid>
@@ -856,6 +904,40 @@ export default function TaskDetailPage() {
 						startIcon={cancelling ? <CircularProgress size={16} color="inherit" /> : undefined}
 					>
 						{cancelling ? "Annullamento..." : "Sì, annulla"}
+					</Button>
+				</DialogActions>
+			</Dialog>
+
+			{/* Dialog Segnala Comportamento */}
+			<Dialog open={reportDialogOpen} onClose={() => !submittingReport && setReportDialogOpen(false)} fullWidth maxWidth="sm">
+				<DialogTitle>Segnala comportamento</DialogTitle>
+				<DialogContent>
+					<Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+						Descrivi il problema riscontrato durante questo task. La segnalazione sarà valutata da un operatore.
+					</Typography>
+					<TextField
+						autoFocus
+						fullWidth
+						multiline
+						minRows={4}
+						label="Descrizione"
+						value={reportText}
+						onChange={(e) => setReportText(e.target.value)}
+						disabled={submittingReport}
+					/>
+				</DialogContent>
+				<DialogActions sx={{ p: 2 }}>
+					<Button onClick={() => setReportDialogOpen(false)} disabled={submittingReport}>
+						Annulla
+					</Button>
+					<Button
+						onClick={handleSubmitReport}
+						color="error"
+						variant="contained"
+						disabled={submittingReport || !reportText.trim()}
+						startIcon={submittingReport ? <CircularProgress size={16} color="inherit" /> : <SendIcon />}
+					>
+						{submittingReport ? "Invio..." : "Invia"}
 					</Button>
 				</DialogActions>
 			</Dialog>
@@ -886,7 +968,7 @@ export default function TaskDetailPage() {
 						width: { xs: "100%", sm: 400 },
 						display: "flex",
 						flexDirection: "column",
-						bgcolor: "#F8FAFC",
+						bgcolor: "background.default",
 					},
 				}}
 			>
@@ -971,8 +1053,8 @@ export default function TaskDetailPage() {
 										elevation={1}
 										sx={{
 											p: 1.5,
-											backgroundColor: isMe ? "primary.main" : "white",
-											color: isMe ? "white" : "text.primary",
+											backgroundColor: isMe ? "primary.main" : "background.paper",
+											color: isMe ? "primary.contrastText" : "text.primary",
 											borderRadius: isMe ? "16px 16px 4px 16px" : "16px 16px 16px 4px",
 										}}
 									>
@@ -1008,7 +1090,7 @@ export default function TaskDetailPage() {
 					onSubmit={handleSendMessage}
 					sx={{
 						p: 2,
-						bgcolor: "white",
+						bgcolor: "background.paper",
 						borderTop: "1px solid",
 						borderColor: "divider",
 						display: "flex",

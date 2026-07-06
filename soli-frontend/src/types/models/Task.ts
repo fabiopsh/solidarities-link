@@ -22,6 +22,8 @@ export interface Task {
 	status: TaskStatus;
 	checkInToken?: string;
 	checkOutToken?: string;
+	checkInAt?: string;
+	checkOutAt?: string;
 	rewardCredits: number;
 	acceptedAt?: string;
 	creatorConfirmed?: boolean;
