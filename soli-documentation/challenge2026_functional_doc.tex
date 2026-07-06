@@ -390,7 +390,7 @@ Tutte le operazioni condividono lo stesso flusso di interazione tra le component
 {Fig.~\ref{fig:seq-open}. \texttt{AnalyticsService.categories()}: valori costanti di dominio, nessuna query.}
 
 \ifacecard{Panoramica generale}{FR-21}
-{Fornisce in un unico oggetto i totali aggregati del sistema: quanti utenti e volontari, quanti task in ciascuno stato, i crediti in gioco e i riscatti effettuati. \`E il punto d'ingresso per un cruscotto sintetico.}
+{Fornisce in un unico oggetto i totali aggregati del sistema: quanti utenti e volontari, quanti task in ciascuno stato, i crediti in gioco e i riscatti effettuati. \`E il punto d'ingresso per una dashboard sintetica.}
 {Nessun parametro di input.}
 {\outbox{Oggetto con: \texttt{users}, \texttt{volunteers}, \texttt{tasksTotal}, \texttt{tasksCompleted}, \texttt{tasksOpen}, \texttt{tasksInProgress}, \texttt{creditsEarned}, \texttt{creditsSpent}, \texttt{creditsInCirculation}, \texttt{charitiesActive}, \texttt{redemptions}, \texttt{associations}, \texttt{reports}.}}
 {Fig.~\ref{fig:seq-open}. \texttt{AnalyticsService.overview()}: \texttt{count(*)} e somme su pi\`u tabelle \texttt{soli\_*}.}
@@ -478,7 +478,7 @@ granularity & Ampiezza del bucket: \texttt{day} $|$ \texttt{week} $|$ \texttt{mo
 {Fig.~\ref{fig:seq-open}. \texttt{AnalyticsService.cities()}: KPI aggregati raggruppati per \texttt{target\_location}.}
 
 \ifacecard{Report di una citt\`a}{FR-21, NFR-13}
-{Report analitico completo per una singola citt\`a (drill-down): totali, completamento, tempi medi, volontari e beneficiari, con ripartizione per categoria e per urgenza. Alimenta la vista di dettaglio del cruscotto comunale.}
+{Report analitico completo per una singola citt\`a (drill-down): totali, completamento, tempi medi, volontari e beneficiari, con ripartizione per categoria e per urgenza. Alimenta la vista di dettaglio della dashboard comunale.}
 {\begin{inparams}
 city (*) & Nome della citt\`a su cui produrre il report (confronto case-insensitive). Obbligatorio; passato nel path dell'URI.\\\hline
 \end{inparams}}
@@ -785,7 +785,7 @@ Questa sezione raccoglie gli screenshot delle interfacce utente reali del sistem
 
 \shot{shot6}{\textbf{Coordinamento --- chat interna anonimizzata.} Chat di supporto per la durata del task: messaggi resi anonimi, monitorati e disattivati al completamento; richiedente e volontario si coordinano senza scambiare recapiti personali (FR-10, NFR-03, NFR-06).}
 
-\shot{shot7}{\textbf{Smart-city --- cruscotto Open Data.} Pannello amministrativo con analitiche aggregate: confronto tra citt\`a, drill-down su Pisa (KPI, distribuzione per categoria) alimentato dalle stesse Open Data API esposte pubblicamente (FR-21, NFR-10).}
+\shot{shot7}{\textbf{Smart-city --- dashboard Open Data.} Pannello amministrativo con analitiche aggregate: confronto tra citt\`a, drill-down su Pisa (KPI, distribuzione per categoria) alimentato dalle stesse Open Data API esposte pubblicamente (FR-21, NFR-10).}
 
 \shot{shot8}{\textbf{Smart-city --- portale sviluppatori.} Pagina pubblica \texttt{/developers} con la documentazione delle Open Data API: istruzioni di autenticazione via \texttt{X-API-Key} (esempio \texttt{curl}), link a Swagger UI e catalogo degli endpoint disponibili con metodo, path e descrizione (FR-21, NFR-10).}
 
