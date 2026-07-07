@@ -215,6 +215,7 @@ Si riportano i termini specifici del progetto e le sigle ricorrenti nel document
   \item[LV1--LV3] Livelli di fiducia dell'utente: registrazione SPID; volontario formato; partnership con associazione.
   \item[SPID / CIEid] Sistemi di identit\`a digitale pubblica usati per l'onboarding certificato.
   \item[Open Data API] Interfaccia REST pubblica smart-city (\texttt{/api/open/v1}) protetta da chiave \texttt{X-API-Key}.
+  \item[M2M] Machine-to-machine: comunicazione diretta tra sistemi software senza intervento di un utente umano, autenticata tramite identit\`a applicative (grant OAuth2 \emph{client credentials}).
   \item[QR] Token anti-frode scambiato dai due attori alla conferma dell'incontro fisico.
   \item[FR / NFR] Requisito funzionale / non funzionale.
   \item[WCAG / GDPR] Linee guida di accessibilit\`a web / regolamento europeo sulla protezione dei dati.
@@ -286,6 +287,7 @@ Ogni requisito \`e caratterizzato da un nome seguito da una breve descrizione.
 \fr{19}{Gestione Rilascio del Task}{Il sistema deve permettere al volontario di abbandonare una richiesta accettata tramite ``Rilascio Task'' per imprevisti post-accettazione, innescando una ri-assegnazione prioritaria e senza penalit\`a.}
 \fr{20}{Gestione Annullamento del Task}{Il sistema deve permettere al Richiedente di annullare una richiesta: liberamente se il task non \`e ancora accettato (notificando i volontari coinvolti); entro 10 minuti dall'accettazione se il task \`e gi\`a stato preso in carico. Oltre tale finestra il task va portato a completamento.}
 \fr{21}{Open Data API (Smart-City)}{Il sistema deve esporre API pubbliche di sola lettura su dati aggregati e anonimizzati del volontariato civico, per l'integrazione smart-city (dashboard comunali, portali open-data, ricerca). L'accesso avviene tramite token API con scadenza; nessun dato personale \`e restituito (aggregazione e k-anonymity).}
+\fr{22}{Integrazione Applicativa di Terze Parti}{Il sistema deve prevedere l'apertura controllata di un sottoinsieme delle API core a sistemi di terze parti accreditati che operano per conto dei propri utenti finali. Il partner si autentica tramite un'identit\`a applicativa dedicata (client OAuth2 confidenziale con \emph{service account}, grant \emph{client credentials}), nel rispetto del modello di sicurezza e senza esposizione di dati personali degli utenti SOLI.}
 \end{description}
 
 % =====================================================================
@@ -316,7 +318,7 @@ Il sistema SOLI \`e organizzato in \textbf{quattro livelli} sovrapposti che comu
 
 \begin{itemize}[leftmargin=1.4em]
   \item \textbf{Livello client.} I punti di accesso sono il client mobile e il client web. Entrambi non comunicano mai direttamente con i servizi interni, ma esclusivamente attraverso il Proxy.
-  \item \textbf{Livello gateway.} Porta d'ingresso unica: il Proxy riceve tutto il traffico in entrata, lo smista verso il servizio corretto e applica le policy di sicurezza (autenticazione, rate limiting, CORS). L'Auth Server gestisce le identit\`a: emette e valida i token di sessione e si integra con i sistemi di identit\`a digitale nazionale (SPID/CIEid).
+  \item \textbf{Livello gateway.} Porta d'ingresso unica: il Proxy riceve tutto il traffico in entrata, lo smista verso il servizio corretto e applica le policy di sicurezza (autenticazione, rate limiting, CORS). L'Auth Server gestisce le identit\`a: emette e valida i token di sessione e si integra con i sistemi di identit\`a digitale nazionale (SPID/CIEid); oltre agli utenti finali supporta \emph{identit\`a applicative} (client OAuth2 confidenziali) per l'integrazione M2M di sistemi partner accreditati (FR-22).
   \item \textbf{Livello applicativo.} \`E il cuore del sistema. Il Backend centralizza la logica: profili utente, ciclo di vita dei task, algoritmo di matching, reward, audit log e chat. Il Modulo AI, interno e non esposto, viene richiamato per assistenza conversazionale, moderazione dei contenuti e classificazione dell'urgenza. Il Notification Service \`e un worker che ascolta gli eventi pubblicati dal Backend e invia notifiche push mirate.
   \item \textbf{Livello infrastruttura.} Comprende persistenza e comunicazione asincrona: un geo-store in memoria mantiene le posizioni dei volontari per query di prossimit\`a in tempo reale e funge da message broker; il database relazionale gestisce i dati strutturati e transazionali; il database documentale gestisce i messaggi di chat con cancellazione automatica.
 \end{itemize}
@@ -342,7 +344,14 @@ Di seguito si riportano \textbf{due viste} dell'architettura: la versione \emph{
 % =====================================================================
 \subsection{Interfacce dei servizi esposti dal sistema}
 
-Coerentemente con la vocazione smart-city del progetto (FR-21), le interfacce esposte \textbf{verso l'esterno} --- fruibili da enti pubblici, ricercatori e dagli altri gruppi della challenge --- sono le \textbf{Open Data API} di sola lettura su dati aggregati e anonimizzati.
+Le interfacce del sistema si organizzano in \textbf{due cluster}, che rispondono a due domande diverse poste da chi vuole integrarsi con SOLI:
+
+\begin{itemize}[leftmargin=1.4em]
+  \item \textbf{API informative sul servizio} --- rispondono a ``\emph{che cosa succede sul servizio?}'': sono le \textbf{Open Data API} di sola lettura su dati aggregati e anonimizzati, gi\`a esposte pubblicamente (FR-21) e fruibili da enti pubblici, ricercatori e dagli altri gruppi della challenge.
+  \item \textbf{API di interazione con il sistema} --- rispondono a ``\emph{come opero sul servizio?}'': sono le operazioni core (base URI \texttt{/api}), oggi riservate ai client di prima parte, di cui un sottoinsieme \`e progettato per essere \textbf{apribile} a partner accreditati che agiscono per conto dei propri utenti finali (FR-22, Sezione~\ref{subsec:third-party}).
+\end{itemize}
+
+Coerentemente con la vocazione smart-city del progetto (FR-21), le interfacce gi\`a esposte \textbf{verso l'esterno} sono quelle del primo cluster, descritte di seguito.
 
 \begin{itemize}[leftmargin=1.4em]
   \item \textbf{Base URI:} \texttt{/api/open/v1} \qquad \textbf{Formato:} JSON \qquad \textbf{Licenza dati:} CC-BY 4.0.
@@ -509,7 +518,27 @@ city (*) & Nome della citt\`a su cui produrre il report (confronto case-insensit
 {\outbox{Array di oggetti \{ \texttt{hour} (0--23), \texttt{count} \}, uno per fascia oraria.}}
 {Fig.~\ref{fig:seq-open}. \texttt{AnalyticsService.tasksByHour()}: \texttt{GROUP BY EXTRACT(HOUR ...)} su \texttt{created\_at}.}
 
-Le operazioni interne (autenticazione, ciclo di vita del task, chat, wallet, riscatti) non sono esposte pubblicamente: sono raggiungibili dai soli client autenticati tramite Bearer JWT e sono documentate --- insieme alle Open Data API --- nella Sezione~\ref{sec:rest}.
+Le operazioni interne (autenticazione, ciclo di vita del task, chat, wallet, riscatti) sono riservate ai client autenticati tramite Bearer JWT e documentate --- insieme alle Open Data API --- nella Sezione~\ref{sec:rest}. Un loro sottoinsieme \`e per\`o progettato per essere aperto a partner accreditati, come descritto nella sottosezione seguente.
+
+% =====================================================================
+\subsection{Integrazione con sistemi di terze parti}
+\label{subsec:third-party}
+
+\paragraph{Scenario e problema.} Fin dalle prime fasi di progettazione ci siamo posti la domanda: \emph{chi si integra con SOLI, e come pu\`o farlo?} Non \`e possibile conoscere a priori la natura dei sistemi esterni: altre aziende e piattaforme erogano servizi verso i propri utenti, con caratteristiche diverse dalle nostre. Da questa riflessione nasce la distinzione in due cluster introdotta in apertura della sottosezione precedente: per il primo cluster (informazioni sul servizio) la risposta sono le Open Data API gi\`a esposte; per il secondo (interazione con il sistema) il nodo \`e pi\`u sottile. Un'azienda terza che volesse usare le nostre operazioni core agirebbe da \emph{proxy} rispetto al proprio utente finale: non \`e essa stessa un utente SOLI, non ha un'identit\`a personale, e quindi non pu\`o autenticarsi come una persona fisica. Come ottiene un token?
+
+\paragraph{Il modello dell'identit\`a applicativa (``utente speciale'').} La soluzione prevista \`e registrare il partner in Keycloak non come utente, ma come \textbf{client OAuth2 confidenziale dedicato} con \emph{service account} abilitato: un'identit\`a applicativa che ottiene token tramite grant \emph{client credentials} (M2M), senza interazione umana. Il token cos\`i emesso porta l'audience del backend e un ruolo dedicato (\texttt{PARTNER}), distinto dai ruoli degli utenti finali, su cui il gateway pu\`o applicare policy specifiche (autorizzazione per sottoinsieme di endpoint, rate limiting dedicato). Il pattern non richiede modifiche architetturali: \`e lo stesso gi\`a adottato nel realm per il client di servizio del backend (\texttt{soli-backend}, \emph{service account} abilitato). Nella POC il partner \`e quindi rappresentabile come \emph{stub} --- un ``utente speciale'' registrato via Keycloak --- attivabile con sola configurazione.
+
+\paragraph{Il nodo SPID.} Il requisito FR-01 impone l'onboarding via SPID/CIEid per le persone fisiche; il partner, essendo un'identit\`a applicativa, non passa da SPID. Questo non significa aggirare l'autenticazione forte, ma gestirla a un livello diverso: l'accreditamento del partner \`e un atto amministrativo e contrattuale, in cui il partner si assume la responsabilit\`a dell'identificazione dei propri utenti finali (delega di identit\`a). Per gli utenti diretti di SOLI nulla cambia. Nel caso di integrazione profonda --- ad esempio un partner che realizzi un proprio frontend sfruttando tutte le nostre operazioni --- il livello SPID viene gestito a un livello successivo del modello di sicurezza (federazione delle identit\`a o onboarding SPID lato partner), sempre tramite scambio di API e nel rispetto del modello di sicurezza complessivo.
+
+\paragraph{Sottoinsieme di API apribili.} Una ricognizione delle operazioni core ha individuato quali primitive possano essere effettivamente aperte ai partner e quali debbano restare riservate:
+
+\begin{itemize}[leftmargin=1.4em]
+  \item \textbf{Lettura del catalogo del servizio} (rischio minimo, nessun dato personale): \texttt{GET /categories} (gi\`a aperta nel cluster Open Data), \texttt{GET /rewards}, \texttt{GET /charities}, \texttt{GET /associations}, \texttt{GET /tasks} e \texttt{GET /tasks/\{id\}} con proiezione priva di dati personali.
+  \item \textbf{Ciclo di vita del task} (il partner opera per conto del proprio utente): \texttt{POST /tasks}, \texttt{PUT /task-notifications/\{id\}/respond}, \texttt{POST /tasks/\{id\}/checkin}, \texttt{/checkout}, \texttt{/confirm-completion}, \texttt{/release}.
+  \item \textbf{Esplicitamente non apribili}: wallet, crediti e transazioni (coinvolgono valore economico e il vincolo statutario alla donazione) e chat (dati personali e moderazione LLM-in-the-middle, NFR-03/NFR-06).
+\end{itemize}
+
+\paragraph{Roadmap.} Nella POC il meccanismo \`e previsto e rappresentabile come stub (client partner in Keycloak); nel target si aggiungono \emph{scope} OAuth2 granulari per partner (es. \texttt{partner:read-catalog}, \texttt{partner:tasks}), rate limiting dedicato al gateway e arricchimento dell'audit log con l'identit\`a del client partner, in continuit\`a con la tracciabilit\`a richiesta da NFR-11.
 
 % =====================================================================
 \section{Progettazione di dettaglio del sistema}
@@ -631,7 +660,7 @@ Il dispiegamento del POC \`e descritto in \texttt{docker-compose.yml} e avviabil
 \section{Codifica RESTful delle interfacce dei servizi}
 \label{sec:rest}
 
-Le operazioni sono descritte secondo la scheda richiesta. Gli URI sono indicati come \textbf{estensione del base URI}. Le API interne usano il base URI \texttt{/api} e richiedono \textbf{Bearer JWT} (header \texttt{Authorization: Bearer <token>}); le Open Data API usano il base URI \texttt{/api/open/v1} e richiedono l'header \texttt{X-API-Key}.
+Le operazioni sono descritte secondo la scheda richiesta. Gli URI sono indicati come \textbf{estensione del base URI}. Le API interne usano il base URI \texttt{/api} e richiedono \textbf{Bearer JWT} (header \texttt{Authorization: Bearer <token>}); le Open Data API usano il base URI \texttt{/api/open/v1} e richiedono l'header \texttt{X-API-Key}. La codifica rispecchia i due cluster della Sezione~\ref{subsec:third-party}: per i partner accreditati il sottoinsieme apribile delle operazioni \texttt{/api} \`e invocabile con Bearer JWT ottenuto via grant \emph{client credentials} (identit\`a applicativa), senza variazioni di URI o metodo.
 
 % -------------------- OPEN DATA API --------------------
 \subsection{Open Data API (\texttt{/api/open/v1})}
