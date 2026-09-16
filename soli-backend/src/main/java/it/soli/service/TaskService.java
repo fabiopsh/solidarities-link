@@ -216,6 +216,18 @@ public class TaskService {
         return task;
     }
 
+    /**
+     * Creates a task on behalf of an accredited institutional partner (FARO engagement, FR-22).
+     * The per-requester daily limit (FR-04) targets individual requesters and does not apply;
+     * matching is triggered exactly as for native tasks.
+     */
+    @Transactional
+    public Task createPartnerTask(Task task) {
+        task.persist();
+        taskCreatedEvent.fire(task);
+        return task;
+    }
+
     @Transactional
     public Task cancelTask(UUID taskId, UUID requesterId) {
         Task task = Task.findById(taskId);

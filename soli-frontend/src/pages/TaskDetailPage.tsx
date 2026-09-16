@@ -54,6 +54,8 @@ import type { User } from "../types/models/User";
 import { formatScheduledAt } from "../utils/dateFormat";
 import { useUserLocation } from "../hooks/useUserLocation";
 import { formatDistance, haversineKm } from "../utils/location";
+import FaroSosDialog from "../components/FaroSosDialog";
+import FaroSafetyBanner from "../components/FaroSafetyBanner";
 
 interface ChatMessage {
 	id: string;
@@ -105,6 +107,7 @@ export default function TaskDetailPage() {
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 	const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+	const [sosOpen, setSosOpen] = useState(false);
 	const [cancelling, setCancelling] = useState(false);
 	const [accepting, setAccepting] = useState(false);
 	const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: "success" | "error" }>({
@@ -443,6 +446,9 @@ export default function TaskDetailPage() {
 				<Grid size={{ xs: 12, md: 8 }}>
 					<Card sx={{ borderRadius: 3, boxShadow: "0 4px 20px rgba(0,0,0,0.05)" }}>
 						<CardContent sx={{ p: 4 }}>
+							{(task.status === "OPEN" || task.status === "ACCEPTED" || task.status === "IN_PROGRESS") && (
+								<FaroSafetyBanner taskId={task.id} />
+							)}
 							<Grid container alignItems="flex-start" justifyContent="space-between" spacing={3} sx={{ mb: 4 }}>
 								<Grid size={{ xs: 12, md: "grow" }}>
 									<Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 1, flexWrap: "wrap" }}>
@@ -455,6 +461,13 @@ export default function TaskDetailPage() {
 												color={getStatusConfig(task.status).color as any}
 												sx={{ fontWeight: 800, borderRadius: 1.5, fontSize: "0.75rem" }}
 											/>
+											{task.externalSource === "FARO" && (
+												<Chip
+													label="🚨 Protezione Civile · FARO"
+													color="error"
+													sx={{ fontWeight: 800, borderRadius: 1.5, fontSize: "0.75rem" }}
+												/>
+											)}
 										</Stack>
 									</Box>
 									<Box sx={{ display: "flex", alignItems: "center", gap: 1, color: getCategoryConfig(task.category).color }}>
@@ -470,6 +483,17 @@ export default function TaskDetailPage() {
 								{(task.status === "OPEN" || task.status === "ACCEPTED" || task.status === "IN_PROGRESS") && (
 									<Grid size={{ xs: 12, md: "auto" }}>
 										<Box sx={{ display: "flex", gap: 2, flexWrap: "wrap", justifyContent: { xs: "flex-start", md: "flex-end" } }}>
+											{(task.status === "ACCEPTED" || task.status === "IN_PROGRESS") && (isVolunteer || isCreator) && (
+												<Button
+													variant="contained"
+													color="error"
+													onClick={() => setSosOpen(true)}
+													sx={{ fontWeight: 900, borderRadius: 2, flex: { xs: 1, sm: "none" } }}
+													disableElevation
+												>
+													🆘 SOS
+												</Button>
+											)}
 											{(task.status === "ACCEPTED" || task.status === "IN_PROGRESS") && isVolunteer && (
 												<Button
 													variant="contained"
@@ -885,6 +909,8 @@ export default function TaskDetailPage() {
 					</Stack>
 				</Grid>
 			</Grid>
+
+			<FaroSosDialog task={task} open={sosOpen} onClose={() => setSosOpen(false)} />
 
 			{/* Dialog di Conferma Annullamento */}
 			<Dialog open={cancelDialogOpen} onClose={handleCloseDialog}>

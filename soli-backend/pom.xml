@@ -37,6 +37,12 @@
             <artifactId>quarkus-arc</artifactId>
         </dependency>
 
+        <!-- Scheduler (FARO integration: heartbeat + event stream consumer) -->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-scheduler</artifactId>
+        </dependency>
+
         <!-- REST API -->
         <dependency>
             <groupId>io.quarkus</groupId>

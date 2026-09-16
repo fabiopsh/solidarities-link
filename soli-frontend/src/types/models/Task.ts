@@ -28,6 +28,10 @@ export interface Task {
 	acceptedAt?: string;
 	creatorConfirmed?: boolean;
 	volunteerConfirmed?: boolean;
+	/** "FARO" when created by an engagement from the FARO emergency platform */
+	externalSource?: "FARO" | null;
+	faroEmergencyId?: number | null;
+	faroEventId?: string | null;
 	createdAt: string;
 	updatedAt: string;
 }

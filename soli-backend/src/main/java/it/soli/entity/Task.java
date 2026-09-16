@@ -82,6 +82,17 @@ public class Task extends PanacheEntityBase {
     @Column(name = "volunteer_confirmed")
     public Boolean volunteerConfirmed = false;
 
+    // --- External origin (FARO integration) ---
+    // "FARO" when the task was created by an engagement from FARO's Binder; null for native tasks.
+    @Column(name = "external_source")
+    public String externalSource;
+
+    @Column(name = "faro_emergency_id")
+    public Long faroEmergencyId;
+
+    @Column(name = "faro_event_id")
+    public String faroEventId;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     public LocalDateTime createdAt;
 

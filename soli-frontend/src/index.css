@@ -74,3 +74,48 @@ html.dark ::-webkit-scrollbar-thumb {
 html.dark ::-webkit-scrollbar-thumb:hover {
 	background: rgba(255, 255, 255, 0.35);
 }
+
+/* ── FARO emergency markers ─────────────────────────────────────── */
+.faro-emergency-marker {
+	background: transparent;
+	border: none;
+}
+
+.faro-emergency-pin {
+	position: relative;
+	width: 44px;
+	height: 44px;
+	border-radius: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 22px;
+	line-height: 1;
+	background: #fff;
+	border: 3px solid var(--faro-color, #c62828);
+	box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+}
+
+.faro-emergency-pin.critical::after {
+	content: "";
+	position: absolute;
+	inset: -3px;
+	border-radius: 50%;
+	border: 3px solid var(--faro-color, #c62828);
+	animation: faro-pulse 1.6s ease-out infinite;
+}
+
+@keyframes faro-pulse {
+	0% {
+		transform: scale(1);
+		opacity: 0.9;
+	}
+	100% {
+		transform: scale(1.9);
+		opacity: 0;
+	}
+}
+
+.soli-task-marker.faro-risk > div {
+	filter: drop-shadow(0 0 4px #d32f2f) drop-shadow(0 0 2px #d32f2f);
+}

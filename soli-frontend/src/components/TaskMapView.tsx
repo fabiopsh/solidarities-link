@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
-import { Box, Button, Typography, CircularProgress, Alert, Chip, Stack, Divider, Drawer, IconButton } from "@mui/material";
+import { Box, Button, Typography, CircularProgress, Alert, Chip, Stack, Divider, Drawer, IconButton, FormControlLabel, Switch } from "@mui/material";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import FaroEmergencyLayer from "./FaroEmergencyLayer";
+import { useFaroEmergencies } from "../hooks/useFaroEmergencies";
+import { emergenciesCovering, FARO_CATEGORY_CONFIG } from "../utils/faro";
 import { useNavigate } from "react-router-dom";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import ScheduleIcon from "@mui/icons-material/Schedule";
@@ -80,13 +83,13 @@ const userLocationIcon = L.divIcon({
 });
 
 // ── Create category-colored marker with emoji ─────────────────────
-function createTaskIcon(category: string): L.DivIcon {
+function createTaskIcon(category: string, inRiskArea = false): L.DivIcon {
     const config = getCategoryConfig(category);
     const color = config.color;
     const darkerColor = darkenHex(color, 30);
 
     return L.divIcon({
-        className: "soli-task-marker",
+        className: inRiskArea ? "soli-task-marker faro-risk" : "soli-task-marker",
         html: `
             <div style="position:relative;width:38px;height:46px;">
                 <svg viewBox="0 0 38 46" width="38" height="46" xmlns="http://www.w3.org/2000/svg">
@@ -411,6 +414,8 @@ export default function TaskMapView({ tasks }: { tasks: Task[] }) {
     const [isLocating, setIsLocating] = useState(true);
     const [selectedTask, setSelectedTask] = useState<Task | null>(null);
     const [drawerOpen, setDrawerOpen] = useState(false);
+    const [showFaro, setShowFaro] = useState(true);
+    const { emergencies } = useFaroEmergencies();
 
     const handleOpenDrawer = (task: Task) => {
         setSelectedTask(task);
@@ -458,6 +463,39 @@ export default function TaskMapView({ tasks }: { tasks: Task[] }) {
                     {locationError}
                 </Alert>
             )}
+            <Box
+                sx={{
+                    mb: 1.5,
+                    px: 2,
+                    py: 1,
+                    borderRadius: 2,
+                    border: "1px solid",
+                    borderColor: emergencies.length > 0 ? "error.light" : "divider",
+                    bgcolor: emergencies.length > 0 ? "rgba(211,47,47,0.06)" : "background.paper",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: 1,
+                    flexWrap: "wrap",
+                }}
+            >
+                <Stack direction="row" spacing={1.5} alignItems="center" sx={{ flexWrap: "wrap", rowGap: 0.5 }}>
+                    <Typography variant="body2" fontWeight={800}>
+                        🚨 Emergenze FARO attive: {emergencies.length}
+                    </Typography>
+                    {Object.entries(FARO_CATEGORY_CONFIG)
+                        .filter(([key]) => key !== "UNKNOWN")
+                        .map(([key, cfg]) => (
+                            <Typography key={key} variant="caption" color="text.secondary">
+                                {cfg.emoji} {cfg.label}
+                            </Typography>
+                        ))}
+                </Stack>
+                <FormControlLabel
+                    control={<Switch size="small" checked={showFaro} onChange={(e) => setShowFaro(e.target.checked)} />}
+                    label={<Typography variant="caption" fontWeight={700}>Mostra emergenze</Typography>}
+                />
+            </Box>
             <Box sx={{ height: 600, width: "100%", borderRadius: 2, overflow: "hidden", border: "1px solid", borderColor: "divider", zIndex: 0 }}>
                 <MapContainer center={userLocation!} zoom={13} style={{ height: "100%", width: "100%" }}>
                     <TileLayer
@@ -479,17 +517,21 @@ export default function TaskMapView({ tasks }: { tasks: Task[] }) {
                         </Marker>
                     )}
 
+                    {/* Active emergencies from FARO */}
+                    {showFaro && <FaroEmergencyLayer emergencies={emergencies} />}
+
                     {/* Task markers — category icon & colour */}
                     {tasks.map((task) => {
                         if (task.latitude && task.longitude) {
                             const catConfig = getCategoryConfig(task.category);
                             const urgConfig = getUrgencyConfig(task.urgencyLevel);
                             const statusConfig = getStatusConfig(task.status);
+                            const risks = emergenciesCovering(emergencies, task.latitude, task.longitude);
                             return (
                                 <Marker
                                     key={task.id}
                                     position={[task.latitude, task.longitude]}
-                                    icon={createTaskIcon(task.category)}
+                                    icon={createTaskIcon(task.category, risks.length > 0)}
                                 >
                                     <Popup>
                                         <Box sx={{ minWidth: 280, maxWidth: 320, p: 0.5 }}>
@@ -509,6 +551,20 @@ export default function TaskMapView({ tasks }: { tasks: Task[] }) {
                                                     sx={{ fontWeight: 700, borderRadius: 1.5, fontSize: "0.65rem" }}
                                                 />
                                             </Box>
+
+                                            {task.externalSource === "FARO" && (
+                                                <Chip
+                                                    label="🚨 Richiesta Protezione Civile · FARO"
+                                                    size="small"
+                                                    color="error"
+                                                    sx={{ fontWeight: 700, mb: 1, fontSize: "0.68rem" }}
+                                                />
+                                            )}
+                                            {risks.length > 0 && (
+                                                <Alert severity="error" sx={{ mb: 1, py: 0, fontSize: "0.75rem" }}>
+                                                    In area a rischio FARO: {risks.map((r) => FARO_CATEGORY_CONFIG[r.category]?.label ?? r.category).join(", ")}
+                                                </Alert>
+                                            )}
 
                                             {/* Title */}
                                             <Typography

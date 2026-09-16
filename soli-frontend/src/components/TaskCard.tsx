@@ -128,6 +128,14 @@ export default function TaskCard({ task, currentUserId, onDetailsClick, onCancel
                             size="small"
                             sx={{ fontWeight: 800, borderRadius: 1.5, textTransform: "uppercase", fontSize: "0.65rem" }}
                         />
+                        {task.externalSource === "FARO" && (
+                            <Chip
+                                label="🚨 Protezione Civile · FARO"
+                                color="error"
+                                size="small"
+                                sx={{ fontWeight: 800, borderRadius: 1.5, fontSize: "0.65rem" }}
+                            />
+                        )}
                     </Stack>
                 </Box>
 
