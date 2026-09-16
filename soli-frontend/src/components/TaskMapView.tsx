@@ -4,6 +4,11 @@ import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import FaroEmergencyLayer from "./FaroEmergencyLayer";
 import { useFaroEmergencies } from "../hooks/useFaroEmergencies";
 import { emergenciesCovering, FARO_CATEGORY_CONFIG } from "../utils/faro";
+import SeismicOverlayLayer from "./SeismicOverlayLayer";
+import SeismicOverlayPanel from "./SeismicOverlayPanel";
+import SeismicBuildingDrawer from "./SeismicBuildingDrawer";
+import type { BuildingKpi } from "../types/models/SeismicOverlay";
+import { useSeismicOverlay } from "../hooks/useSeismicOverlay";
 import { useNavigate } from "react-router-dom";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import ScheduleIcon from "@mui/icons-material/Schedule";
@@ -416,6 +421,10 @@ export default function TaskMapView({ tasks }: { tasks: Task[] }) {
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [showFaro, setShowFaro] = useState(true);
     const { emergencies } = useFaroEmergencies();
+    const seismic = useSeismicOverlay();
+    const [showSeismic, setShowSeismic] = useState(true);
+    const [seismicFocus, setSeismicFocus] = useState(0);
+    const [selectedBuilding, setSelectedBuilding] = useState<BuildingKpi | null>(null);
 
     const handleOpenDrawer = (task: Task) => {
         setSelectedTask(task);
@@ -496,6 +505,18 @@ export default function TaskMapView({ tasks }: { tasks: Task[] }) {
                     label={<Typography variant="caption" fontWeight={700}>Mostra emergenze</Typography>}
                 />
             </Box>
+            <SeismicOverlayPanel
+                events={seismic.events}
+                selectedId={seismic.selectedId}
+                onSelect={seismic.setSelectedId}
+                overlay={seismic.overlay}
+                visible={showSeismic}
+                onToggle={setShowSeismic}
+                onFocus={() => {
+                    setShowSeismic(true);
+                    setSeismicFocus((k) => k + 1);
+                }}
+            />
             <Box sx={{ height: 600, width: "100%", borderRadius: 2, overflow: "hidden", border: "1px solid", borderColor: "divider", zIndex: 0 }}>
                 <MapContainer center={userLocation!} zoom={13} style={{ height: "100%", width: "100%" }}>
                     <TileLayer
@@ -515,6 +536,11 @@ export default function TaskMapView({ tasks }: { tasks: Task[] }) {
                                 </Box>
                             </Popup>
                         </Marker>
+                    )}
+
+                    {/* Post-earthquake overlay from Urban Sentinel */}
+                    {showSeismic && seismic.overlay && (
+                        <SeismicOverlayLayer overlay={seismic.overlay} focusKey={seismicFocus} onSelectBuilding={setSelectedBuilding} />
                     )}
 
                     {/* Active emergencies from FARO */}
@@ -672,6 +698,14 @@ export default function TaskMapView({ tasks }: { tasks: Task[] }) {
 
             {/* Task detail drawer — opens on top of map */}
             <TaskDetailDrawer task={selectedTask} open={drawerOpen} onClose={handleCloseDrawer} />
+
+            {/* Building card (Urban Sentinel) — beside the map, fully readable */}
+            <SeismicBuildingDrawer
+                building={selectedBuilding}
+                event={seismic.overlay?.event ?? null}
+                open={selectedBuilding !== null}
+                onClose={() => setSelectedBuilding(null)}
+            />
         </Box>
     );
 }
