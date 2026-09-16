@@ -56,6 +56,11 @@ import { useUserLocation } from "../hooks/useUserLocation";
 import { formatDistance, haversineKm } from "../utils/location";
 import FaroSosDialog from "../components/FaroSosDialog";
 import FaroSafetyBanner from "../components/FaroSafetyBanner";
+import TaskTransitCard from "../components/TaskTransitCard";
+import TransitDisruptionBanner from "../components/TransitDisruptionBanner";
+import TransitIssueDialog from "../components/TransitIssueDialog";
+import TransitMatchingCard from "../components/TransitMatchingCard";
+import { useTaskTransit } from "../hooks/useTaskTransit";
 
 interface ChatMessage {
 	id: string;
@@ -108,6 +113,9 @@ export default function TaskDetailPage() {
 	const [error, setError] = useState<string | null>(null);
 	const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
 	const [sosOpen, setSosOpen] = useState(false);
+	const [issueOpen, setIssueOpen] = useState(false);
+	const [destinationStopId, setDestinationStopId] = useState<string | null>(null);
+	const { transit, loading: transitLoading, reload: reloadTransit } = useTaskTransit(id, destinationStopId);
 	const [cancelling, setCancelling] = useState(false);
 	const [accepting, setAccepting] = useState(false);
 	const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: "success" | "error" }>({
@@ -449,6 +457,12 @@ export default function TaskDetailPage() {
 							{(task.status === "OPEN" || task.status === "ACCEPTED" || task.status === "IN_PROGRESS") && (
 								<FaroSafetyBanner taskId={task.id} />
 							)}
+							{(task.status === "OPEN" || task.status === "ACCEPTED" || task.status === "IN_PROGRESS") && (
+								<TransitDisruptionBanner
+									transit={transit}
+									onReport={isVolunteer && task.status !== "OPEN" ? () => setIssueOpen(true) : undefined}
+								/>
+							)}
 							<Grid container alignItems="flex-start" justifyContent="space-between" spacing={3} sx={{ mb: 4 }}>
 								<Grid size={{ xs: 12, md: "grow" }}>
 									<Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 1, flexWrap: "wrap" }}>
@@ -492,6 +506,16 @@ export default function TaskDetailPage() {
 													disableElevation
 												>
 													🆘 SOS
+												</Button>
+											)}
+											{(task.status === "ACCEPTED" || task.status === "IN_PROGRESS") && isVolunteer && transit?.covered && (
+												<Button
+													variant="outlined"
+													color="warning"
+													onClick={() => setIssueOpen(true)}
+													sx={{ fontWeight: 800, borderRadius: 2, flex: { xs: 1, sm: "none" } }}
+												>
+													🚌 Problema sul percorso
 												</Button>
 											)}
 											{(task.status === "ACCEPTED" || task.status === "IN_PROGRESS") && isVolunteer && (
@@ -908,9 +932,27 @@ export default function TaskDetailPage() {
 
 					</Stack>
 				</Grid>
+
+				{/* TPL support (CassiTrack + OmniMove) — full width for readability */}
+				{(task.status === "OPEN" || task.status === "NOTIFIED") && (isCreator || dbUser?.role === "ADMIN") && (
+					<Grid size={{ xs: 12 }}>
+						<TransitMatchingCard taskId={task.id} />
+					</Grid>
+				)}
+				{task.status !== "COMPLETED" && task.status !== "CANCELLED" && (transitLoading || transit?.covered) && (
+					<Grid size={{ xs: 12 }}>
+						<TaskTransitCard
+							transit={transit}
+							loading={transitLoading}
+							isMobility={task.category === "MOBILITY"}
+							onDestinationChange={setDestinationStopId}
+						/>
+					</Grid>
+				)}
 			</Grid>
 
 			<FaroSosDialog task={task} open={sosOpen} onClose={() => setSosOpen(false)} />
+			<TransitIssueDialog taskId={task.id} open={issueOpen} onClose={() => setIssueOpen(false)} onSent={reloadTransit} />
 
 			{/* Dialog di Conferma Annullamento */}
 			<Dialog open={cancelDialogOpen} onClose={handleCloseDialog}>

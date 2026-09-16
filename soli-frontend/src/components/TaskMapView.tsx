@@ -9,6 +9,10 @@ import SeismicOverlayPanel from "./SeismicOverlayPanel";
 import SeismicBuildingDrawer from "./SeismicBuildingDrawer";
 import type { BuildingKpi } from "../types/models/SeismicOverlay";
 import { useSeismicOverlay } from "../hooks/useSeismicOverlay";
+import TransitLayer from "./TransitLayer";
+import TransitPanel from "./TransitPanel";
+import { useTransitNetwork } from "../hooks/useTransitNetwork";
+import { lineLabel, nearestStop, uniqueStops } from "../utils/transit";
 import { useNavigate } from "react-router-dom";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import ScheduleIcon from "@mui/icons-material/Schedule";
@@ -425,6 +429,10 @@ export default function TaskMapView({ tasks }: { tasks: Task[] }) {
     const [showSeismic, setShowSeismic] = useState(true);
     const [seismicFocus, setSeismicFocus] = useState(0);
     const [selectedBuilding, setSelectedBuilding] = useState<BuildingKpi | null>(null);
+    const transit = useTransitNetwork();
+    const [showTransit, setShowTransit] = useState(true);
+    const [transitFocus, setTransitFocus] = useState(0);
+    const transitStops = transit ? uniqueStops(transit.routes) : [];
 
     const handleOpenDrawer = (task: Task) => {
         setSelectedTask(task);
@@ -517,6 +525,15 @@ export default function TaskMapView({ tasks }: { tasks: Task[] }) {
                     setSeismicFocus((k) => k + 1);
                 }}
             />
+            <TransitPanel
+                network={transit}
+                visible={showTransit}
+                onToggle={setShowTransit}
+                onFocus={() => {
+                    setShowTransit(true);
+                    setTransitFocus((k) => k + 1);
+                }}
+            />
             <Box sx={{ height: 600, width: "100%", borderRadius: 2, overflow: "hidden", border: "1px solid", borderColor: "divider", zIndex: 0 }}>
                 <MapContainer center={userLocation!} zoom={13} style={{ height: "100%", width: "100%" }}>
                     <TileLayer
@@ -543,6 +560,9 @@ export default function TaskMapView({ tasks }: { tasks: Task[] }) {
                         <SeismicOverlayLayer overlay={seismic.overlay} focusKey={seismicFocus} onSelectBuilding={setSelectedBuilding} />
                     )}
 
+                    {/* TPL network of Cassino from CassiTrack */}
+                    {showTransit && transit && <TransitLayer network={transit} focusKey={transitFocus} />}
+
                     {/* Active emergencies from FARO */}
                     {showFaro && <FaroEmergencyLayer emergencies={emergencies} />}
 
@@ -553,6 +573,8 @@ export default function TaskMapView({ tasks }: { tasks: Task[] }) {
                             const urgConfig = getUrgencyConfig(task.urgencyLevel);
                             const statusConfig = getStatusConfig(task.status);
                             const risks = emergenciesCovering(emergencies, task.latitude, task.longitude);
+                            const stop = nearestStop(transitStops, task.latitude, task.longitude);
+                            const stopLines = stop && transit ? transit.routes.filter((r) => stop.stop.routeIds.includes(r.id)) : [];
                             return (
                                 <Marker
                                     key={task.id}
@@ -644,6 +666,19 @@ export default function TaskMapView({ tasks }: { tasks: Task[] }) {
                                                         {task.targetAddress || "Indirizzo non specificato"}
                                                     </Typography>
                                                 </Box>
+
+                                                {/* Nearest TPL stop (CassiTrack) */}
+                                                {stop && (
+                                                    <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
+                                                        <Box sx={{ p: 0.5, borderRadius: 1, bgcolor: "action.hover", display: "flex", fontSize: 14, lineHeight: 1 }}>🚏</Box>
+                                                        <Typography variant="body2" color="text.secondary" sx={{ fontSize: "0.82rem" }}>
+                                                            {stop.stop.name} · {stop.walkMinutes} min a piedi
+                                                        </Typography>
+                                                        {stopLines.map((r) => (
+                                                            <Chip key={r.id} size="small" label={lineLabel(r.shortName)} sx={{ height: 18, fontSize: "0.65rem", fontWeight: 700, bgcolor: r.color, color: "#fff" }} />
+                                                        ))}
+                                                    </Box>
+                                                )}
 
                                                 {/* Date row */}
                                                 {task.scheduledAt && (

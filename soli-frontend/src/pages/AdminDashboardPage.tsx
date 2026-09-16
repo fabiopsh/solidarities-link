@@ -44,6 +44,7 @@ import { Link } from "react-router-dom";
 import api from "../api";
 import type { Task } from "../types/models/Task";
 import type { ApiTokenView, CreatedApiToken } from "../types/models/ApiToken";
+import TransitAnalyticsSection from "../components/TransitAnalyticsSection";
 
 type Snack = { open: boolean; message: string; severity: "success" | "error" };
 
@@ -254,6 +255,7 @@ export default function AdminDashboardPage() {
 				<Tab label="Task" />
 				<Tab label="Statistiche" />
 				<Tab label="API Token" />
+				<Tab label="Mobilità · CassiTrack" />
 			</Tabs>
 
 			{/* ---------------------------------------------------------- TAB 0: Task */}
@@ -291,6 +293,9 @@ export default function AdminDashboardPage() {
 					</CardContent>
 				</Card>
 			)}
+
+			{/* ------------------------------------- TAB 3: Mobilità territoriale */}
+			{tab === 3 && <TransitAnalyticsSection />}
 
 			{/* --------------------------------------------------- TAB 1: Statistiche */}
 			{tab === 1 && (

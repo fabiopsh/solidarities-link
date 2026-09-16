@@ -1,12 +1,13 @@
 package it.soli.service;
 
-import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import it.soli.entity.Task;
 import it.soli.entity.TaskNotification;
 import it.soli.entity.NotificationStatus;
 import it.soli.entity.ServiceCategory;
 import it.soli.entity.VolunteerProfile;
+import it.soli.integration.cassitrack.TransitMatchingAdvisor;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 
 import java.util.Comparator;
@@ -17,6 +18,9 @@ import java.util.stream.Collectors;
 public class MatchingService {
 
     private static final int EARTH_RADIUS_METERS = 6371000;
+
+    @Inject
+    TransitMatchingAdvisor transitAdvisor;
 
     /**
      * Finds candidates, scores and sorts them, and creates TaskNotification entities
@@ -29,18 +33,20 @@ public class MatchingService {
             return; // Cannot perform geo-matching
         }
 
-        List<MatchedVolunteer> candidates = findCandidates(task.category, task.latitude, task.longitude);
-
-        // For fair rotation, we count how many notifications a volunteer has already received
-        // This is a simple proxy for "fewer recent assigned tasks" avoiding overload.
-        for (MatchedVolunteer mv : candidates) {
-            mv.previousNotifications = TaskNotification.count("volunteerId", mv.profile.userId);
+        List<MatchedVolunteer> candidates;
+        if (transitAdvisor.applies(task)) {
+            // Area served by the Cassino TPL network: rank by real travel time (CassiTrack + OmniMove)
+            List<MatchedVolunteer> competent = findCompetentVolunteers(task.category, task.latitude, task.longitude);
+            countPreviousNotifications(competent);
+            candidates = transitAdvisor.rerank(task, competent);
+        } else {
+            candidates = findCandidates(task.category, task.latitude, task.longitude);
+            countPreviousNotifications(candidates);
+            // 3 & 4. Sort primarily by proximity, secondarily by fair rotation
+            candidates.sort(Comparator
+                    .comparingDouble((MatchedVolunteer mv) -> mv.distanceMeters)
+                    .thenComparingLong(mv -> mv.previousNotifications));
         }
-
-        // 3 & 4. Sort primarily by proximity, secondarily by fair rotation
-        candidates.sort(Comparator
-                .comparingDouble((MatchedVolunteer mv) -> mv.distanceMeters)
-                .thenComparingLong(mv -> mv.previousNotifications));
 
         // Limit the number of notified volunteers to avoid spamming everyone
         int limit = 10;
@@ -57,10 +63,28 @@ public class MatchingService {
     }
 
     /**
+     * For fair rotation, we count how many notifications a volunteer has already received.
+     * This is a simple proxy for "fewer recent assigned tasks" avoiding overload.
+     */
+    public void countPreviousNotifications(List<MatchedVolunteer> candidates) {
+        for (MatchedVolunteer mv : candidates) {
+            mv.previousNotifications = TaskNotification.count("volunteerId", mv.profile.userId);
+        }
+    }
+
+    /**
      * Volunteers competent for the category whose action radius covers the given point
      * (steps 1-2 of the matching). Also used to pre-check partner engagements (FARO).
      */
     public List<MatchedVolunteer> findCandidates(ServiceCategory category, double latitude, double longitude) {
+        return findCompetentVolunteers(category, latitude, longitude).stream()
+                // 2. Filter by proximity (in max radius)
+                .filter(mv -> mv.distanceMeters <= mv.profile.maxTaskDistanceMeters)
+                .collect(Collectors.toList());
+    }
+
+    /** Volunteers competent for the category, with their distance from the point, regardless of action radius. */
+    public List<MatchedVolunteer> findCompetentVolunteers(ServiceCategory category, double latitude, double longitude) {
         List<VolunteerProfile> allActiveProfiles = VolunteerProfile.listAll();
 
         return allActiveProfiles.stream()
@@ -75,8 +99,6 @@ public class MatchingService {
                             profile.latitude, profile.longitude);
                     return new MatchedVolunteer(profile, distance);
                 })
-                // 2. Filter by proximity (in max radius)
-                .filter(mv -> mv.distanceMeters <= mv.profile.maxTaskDistanceMeters)
                 .collect(Collectors.toList());
     }
 
@@ -95,7 +117,7 @@ public class MatchingService {
     public static class MatchedVolunteer {
         public VolunteerProfile profile;
         public double distanceMeters;
-        long previousNotifications;
+        public long previousNotifications;
 
         MatchedVolunteer(VolunteerProfile profile, double distanceMeters) {
             this.profile = profile;

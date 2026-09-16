@@ -45,6 +45,7 @@ import TaskMapView from "../components/TaskMapView";
 import TaskCard from "../components/TaskCard";
 import FaroNearbyBanner from "../components/FaroNearbyBanner";
 import SeismicRecentBanner from "../components/SeismicRecentBanner";
+import TransitAlertsBanner from "../components/TransitAlertsBanner";
 import { useRole } from "../context/RoleContext";
 
 const CATEGORY_LABELS: Record<ServiceCategory, string> = {
@@ -336,6 +337,7 @@ export default function DashboardPage() {
 				<>
 					<FaroNearbyBanner tasks={tasks} />
 					<SeismicRecentBanner />
+					<TransitAlertsBanner />
 					<Grid container spacing={3} sx={{ mb: 4 }}>
 						<Grid size={{ xs: 12, sm: 6, md: 3 }}>
 							{statCard("Task Completati", completedAsVolunteer.length, "linear-gradient(135deg, #00796B 0%, #48A999 100%)", <AssignmentIcon sx={{ fontSize: 48, opacity: 0.3 }} />)}
